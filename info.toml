@@ -9,3 +9,4 @@ blocks = ["music-auto-toggler", "music-auto-toggler-dev"]
 [script]
 #__DEFINES__
 # dependencies = ["MLHook", "MLFeedRaceData"]
+dependencies = ["VehicleState"]

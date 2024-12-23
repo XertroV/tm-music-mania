@@ -65,12 +65,16 @@ class TurboMusic : Music {
         PrintJson();
         yield();
         // PlayAll();
-        startnew(CoroutineFunc(this.PlayLoop)).WithRunContext(Meta::RunContext::BeforeScripts);
+        StartPlaying();
     }
 
 
     NamedSample@ LoadSample(const string &in audioName, int intensity) {
         auto fullPath = turboDirPath + "/Tracks/" + audioName + ".ogg";
+        if (!IO::FileExists(fullPath)) {
+            warn("File does not exist: " + fullPath);
+            return null;
+        }
         print("Loading sample: " + fullPath);
         Audio::Sample@ s = Audio::LoadSample(ReadFileToBuf(fullPath), false);
         // auto v = Audio::Play(s, 0.5);
@@ -172,7 +176,12 @@ class TurboMusic : Music {
                 auto @var = trackGroupVariants[trackGroupVariants.Length - 1];
                 if (var.intensity < minIntensity) minIntensity = var.intensity;
                 if (var.intensity > maxIntensity) maxIntensity = var.intensity;
-                sLoop.InsertLast(this.LoadSample(var.name, var.intensity));
+                auto ns = this.LoadSample(var.name, var.intensity);
+                if (ns !is null) {
+                    sLoop.InsertLast(ns);
+                } else {
+                    trackGroupVariants.RemoveLast();
+                }
             } else {
                 warn("Unknown trackgroup child: " + name);
             }
@@ -240,7 +249,7 @@ class TurboMusic : Music {
 
 
     void StartPlaying() {
-        startnew(CoroutineFunc(this.PlayLoop)).WithRunContext(Meta::RunContext::BeforeScripts);
+        startnew(CoroutineFunc(this.PlayLoop)).WithRunContext(Meta::RunContext::AfterScripts);
     }
 
     TurboMusicLayer@[] layers;
@@ -267,7 +276,7 @@ class TurboMusic : Music {
     }
 
 
-    bool FindAndPlayVariant(int intensity, MusicFading fade, float cfDuration, const string &in nameNot = "") {
+    bool FindAndPlayVariant(int intensity, MusicFading fade, float cfDuration, const string &in nameNot = "", float pos = 0.0) {
         print("FindAndPlayVariant: " + intensity + " fade: " + fade + " cfDuration: " + cfDuration + " nameNot: " + nameNot);
 
         auto varDist = 0;
@@ -280,8 +289,8 @@ class TurboMusic : Music {
         print("Playing variant: " + namedSample.name);
         // layers.InsertLast(TurboMusicLayer(namedSample, cfDuration, fade));
         layers.InsertLast(namedSample.layer);
-        namedSample.layer.ResetFadeIn(0.0);
-        currIntensity = namedSample.intensity;
+        namedSample.layer.ResetFadeIn(pos);
+        // currIntensity = namedSample.intensity;
         return true;
     }
 
@@ -303,10 +312,18 @@ class TurboMusic : Music {
         return null;
     }
 
+    void UpdateIntensity() {
+        auto p = VehicleState::GetViewingPlayer();
+        if (p is null) return;
+        auto v = VehicleState::GetVis(GetApp().GameScene, p);
+        currIntensity = int(Math::Round(Math::Lerp(float(minIntensity), float(maxIntensity), Math::Clamp(Math::InvLerp(100.0, 500.0, 3.6*v.AsyncState.FrontSpeed), 0.0, 1.0))));
+    }
+
     int trackUpperLim = 2;
     bool doneFirst = false;
 
     void CheckForDoneLayersAndUpdate() {
+        UpdateIntensity();
         if (layers.Length == 0) return;
 
         float pos = layers[0].voice.GetPosition();
@@ -316,11 +333,13 @@ class TurboMusic : Music {
 
         if (!doneFirst && l0Done) {
             doneFirst = true;
-            FindAndPlayVariant(currIntensity, MusicFading::FadeIn, CrossfadeDuration);
-            layers[layers.Length - 1].SetPosition(pos);
+            FindAndPlayVariant(currIntensity, MusicFading::FadeIn, CrossfadeDuration, layers[layers.Length - 1].name, pos);
         }
 
         for (int i = layers.Length - 1; i >= 0; i--) {
+            if (i > 0 && Math::Abs(layers[i].voice.GetPosition() - pos) > 0.015) {
+                layers[i].SetPosition(pos);
+            }
             if (layers[i].Update()) {
                 auto @layer = layers[i];
                 print("Layer done: " + layer.name);
@@ -337,11 +356,12 @@ class TurboMusic : Music {
                         break;
                     case MusicFading::None: {
                         bool hasRoom = layers.Length < trackUpperLim;
-                        if (hasRoom && Math::Rand(.0, 1.0) < swapVariantP || layer.Repetitions > loopVariantMaxCycles) {
+                        // layer.Repetitions < loopVariantMaxCycles
+                        if (hasRoom && Math::Rand(.0, 1.0) < swapVariantP) {
                             trace("Swapping variant: " + layer.name);
                             layer.ResetFadeOut(pos);
                             layers.InsertLast(layer);
-                            FindAndPlayVariant(currIntensity, MusicFading::FadeIn, CrossfadeDuration, layer.name);
+                            FindAndPlayVariant(currIntensity, MusicFading::FadeIn, CrossfadeDuration, layer.name, pos);
                         } else if (currIntensity == layer.intensity || layers.Length == 0) {
                             trace("Repeating layer: " + layer.name);
                             layer.ResetNoFade(pos);
@@ -353,23 +373,24 @@ class TurboMusic : Music {
                             print("currIntensity: " + currIntensity + " layer.intensity: " + layer.intensity);
                             print("Dropping layer: " + layer.name);
                             if (layers.Length == 1) {
-                                FindAndPlayVariant(currIntensity, MusicFading::FadeIn, CrossfadeDuration, layer.name);
+                                FindAndPlayVariant(currIntensity, MusicFading::FadeIn, CrossfadeDuration, layer.name, pos);
                             }
                         }
 
                         if (layers.Length < trackUpperLim - 1 && Math::Rand(.0, 1.0) < swapVariantP) {
-                            FindAndPlayVariant(currIntensity, MusicFading::FadeIn, CrossfadeDuration, layer.name);
-                            layers[layers.Length - 1].SetPosition(pos);
+                            FindAndPlayVariant(currIntensity, MusicFading::FadeIn, CrossfadeDuration, layer.name, pos);
                         }
                         break;
                     }
                     case MusicFading::FadeOut:
-                        layer.voice.Pause();
-                        layer.voice.SetPosition(0.0);
+                        // layer.voice.Pause();
+                        layer.NullifyVoice();
+                        // layer.voice.SetPosition(0.0);
                         break;
                 }
             }
         }
+
 
         bool allFadingOut = true;
         for (uint i = 0; i < layers.Length; i++) {
@@ -379,8 +400,29 @@ class TurboMusic : Music {
             }
         }
         if (allFadingOut) {
-            FindAndPlayVariant(currIntensity, MusicFading::FadeIn, CrossfadeDuration);
+            layers[0].ResetNoFade(pos);
+            FindAndPlayVariant(currIntensity, MusicFading::FadeIn, CrossfadeDuration, layers[0].name, pos);
         }
+
+        float firstPos = layers[0].voice.GetPosition();
+        if (firstPos < 0.01) {
+            bool anyCorrectIntensity = false;
+            for (uint i = 0; i < layers.Length; i++) {
+                if (layers[i].intensity == currIntensity) {
+                    anyCorrectIntensity = true;
+                    break;
+                }
+            }
+            if (!anyCorrectIntensity) {
+                layers[0].ResetFadeOut(pos);
+                FindAndPlayVariant(currIntensity, MusicFading::FadeIn, CrossfadeDuration * .2, "", pos);
+            }
+
+            for (uint i = 1; i < layers.Length; i++) {
+                layers[i].SetPosition(firstPos);
+            }
+        }
+
     }
 }
 
@@ -450,7 +492,8 @@ class TurboMusicLayer {
     void SetPosition(float pos) {
         trace("["+name+"] SetPosition: " + pos + " / " + (voice !is null));
         if (voice is null) return;
-        voice.SetPosition(Math::Max(pos, 0.0));
+        // pos += g_dt
+        voice.SetPosition(Math::Max(pos, 0.0) + 0.01);
     }
 
     void SetVoiceUpdateAndStart(bool andStart = true) {
@@ -459,8 +502,16 @@ class TurboMusicLayer {
         if (andStart) StartVoice();
     }
 
+    void NullifyVoice() {
+        if (voice !is null) {
+            voice.SetGain(0.0);
+            @voice = null;
+        }
+    }
+
     void SetVoice() {
         // if (voice is null)
+        NullifyVoice();
         @this.voice = Audio::Start(this.sample);
         voice.SetGain(currVol * Global::MusicVolume);
         duration = voice.GetLength();
@@ -493,8 +544,10 @@ class TurboMusicLayer {
         fade = MusicFading::FadeIn;
         volStartEnd = vec2(0.0, 1.0);
         currVol = 0.0;
+        cfStart = 0.0;
+        cfEnd = crossfadeDuration;
         SetVoice();
-        SetPosition(0.0);
+        SetPosition(pos);
         StartIfNotPlaying();
         Repetitions++;
         // print("ResetFadeIn: " + newPos);
@@ -502,14 +555,14 @@ class TurboMusicLayer {
 
     void ResetNoFade(float pos) {
         cfP = 1.0;
-        cfStart = 0.0;
-        cfEnd = crossfadeDuration;
         fade = MusicFading::None;
         volStartEnd = vec2(1.0);
         currVol = 1.0;
+        cfStart = 0.0;
+        cfEnd = crossfadeDuration;
         SetVoice();
-        SetPosition(Math::Max(pos, 0.0));
         StartIfNotPlaying();
+        SetPosition(pos);
         Repetitions++;
         // print("ResetNoFade: " + newPos);
     }
@@ -520,7 +573,7 @@ class TurboMusicLayer {
         volStartEnd = vec2(1.0, 0.0);
         currVol = 1.0;
         SetVoice();
-        SetPosition(Math::Max(pos, 0.0));
+        SetPosition(pos);
         StartIfNotPlaying();
         cfStart = duration - crossfadeDuration;
         cfEnd = duration;
@@ -610,8 +663,14 @@ string ReadFileToString(const string &in path) {
 }
 
 MemoryBuffer@ ReadFileToBuf(const string &in path) {
-    IO::File file(path, IO::FileMode::Read);
-    return file.Read(file.Size());
+    try {
+        IO::File file(path, IO::FileMode::Read);
+        return file.Read(file.Size());
+    } catch {
+        warn("Failed to read file: " + path);
+        warn("Error: " + getExceptionInfo());
+    }
+    return null;
 }
 
 void WaitTillDone(Audio::Voice@ v) {
@@ -679,7 +738,7 @@ namespace TurboDebug {
             UI::Text("Name: " + g_turboMusic.layers[i].name);
             UI::Text("Intensity: " + g_turboMusic.layers[i].intensity);
             UI::Text("Fading: " + g_turboMusic.layers[i].fade);
-            UI::Text("Progress: " + g_turboMusic.layers[i].voice.GetPosition());
+            UI::Text("Position: " + Text::Format("%.6f", g_turboMusic.layers[i].voice.GetPosition()));
             UI::Text("Length: " + g_turboMusic.layers[i].voice.GetLength());
             UI::Text("IsDone: " + g_turboMusic.layers[i].IsDone);
             auto v = g_turboMusic.layers[i].voice;
