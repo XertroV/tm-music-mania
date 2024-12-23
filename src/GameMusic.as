@@ -1,3 +1,5 @@
+const Meta::RunContext MUSIC_RUN_CTX = Meta::RunContext::GameLoop;
+
 namespace GameMusic {
     // 51 and 57 for main menu and in-game atm
     uint[] musicTrackIndexes;
@@ -8,7 +10,7 @@ namespace GameMusic {
     float targetVolume = -100.0f;
 
     void Main() {
-        startnew(GameMusic::MainAsync).WithRunContext(Meta::RunContext::AfterScripts);
+        startnew(GameMusic::MainAsync).WithRunContext(MUSIC_RUN_CTX);
     }
 
     void MainAsync() {
@@ -29,6 +31,12 @@ namespace GameMusic {
 
     [Setting hidden]
     float S_MusicInMapVolume = 3.0;
+
+    void RenderMenu() {
+        if (UI::MenuItem("Music Mania Debug", "", windowOpen)) {
+            windowOpen = !windowOpen;
+        }
+    }
 
     void Render() {
         if (UI::Begin("Music Mania Debug", windowOpen, UI::WindowFlags::AlwaysAutoResize)) {

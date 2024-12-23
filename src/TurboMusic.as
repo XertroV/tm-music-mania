@@ -249,7 +249,7 @@ class TurboMusic : Music {
 
 
     void StartPlaying() {
-        startnew(CoroutineFunc(this.PlayLoop)).WithRunContext(Meta::RunContext::AfterScripts);
+        startnew(CoroutineFunc(this.PlayLoop)).WithRunContext(MUSIC_RUN_CTX);
     }
 
     TurboMusicLayer@[] layers;
@@ -693,6 +693,13 @@ string GetLastDirName(string path) {
 
 namespace TurboDebug {
     bool window = true;
+
+    void RenderMenu() {
+        if (UI::MenuItem("TurboMusic Debug", "", window)) {
+            window = !window;
+        }
+    }
+
     void Render() {
         if (!window) return;
         if (UI::Begin("TurboMusic Debug", window)) {

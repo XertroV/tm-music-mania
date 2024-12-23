@@ -23,3 +23,10 @@ void RenderInterface() {
     GameMusic::Render();
     TurboDebug::Render();
 }
+
+/** Render function called every frame intended only for menu items in `UI`.
+*/
+void RenderMenu() {
+    GameMusic::RenderMenu();
+    TurboDebug::RenderMenu();
+}
