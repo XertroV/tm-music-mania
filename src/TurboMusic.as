@@ -109,6 +109,8 @@ class TurboMusic : Music {
 
     // beats per minute
     float bpm;
+    // seconds per beat
+    float spb;
     // beats per bar
     float bpb;
 
@@ -119,6 +121,7 @@ class TurboMusic : Music {
     void ParseTempoNode(XML::Node &in node) {
         bpm = Text::ParseFloat(node.Attribute("beatsperminute"));
         bpb = Text::ParseFloat(node.Attribute("beatsperbar"));
+        spb = 60.0 / bpm;
     }
 
     void ParseSegmentNode(XML::Node &in node) {
@@ -331,6 +334,8 @@ class TurboMusic : Music {
         bool l0Done = layers[0].IsDone;
         if (l0Done) pos = layers[0].lastPosDelta - layers[0].finalPartial;
 
+        IsOnBeat = Math::Abs(((pos + g_dt * .5) % spb)) < g_dt;
+
         if (!doneFirst && l0Done) {
             doneFirst = true;
             FindAndPlayVariant(currIntensity, MusicFading::FadeIn, CrossfadeDuration, layers[layers.Length - 1].name, pos);
@@ -424,6 +429,8 @@ class TurboMusic : Music {
         }
 
     }
+
+    bool IsOnBeat;
 }
 
 enum MusicFading {
@@ -694,10 +701,19 @@ string GetLastDirName(string path) {
 namespace TurboDebug {
     bool window = true;
 
+    bool IsTurboMusicOnBeat() {
+        if (g_turboMusic is null) return false;
+        return g_turboMusic.IsOnBeat;
+    }
+
     void RenderMenu() {
+        auto frameBgActive = UI::GetStyleColor(UI::Col::FrameBg);
+        if (IsTurboMusicOnBeat()) frameBgActive = vec4(0.0, 1.0, 0.0, 1.0);
+        UI::PushStyleColor(UI::Col::FrameBg, frameBgActive);
         if (UI::MenuItem("TurboMusic Debug", "", window)) {
             window = !window;
         }
+        UI::PopStyleColor();
     }
 
     void Render() {

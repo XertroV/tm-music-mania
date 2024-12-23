@@ -39,7 +39,8 @@ namespace GameMusic {
     }
 
     void Render() {
-        if (UI::Begin("Music Mania Debug", windowOpen, UI::WindowFlags::AlwaysAutoResize)) {
+        if (!windowOpen) return;
+        if (UI::Begin("Music Mania Debug", windowOpen, UI::WindowFlags::AlwaysAutoResize | UI::WindowFlags::NoCollapse)) {
             UI::Text("Music Track Indexes: " + musicTrackIndexes.Length);
             UI::Text("\\$i> " + Json::Write(musicTrackIndexes.ToJson()));
             UI::Text("\\$i" + Icons::PlayCircle + ": " + Json::Write(GetMTIsPlaying().ToJson()));
