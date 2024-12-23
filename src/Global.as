@@ -23,7 +23,7 @@ namespace Global {
 }
 
 // openplanet is quite loud by default.
-const float SCALE_VOL_FOR_OP = 0.25;
+const float SCALE_VOL_FOR_OP = 0.325;
 
 // The game volume is stored in decibels, need to convert to amplitude for openplanet.
 // typical db range is -40 to 0
