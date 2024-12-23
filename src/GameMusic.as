@@ -1,4 +1,4 @@
-const Meta::RunContext MUSIC_RUN_CTX = Meta::RunContext::GameLoop;
+const Meta::RunContext MUSIC_RUN_CTX = Meta::RunContext::AfterMainLoop;
 
 namespace GameMusic {
     // 51 and 57 for main menu and in-game atm

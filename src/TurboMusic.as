@@ -319,6 +319,7 @@ class TurboMusic : Music {
         auto p = VehicleState::GetViewingPlayer();
         if (p is null) return;
         auto v = VehicleState::GetVis(GetApp().GameScene, p);
+        if (v is null) return;
         currIntensity = int(Math::Round(Math::Lerp(float(minIntensity), float(maxIntensity), Math::Clamp(Math::InvLerp(100.0, 500.0, 3.6*v.AsyncState.FrontSpeed), 0.0, 1.0))));
     }
 
