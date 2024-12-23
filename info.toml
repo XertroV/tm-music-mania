@@ -1,0 +1,11 @@
+[meta]
+name     = "Music Mania"
+author   = "XertroV"
+category = "Music"
+version  = "1.0.0"
+
+blocks = ["music-auto-toggler", "music-auto-toggler-dev"]
+
+[script]
+#__DEFINES__
+# dependencies = ["MLHook", "MLFeedRaceData"]
