@@ -77,6 +77,40 @@ namespace GameMusic {
                 S_MusicInMapVolume = UI::SliderFloat("Custom Music Volume", S_MusicInMapVolume, -100.0f, 20.0f);
                 AddSimpleTooltip("dB; 0.0 is normal");
             }
+
+            UI::Text("G_Debug_SongName: " + Turbo::G_Debug_SongName);
+            UI::Text("G_Debug_LastTargetLPFratioFromSpeed: " + Turbo::G_Debug_LastTargetLPFratioFromSpeed);
+
+            if (Turbo::G_Music !is null) {
+                if (UI::Button("Explore")) {
+                    ExploreNod(Turbo::G_Music);
+                }
+                if (UI::Button("Next Variant")) {
+                    Turbo::G_Music.EnableSegment("loop");
+                    Turbo::G_Music.NextVariant();
+                }
+                if (UI::Button("Next Variant2(false)")) {
+                    Turbo::G_Music.EnableSegment("loop");
+                    Turbo::G_Music.NextVariant2(false);
+                }
+                if (UI::Button("Next Variant2(true)")) {
+                    Turbo::G_Music.EnableSegment("loop");
+                    Turbo::G_Music.NextVariant2(true);
+                }
+            }
+
+            if (UI::CollapsingHeader("All Sources")) {
+                if (UI::BeginChild("All Sources")) {
+                    UI::Indent();
+                    auto ap = GetApp().AudioPort;
+                    for (uint i = 0; i < ap.Sources.Length; i++) {
+                        auto src = ap.Sources[i];
+                        UI::Text("[" + i + "] " + src.BalanceGroup + " | \\$<" + (src.IsPlaying ? "\\$4b4" : "") + src.IsPlaying + "\\$> | " + src.VolumedB + " | " + GetSoundSourceFidName(src));
+                    }
+                    UI::Unindent();
+                }
+                UI::EndChild();
+            }
         }
         UI::End();
     }
@@ -127,7 +161,7 @@ namespace GameMusic {
         // once we have the first 2, we don't care about the rest (except editor)
         bool isInEditor = app.Editor !is null;
         uint maxTracks = isInEditor ? 3 : 2;
-        if (stale && musicTrackIndexes.Length < 2) {
+        if (stale && musicTrackIndexes.Length < 10) {
             FindMenuMusicSources(audioPort, true);
         }
     }
@@ -177,7 +211,9 @@ namespace GameMusic {
         // print("GameMusic :: Finding music sources... (staring from " + minIx + ")");
         for (uint i = minIx; i < ap.Sources.Length; i++) {
             auto src = ap.Sources[i];
-            if (src.BalanceGroup == CAudioSource::EAudioBalanceGroup::Music) {
+            if (src.BalanceGroup == CAudioSource::EAudioBalanceGroup::Music
+                && !IsOneOfOurSoundSources(src)
+            ) {
                 auto mtIx = musicTrackIndexes.Length;
                 musicTrackIndexes.InsertLast(i);
                 musicTracksWerePlaying.InsertLast(src.IsPlaying);
@@ -210,9 +246,19 @@ namespace GameMusic {
             auto fid = GetFidFromNod(src.PlugSound.PlugFile);
             return fid.FileName;
         } catch {
-            warn("GameMusic :: Failed to get FID name for source. " + getExceptionInfo());
+            // warn("GameMusic :: Failed to get FID name for source. " + getExceptionInfo());
             return "Unknown";
         }
+    }
+
+    bool IsOneOfOurSoundSources(CAudioSource@ src) {
+        auto music = cast<CPlugMusic>(src.PlugSound);
+        if (music !is null) return true;
+        if (src.PlugSound is null) return true;
+        if (src.PlugSound.PlugFile is null) return true;
+        auto fid = GetFidFromNod(src.PlugSound.PlugFile);
+        if (fid is null) return true;
+        return fid.ParentFolder.DirName == "Turbo";
     }
 }
 

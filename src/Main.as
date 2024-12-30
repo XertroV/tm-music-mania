@@ -4,7 +4,16 @@ const string PluginIcon = Icons::Cogs;
 const string MenuTitle = MenuIconColor + PluginIcon + "\\$z " + PluginName;
 
 void Main() {
+    startnew(SetupIntercepts);
     startnew(GameMusic::Main);
+    startnew(Turbo::Main).WithRunContext(Meta::RunContext::GameLoop);
+}
+
+/** Called when the plugin is unloaded and completely removed from memory.
+*/
+void OnDestroyed() {
+    // GameMusic::OnDestroyed();
+    Turbo::OnDestroyed();
 }
 
 // seconds
@@ -21,12 +30,12 @@ void Update(float dt) {
 */
 void RenderInterface() {
     GameMusic::Render();
-    TurboDebug::Render();
+    // TurboDebug::Render();
 }
 
 /** Render function called every frame intended only for menu items in `UI`.
 */
 void RenderMenu() {
     GameMusic::RenderMenu();
-    TurboDebug::RenderMenu();
+    // TurboDebug::RenderMenu();
 }
