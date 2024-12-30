@@ -4,6 +4,7 @@ namespace GameMusic {
     // 51 and 57 for main menu and in-game atm
     uint[] musicTrackIndexes;
     bool[] musicTracksWerePlaying;
+    bool[] musicTracksIgnore;
     string[] musicTracksFidNames;
     uint lastApSourcesLen = 0;
 
@@ -40,9 +41,13 @@ namespace GameMusic {
 
     void Render() {
         if (!windowOpen) return;
-        if (UI::Begin("Music Mania Debug", windowOpen, UI::WindowFlags::AlwaysAutoResize | UI::WindowFlags::NoCollapse)) {
+        if (UI::Begin("Music Mania Debug", windowOpen, UI::WindowFlags::None)) {
             UI::Text("Music Track Indexes: " + musicTrackIndexes.Length);
-            UI::Text("\\$i> " + Json::Write(musicTrackIndexes.ToJson()));
+            string[] musicTrackStrs;
+            for (uint i = 0; i < musicTrackIndexes.Length; i++) {
+                musicTrackStrs.InsertLast("\\$<" + (musicTracksIgnore[i] ? "\\$888" : "") + tostring(musicTrackIndexes[i]) + "\\$>");
+            }
+            UI::TextWrapped("\\$i> " + string::Join(musicTrackStrs, ",").Replace("\\\\", "\\"));
             UI::Text("\\$i" + Icons::PlayCircle + ": " + Json::Write(GetMTIsPlaying().ToJson()));
             DrawPlayingVolumes();
             if (UI::CollapsingHeader("Track FID File Names")) {
@@ -160,8 +165,8 @@ namespace GameMusic {
         bool stale = SilenceCachedSources(audioPort);
         // once we have the first 2, we don't care about the rest (except editor)
         bool isInEditor = app.Editor !is null;
-        uint maxTracks = isInEditor ? 3 : 2;
-        if (stale && musicTrackIndexes.Length < 10) {
+        // uint maxTracks = isInEditor ? 3 : 2;
+        if (stale) {
             FindMenuMusicSources(audioPort, true);
         }
     }
@@ -173,6 +178,7 @@ namespace GameMusic {
         musicTrackIndexes.RemoveRange(fromIx, musicTrackIndexes.Length - fromIx);
         musicTracksWerePlaying.RemoveRange(fromIx, musicTracksWerePlaying.Length - fromIx);
         musicTracksFidNames.RemoveRange(fromIx, musicTracksFidNames.Length - fromIx);
+        musicTracksIgnore.RemoveRange(fromIx, musicTracksIgnore.Length - fromIx);
     }
 
     bool SilenceCachedSources(CAudioPort@ ap) {
@@ -192,6 +198,7 @@ namespace GameMusic {
                 stale = true;
                 break;
             }
+            if (musicTracksIgnore[i]) continue;
             SetVolumeOnSource(src, i);
         }
         if (lastApSourcesLen < ap.Sources.Length && !stale) {
@@ -211,14 +218,13 @@ namespace GameMusic {
         // print("GameMusic :: Finding music sources... (staring from " + minIx + ")");
         for (uint i = minIx; i < ap.Sources.Length; i++) {
             auto src = ap.Sources[i];
-            if (src.BalanceGroup == CAudioSource::EAudioBalanceGroup::Music
-                && !IsOneOfOurSoundSources(src)
-            ) {
+            if (src.BalanceGroup == CAudioSource::EAudioBalanceGroup::Music) {
                 auto mtIx = musicTrackIndexes.Length;
                 musicTrackIndexes.InsertLast(i);
                 musicTracksWerePlaying.InsertLast(src.IsPlaying);
                 musicTracksFidNames.InsertLast(GetSoundSourceFidName(src));
-                if (andSilence) {
+                musicTracksIgnore.InsertLast(IsOneOfOurSoundSources(src) || IsTempMuxSource(src));
+                if (andSilence && !musicTracksIgnore[mtIx]) {
                     SetVolumeOnSource(src, mtIx);
                 }
             }
@@ -259,6 +265,16 @@ namespace GameMusic {
         auto fid = GetFidFromNod(src.PlugSound.PlugFile);
         if (fid is null) return true;
         return fid.ParentFolder.DirName == "Turbo";
+    }
+
+    bool IsTempMuxSource(CAudioSource@ src) {
+        auto pSound = cast<CPlugSound>(src.PlugSound);
+        if (pSound is null) return false;
+        if (pSound.PlugFile is null) return false;
+        auto fid = GetFidFromNod(pSound.PlugFile);
+        // filename e.g.: D18C607873C835C393BE36D076D451CA2FBF876624B4BD7C5786E5B8B2A7F73536B81F617D2B15CCDFE60285606A7AEF.mux
+        // full filename C:\ProgramData\Trackmania\Cache\D18C607873C835C393BE36D076D451CA2FBF876624B4BD7C5786E5B8B2A7F73536B81F617D2B15CCDFE60285606A7AEF.mux
+        return fid.FileName.EndsWith(".mux");
     }
 }
 
