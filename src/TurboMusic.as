@@ -156,7 +156,7 @@ namespace Turbo {
             G_Music.VolumedB = -39.;
             G_Music.FadeDuration = 0.35;
             G_Music.FadeTracksDuration = .5;
-
+            G_Music.Play();
 
             G_MusicGain = G_MusicDescs[musicToPlay][1];
             G_MusicDelay = 0;
@@ -429,7 +429,7 @@ namespace Turbo {
                     ResetSounds(true);
                     OnStartRace_Reset();
                     print("Music started: " + G_Debug_SongName);
-                    m_isLastFinished = false;
+                    // m_isLastFinished = false;
                     break;
                 case ERaceState::Finished:
                     m_raceStateTrigger_Finished = GameTime;
@@ -533,8 +533,9 @@ namespace Turbo {
         playerCpIx = player.CurrentLaunchedRespawnLandmarkIndex;
         playerLapCount = playerScript.CurrentLapNumber;
         playerRespawned = playerScript.StartTime > GameTime;
-        if (playerCpIx != lastPlayerCpIx || state == ERaceState::Finished) {
-            if (state == ERaceState::Finished && stateChanged) {
+        m_isLastFinished = app.CurrentPlayground.GameTerminals[0].UISequence_Current == SGamePlaygroundUIConfig::EUISequence::Finish;
+        if (playerCpIx != lastPlayerCpIx || lastPlayerWasFinished != m_isLastFinished) {
+            if (m_isLastFinished) {
                 print("Playing finish line sound: " + TurboConst::SoundFinishLine);
                 // end race?
                 m_switchTrackNeeded = true;
@@ -543,6 +544,7 @@ namespace Turbo {
                     warn("Sound is null: " + TurboConst::SoundFinishLine);
                 }
                 audio.PlaySoundEventMix(sound, 5.0, vec3());
+                sound.Play();
             } else if (playerLapCount != lastPlayerLapCount && playerLapCount > 0) {
                 // end lap?
                 m_lapTrackNeeded = true;
@@ -556,6 +558,7 @@ namespace Turbo {
         }
         lastPlayerLapCount = playerLapCount;
         lastPlayerCpIx = playerCpIx;
+        lastPlayerWasFinished = m_isLastFinished;
 
 
         CSceneVehicleVis@ vis;
@@ -604,6 +607,7 @@ namespace Turbo {
     uint playerLapCount = 0;
     uint lastPlayerLapCount = 0;
     bool playerRespawned = false;
+    bool lastPlayerWasFinished = false;
 }
 
 
