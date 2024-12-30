@@ -22,38 +22,38 @@ const float C_VMAX = 10.;
 bool _hasInitializedFids = false;
 
 bool InitializeMusicFids() {
+    _hasInitializedFids = true;
     if (_hasInitializedFids) return true;
-    auto zipFile = Fids::GetUser("TurboMusic.zip");
-    if (zipFile is null) {
-        warn("Could not find TurboMusic.zip");
-        return false;
-    }
-    CPlugFileZip@ zipNod = cast<CPlugFileZip>(Fids::Preload(zipFile));
-    if (zipNod !is null) {
-        zipNod.MwAddRef();
-        // zipNod.UiInstallFids();
-        zipNod.UiInstallFidsInSubFolder();
-        _hasInitializedFids = true;
-        return true;
-    } else {
-        warn("Could not preload TurboMusic.zip");
-    }
+    // auto zipFile = Fids::GetUser("TurboMusic.zip");
+    // if (zipFile is null) {
+    //     warn("Could not find TurboMusic.zip");
+    //     return false;
+    // }
+    // CPlugFileZip@ zipNod = cast<CPlugFileZip>(Fids::Preload(zipFile));
+    // if (zipNod !is null) {
+    //     zipNod.MwAddRef();
+    //     // zipNod.UiInstallFids();
+    //     zipNod.UiInstallFidsInSubFolder();
+    //     return true;
+    // } else {
+    //     warn("Could not preload TurboMusic.zip");
+    // }
     return false;
 }
 
 namespace TurboConst {
-    string SoundFinishLine = "130 Finish Line.ogg";
-    string SoundStartLine = "starting.ogg";
-    string SoundStartLine2 = "starting2.ogg";
-    // string SoundStartLine = "130 Start.ogg";
+    const string SoundFinishLine = "130 Finish Line.ogg";
+    const string SoundStartLine = "starting.ogg";
+    const string SoundStartLine2 = "starting2.ogg";
+    // const string SoundStartLine = "130 Start.ogg";
 
-    string MusicStandBy0 = "110 Pit Stop Twang - Military Loop1.ogg";
-    string MusicStandBy1 = "110 Pit Stop Twang - Military Loop2.ogg";
-    string MusicStandBy2 = "110 Pit Stop Twang - Military Loop3.ogg";
-    string MusicReplay = "MusicReplay.ogg";
+    const string MusicStandBy0 = "110 Pit Stop Twang - Military Loop1.ogg";
+    const string MusicStandBy1 = "110 Pit Stop Twang - Military Loop2.ogg";
+    const string MusicStandBy2 = "110 Pit Stop Twang - Military Loop3.ogg";
+    const string MusicReplay = "MusicReplay.ogg";
 
     string GetMusicStandBy() {
-        switch (Math::Rand(0, 2)) {
+        switch (Math::Rand(0, 3)) {
             case 0: return MusicStandBy0;
             case 1: return MusicStandBy1;
             case 2: return MusicStandBy2;
@@ -61,44 +61,69 @@ namespace TurboConst {
         return MusicStandBy0;
     }
 
-    string SoundGameStart = "110 Pit Stop Military BONGO END NOTE For Random.ogg";
+    const string SoundGameStart = "110 Pit Stop Military BONGO END NOTE For Random.ogg";
 
     // append number + .ogg
-    string SoundCheckpointFast = "130 Checkpoint Fast ";
-    string SoundCheckpointFast0 = "130 Checkpoint Fast 1.ogg";
-    string SoundCheckpointFast1 = "130 Checkpoint Fast 2.ogg";
-    string SoundCheckpointFast2 = "130 Checkpoint Fast 3.ogg";
-    string SoundCheckpointFast3 = "130 Checkpoint Fast 4.ogg";
-    string SoundCheckpointFast4 = "130 Checkpoint Fast 5.ogg";
-    string SoundCheckpointFast5 = "130 Checkpoint Fast 6.ogg";
-    string SoundCheckpointFast6 = "130 Checkpoint Fast 7.ogg";
-    string SoundCheckpointFast7 = "130 Checkpoint Fast 8.ogg";
+    const string SoundCheckpointFast = "130 Checkpoint Fast ";
+    const string SoundCheckpointFast0 = "130 Checkpoint Fast 1.ogg";
+    const string SoundCheckpointFast1 = "130 Checkpoint Fast 2.ogg";
+    const string SoundCheckpointFast2 = "130 Checkpoint Fast 3.ogg";
+    const string SoundCheckpointFast3 = "130 Checkpoint Fast 4.ogg";
+    const string SoundCheckpointFast4 = "130 Checkpoint Fast 5.ogg";
+    const string SoundCheckpointFast5 = "130 Checkpoint Fast 6.ogg";
+    const string SoundCheckpointFast6 = "130 Checkpoint Fast 7.ogg";
+    const string SoundCheckpointFast7 = "130 Checkpoint Fast 8.ogg";
 
     // append number + .ogg
-    string SoundCheckpointSlow = "130 Checkpoint Slow ";
-    string SoundCheckpointSlow0 = "130 Checkpoint Slow 1.ogg";
-    string SoundCheckpointSlow1 = "130 Checkpoint Slow 2.ogg";
-    string SoundCheckpointSlow2 = "130 Checkpoint Slow 3.ogg";
-    string SoundCheckpointSlow3 = "130 Checkpoint Slow 4.ogg";
-    string SoundCheckpointSlow4 = "130 Checkpoint Slow 5.ogg";
-    string SoundCheckpointSlow5 = "130 Checkpoint Slow 6.ogg";
-    string SoundCheckpointSlow6 = "130 Checkpoint Slow 7.ogg";
-    string SoundCheckpointSlow7 = "130 Checkpoint Slow 8.ogg";
+    const string SoundCheckpointSlow = "130 Checkpoint Slow ";
+    const string SoundCheckpointSlow0 = "130 Checkpoint Slow 1.ogg";
+    const string SoundCheckpointSlow1 = "130 Checkpoint Slow 2.ogg";
+    const string SoundCheckpointSlow2 = "130 Checkpoint Slow 3.ogg";
+    const string SoundCheckpointSlow3 = "130 Checkpoint Slow 4.ogg";
+    const string SoundCheckpointSlow4 = "130 Checkpoint Slow 5.ogg";
+    const string SoundCheckpointSlow5 = "130 Checkpoint Slow 6.ogg";
+    const string SoundCheckpointSlow6 = "130 Checkpoint Slow 7.ogg";
+    const string SoundCheckpointSlow7 = "130 Checkpoint Slow 8.ogg";
+
+    const string MusicMenuSimple = "110 Pit Stop Twang - Original - Edit 1 Oct 2015.ogg";
+    const string MusicMenuSimple2 = "TMT_MENU_B1.ogg";
+
+    string GetMusicMenuSimple() {
+        switch (Math::Rand(0, 2)) {
+            case 0: return MusicMenuSimple;
+            case 1: return MusicMenuSimple2;
+        }
+        return MusicMenuSimple;
+    }
 }
 
 Json::Value@ TurboMusicList = GetTurboMusicListJson();
 
 namespace Turbo {
+    void OnLeavePlayground() {
+        CleanupInGameMusic();
+    }
+
     void OnDestroyed() {
-        // return;
+        OnLeavePlayground();
+        CleanupMenuMusic();
+    }
+
+    void CleanupInGameMusic() {
         auto audio = cast<CTrackMania>(GetApp()).MenuManager.MenuCustom_CurrentManiaApp.Audio;
         // CleanupMusic(audio, G_Music);
         for (uint i = 0; i < G_MusicAll.Length; i++) {
             CleanupMusic(audio, G_MusicAll[i]);
+            @G_MusicAll[i] = null;
         }
+        G_MusicAll.Resize(0);
         CleanupSound(audio, G_MusicStandby);
         CleanupSound(audio, G_SoundStandbyEvent);
         CleanupSound(audio, G_MusicReplay);
+        @G_MusicStandby = null;
+        @G_SoundStandbyEvent = null;
+        @G_MusicReplay = null;
+        @G_Music = null;
     }
 
     void CleanupMusic(CAudioScriptManager@ audio, CAudioScriptMusic@ music) {
@@ -153,9 +178,9 @@ namespace Turbo {
             G_Debug_SongName = G_MusicDescs[musicToPlay][0];
             print("Loading music: " + G_Debug_SongName);
             @G_Music = G_MusicAll[musicToPlay]; // (la musique précédente qu'on ecrase est stoppée par ResetSounds() juste avant) / (the previous music we overwrite is stopped by ResetSounds() just before)
-            G_Music.VolumedB = -39.;
+            G_Music.VolumedB = -100.;
             G_Music.FadeDuration = 0.35;
-            G_Music.FadeTracksDuration = .5;
+            G_Music.FadeTracksDuration = G_Music.BeatDuration * 2;
             G_Music.Play();
 
             G_MusicGain = G_MusicDescs[musicToPlay][1];
@@ -239,8 +264,10 @@ namespace Turbo {
         // if ({{{_IsTrackbuilder}}}) yield;
     }
 
+    const float LPF_CUTOFF_RATIO_MIN = 0.42;
+
     void OnStartRace_Reset() {
-        G_Music.LPF_CutoffRatio = 0.25;
+        G_Music.LPF_CutoffRatio = LPF_CUTOFF_RATIO_MIN;
         G_Music.UpdateMode = TurboMusicUpdateMode;
         G_Music.Dbg_ForceSequential = false;
         G_Music.Dbg_ForceIntensity = false;
@@ -257,7 +284,7 @@ namespace Turbo {
     void SetMusicLevel() {
         {
             // if normal
-            G_Music.VolumedB = (-8.5 - 1.0) * 0.0;
+            G_Music.VolumedB = (-8.5 - 1.0) * 0.0 + G_MusicGain;
             // if boosted
             // if muted
         }
@@ -283,20 +310,20 @@ namespace Turbo {
 
     vec3 GetMusicPanRadiusLfe(VolumeCase _Case = VolumeCase::MusicIngame) {
         switch (_Case) {
-            case VolumeCase::MusicIngame: return vec3(0., 0.88, -24.);
-            case VolumeCase::MusicPause: return vec3(0., 0.71, -21.);
-            case VolumeCase::MusicReplay: return vec3(0., 0.71, -21.);
-            case VolumeCase::MusicStandby: return vec3(0., 0.71, -21.);
-            case VolumeCase::MusicMenu: return vec3(0., 1.,   -20.);
-            case VolumeCase::MusicIntro: return vec3(0., 0.88, -14.);
-            case VolumeCase::MenuSFX: return vec3(0., 0.35, -21.);
-            case VolumeCase::MenuAmbiance: return vec3(0., 100., -21.);
-            case VolumeCase::MenuUISpreadLarge: return vec3(0., 1.,   -14.);
-            case VolumeCase::MenuStartRace: return vec3(0., 0.9,  -6.);
-            case VolumeCase::TransitionIngameChopper: return vec3(0., 0.9,  -18.);
-            case VolumeCase::FinishLine: return vec3(0., 0.7,  -20.);
-            case VolumeCase::StateFlying: return vec3(0., 0.88, -100.);
-            case VolumeCase::SpeedEffectStart: return vec3(0., 0.4, -16.);
+            case VolumeCase::MusicIngame: { return vec3(0., 0.88, -24.); }
+            case VolumeCase::MusicPause: { return vec3(0., 0.71, -21.); }
+            case VolumeCase::MusicReplay: { return vec3(0., 0.71, -21.); }
+            case VolumeCase::MusicStandby: { return vec3(0., 0.71, -21.); }
+            case VolumeCase::MusicMenu: { return vec3(0., 1.,   -20.); }
+            case VolumeCase::MusicIntro: { return vec3(0., 0.88, -14.); }
+            case VolumeCase::MenuSFX: { return vec3(0., 0.35, -21.); }
+            case VolumeCase::MenuAmbiance: { return vec3(0., 100., -21.); }
+            case VolumeCase::MenuUISpreadLarge: { return vec3(0., 1.,   -14.); }
+            case VolumeCase::MenuStartRace: { return vec3(0., 0.9,  -6.); }
+            case VolumeCase::TransitionIngameChopper: { return vec3(0., 0.9,  -18.); }
+            case VolumeCase::FinishLine: { return vec3(0., 0.7,  -20.); }
+            case VolumeCase::StateFlying: { return vec3(0., 0.88, -100.); }
+            case VolumeCase::SpeedEffectStart: { return vec3(0., 0.4, -16.); }
         }
         warn("[GetPosX] : Can't find " + tostring(_Case));
         return vec3(0., 0., -100.);
@@ -314,14 +341,14 @@ namespace Turbo {
         // music replay: -1-6
         // ingame: -1
         // standby: -1-1
-        if (sound == "MusicReplay") return GetMusicsVolume(-7.);
-        if (sound == "MusicStandBy") return GetMusicsVolume(-2.);
-        if (sound == "MusicBoosted") return -4.6;
+        if (sound == "MusicReplay") return 2.0; // GetMusicsVolume(-7.);
+        if (sound == "MusicStandBy") return 2.0; // GetMusicsVolume(-2.);
+        if (sound == "MusicBoosted") return 4.6;
         return -1.;
     }
 
     enum ERaceState {
-        BeforeStart, Running, Finished, Eliminated
+        BeforeStart, Running, Finished, Eliminated, EndRound
     }
 
     void SetSFXSceneLevel() {
@@ -333,30 +360,92 @@ namespace Turbo {
         if (_ResetStandby) G_MusicReplay.Stop();
         if (G_Music !is null) {
             G_Music.Stop();
-            G_Music.VolumedB = -39.;
+            G_Music.VolumedB = -100.;
         }
     }
 
+    bool playgroundIsNull = true;
+    bool playgroundWasNull = true;
+
     void Main() {
+        startnew(Main_WatchPlaygroundLoop);
+        startnew(Main_WatchMenuLoop);
+        startnew(Main_WatchEditorLoop);
+    }
+
+    bool wasInMenu = false;
+    bool isInMenu = false;
+
+    void Main_WatchMenuLoop() {
+        auto app = GetApp();
+        while (true) {
+            isInMenu = app.Switcher.ModuleStack.Length == 1 && cast<CTrackManiaMenus>(app.Switcher.ModuleStack[0]) !is null;
+            if (isInMenu && !wasInMenu) {
+                OnEnterMenu();
+            } else if (!isInMenu && wasInMenu) {
+                // OnLeaveMenu();
+            }
+            wasInMenu = isInMenu;
+            yield();
+        }
+    }
+
+    bool wasInEditor = false;
+    bool isInEditor = false;
+
+    void Main_WatchEditorLoop() {
+        auto app = GetApp();
+        while (true) {
+            isInEditor = app.Editor !is null && app.CurrentPlayground is null; //  app.Switcher.ModuleStack.Length == 1 && cast<CTrackManiaEditor>(app.Switcher.ModuleStack[0]) !is null;
+            if (isInEditor && !wasInEditor) {
+                // OnEnterEditor();
+            } else if (!isInEditor && wasInEditor) {
+                // OnLeaveEditor();
+            }
+            wasInEditor = isInEditor;
+            yield();
+        }
+    }
+
+    void Main_WatchPlaygroundLoop() {
+        auto app = GetApp();
+        while (true) {
+            playgroundIsNull = app.CurrentPlayground is null;
+            if (playgroundIsNull && !playgroundWasNull) {
+                // OnLeavePlayground();
+            } else if (!playgroundIsNull && playgroundWasNull) {
+                startnew(Main_CurrPlaygroundNotNull);
+            }
+            playgroundWasNull = playgroundIsNull;
+            yield();
+        }
+    }
+
+    void Main_CurrPlaygroundNotNull() {
+        warn("Main_CurrPlaygroundNotNull");
         InitializeMusicFids();
         // audio.LimitSceneSoundVolumedB = Volumes::GetVolumedB("MainSFX");
-        // G_MusicDescs.clear()
+        G_MusicDescs.RemoveRange(0, G_MusicDescs.Length);
         InitRandomMusicIndicies();
         PreloadSounds();
-        while (true) {
-            yield();
+        auto app = GetApp();
+        while (app.CurrentPlayground !is null) {
             OnRaceStateUpdate(GetCurrentRaceState());
+            yield();
         }
+        CleanupInGameMusic();
+        warn("Main_CurrPlaygroundNotNull: end");
     }
 
     void InitRandomMusicIndicies() {
-        auto musicCount = TurboMusicList.Length;
-        G_MusicRandomIndice.Resize(musicCount);
-        for (uint i = 0; i < musicCount; i++) {
+        auto musicCount = Math::Min(TurboMusicList.Length, 6);
+        auto maxMusicCount = TurboMusicList.Length;
+        G_MusicRandomIndice.Resize(maxMusicCount);
+        for (uint i = 0; i < maxMusicCount; i++) {
             G_MusicRandomIndice[i] = i;
         }
-        for (uint i = 0; i < musicCount; i++) {
-            auto j = Math::Rand(i, musicCount - 1);
+        for (uint i = 0; i < maxMusicCount; i++) {
+            auto j = Math::Rand(i, maxMusicCount - 1);
             auto tmp = G_MusicRandomIndice[i];
             G_MusicRandomIndice[i] = G_MusicRandomIndice[j];
             G_MusicRandomIndice[j] = tmp;
@@ -365,7 +454,6 @@ namespace Turbo {
         for (uint i = 0; i < musicCount; i++) {
             G_MusicDescs.InsertLast(TurboMusicList[G_MusicRandomIndice[i]]);
         }
-
     }
 
     CSmPlayer@ GetCurrentPlayer(CGameCtnApp@ app) {
@@ -378,6 +466,7 @@ namespace Turbo {
             auto app = GetApp();
             if (app.CurrentPlayground is null) return ERaceState::BeforeStart;
             auto gt = app.CurrentPlayground.GameTerminals[0];
+            if (gt.UISequence_Current == SGamePlaygroundUIConfig::EUISequence::EndRound) return ERaceState::EndRound;
             auto player = cast<CSmPlayer>(gt.GUIPlayer);
             if (player is null) return ERaceState::Finished;
             auto ps = cast<CSmScriptPlayer>(player.ScriptAPI);
@@ -398,6 +487,8 @@ namespace Turbo {
     ERaceState m_lastRaceState = ERaceState::Eliminated;
 
     void OnRaceStateUpdate(ERaceState state) {
+        auto audio = cast<CTrackMania>(GetApp()).MenuManager.MenuCustom_CurrentManiaApp.Audio;
+
         bool stateChanged = m_lastRaceState != state;
         m_lastRaceState = state;
         // happens always
@@ -436,6 +527,9 @@ namespace Turbo {
                     // Audio.LimitSceneSoundVolumedB = {{{Volumes::GetVolumedB("MainSFX")-12.}}};
                     m_isLastFinished = true;
                     break;
+                case ERaceState::EndRound:
+                    m_StartStandbyNeeded = true;
+                    break;
             }
         }
 
@@ -444,7 +538,37 @@ namespace Turbo {
         // net standby event
         // net replay event
         // net stop music event
+        if (m_StartStandbyNeeded) {
+            m_StartStandbyNeeded = false;
+            G_Music.Stop();
+            G_MusicReplay.Stop();
+            G_MusicStandby.VolumedB = GetVolumedB("MusicStandBy");
+            G_MusicStandby.Play();
+            // Audio.LimitMusicVolumedB = 0.;
+        }
 
+        if (m_StartReplayNeeded) {
+            m_StartReplayNeeded = false;
+            G_Music.Stop();
+            G_MusicStandby.Stop();
+            G_MusicReplay.VolumedB = GetVolumedB("MusicReplay");
+            G_MusicReplay.Play();
+            // Audio.LimitSceneSoundVolumedB 	= {{{Volumes::GetVolumedB("MainSFXReplay")}}};
+            // Audio.LimitMusicVolumedB = 0.;
+        }
+
+        if (m_StopMusicNeeded) {
+            m_StopMusicNeeded = false;
+            if (G_MusicStandby.IsPlaying && G_SoundStandbyEvent !is null) {
+                trace("Music: Standby event");
+                audio.PlaySoundEvent(G_SoundStandbyEvent, GetVolumedB("MusicReplay"));
+            }
+            G_Music.Stop();
+            G_MusicStandby.Stop();
+            G_MusicReplay.Stop();
+            // SetSFXSceneLevel();
+            // M_SplitscreenMusicLaunched = False;
+        }
 
         if (m_switchTrackNeeded) {
             m_switchTrackNeeded = false;
@@ -467,8 +591,8 @@ namespace Turbo {
             trace("Music: Lap");
         }
 
-        float TargetLPFratioFromSpeed = 0.25;
-        float MinValue = 0.25;
+        float TargetLPFratioFromSpeed = LPF_CUTOFF_RATIO_MIN;
+        float MinValue = LPF_CUTOFF_RATIO_MIN;
 
         if (currSpeed < m_cutoffSpeedThreshold) {
             float MinSpeed = 75.;
@@ -487,9 +611,7 @@ namespace Turbo {
             TargetLPFratioFromSpeed = 1.0;
         }
 
-        bool Net_IsPauseMenuEnabled = false;
-
-        bool isPaused = Net_IsPauseMenuEnabled || m_isLastFinished;
+        bool isPaused = InGameMenuDisplayed || m_isLastFinished;
         if (m_isPaused != isPaused) {
             m_isPaused = isPaused;
             if (isPaused) {
@@ -510,14 +632,18 @@ namespace Turbo {
                 float duration = G_Music.BeatDuration * 5.;
                 float time = 1. * (GameTime - m_raceStateTrigger_Finished) / 1000.;
                 SetMusicLevel();
-                G_Debug_LastTargetLPFratioFromSpeed = easeOutCircle(time, max, -max + 0.25, duration);
+                G_Debug_LastTargetLPFratioFromSpeed = easeOutCircle(time, max, -max + LPF_CUTOFF_RATIO_MIN, duration);
                 G_Music.LPF_CutoffRatio = G_Debug_LastTargetLPFratioFromSpeed;
                 // trace("Finish fade out: LPF: " + G_Music.LPF_CutoffRatio + " -> " + G_Debug_LastTargetLPFratioFromSpeed + " ( " + time + " / " + duration + "; m_raceStateTrigger_Finished: " + m_raceStateTrigger_Finished + "; GameTime: " + GameTime + ")");
+            } else {
+                G_Music.LPF_CutoffRatio = G_Debug_LastTargetLPFratioFromSpeed = LPF_CUTOFF_RATIO_MIN + 0.1;
             }
         }
     }
 
     int GameTime;
+    bool InGameMenuDisplayed;
+
 
     // returns current speed
     float UpdateEngineOrWaypointEvents(ERaceState state, bool stateChanged = false) {
@@ -526,6 +652,7 @@ namespace Turbo {
         // - if finish, end lap, or added CP
         auto app = GetApp();
         GameTime = app.Network.PlaygroundInterfaceScriptHandler.GameTime;
+        InGameMenuDisplayed = app.Network.PlaygroundInterfaceScriptHandler.IsInGameMenuDisplayed;
         auto audio = cast<CTrackMania>(app).MenuManager.MenuCustom_CurrentManiaApp.Audio;
         auto player = GetCurrentPlayer(app);
         if (player is null) return 0.;
@@ -579,7 +706,7 @@ namespace Turbo {
             }
         }
 
-        return vis.AsyncState.WorldVel.Length() * 3.6;
+        return vis.AsyncState.WorldVel.Length() * 3.6 * vis.AsyncState.SimulationTimeCoef;
     }
 
     // t: current time, b: beginning value, c: change in value, d: duration
@@ -603,6 +730,9 @@ namespace Turbo {
     bool m_freewheelTrackNeeded = false;
     bool m_switchTrackNeeded = false;
     bool m_lapTrackNeeded = false;
+    bool m_StartStandbyNeeded = false;
+    bool m_StartReplayNeeded = false;
+    bool m_StopMusicNeeded = false;
 
     // update each frame
     bool isEngineOff = false;
@@ -616,790 +746,35 @@ namespace Turbo {
 
     void SleepAndDestroy(ref@ _sound) {
         auto sound = cast<CAudioScriptSound>(_sound);
-        sleep(sound.PlayLength * 1000);
+        sleep(int(sound.PlayLength * 1000));
         trace('removing sound with length: ' + sound.PlayLength);
         sound.Stop();
         cast<CTrackMania>(GetApp()).MenuManager.MenuCustom_CurrentManiaApp.Audio.DestroySound(sound);
     }
+
+
+
+    CAudioScriptSound@ G_MenuMusic;
+
+
+
+    void OnEnterMenu() {
+        auto audio = cast<CTrackMania>(GetApp()).MenuManager.MenuCustom_CurrentManiaApp.Audio;
+        if (G_MenuMusic is null) {
+            string menuTrack = TurboConst::GetMusicMenuSimple();
+            @G_MenuMusic = audio.CreateSoundEx(MEDIA_SOUNDS_TURBO + menuTrack, 0.0, true, true, false);
+            G_MenuMusic.PanRadiusLfe = GetMusicPanRadiusLfe(VolumeCase::MusicMenu);
+            G_MenuMusic.VolumedB = menuTrack.Length < 20 ? 6. : 0.;
+            G_MenuMusic.Play();
+        }
+    }
+
+    void CleanupMenuMusic() {
+        auto audio = cast<CTrackMania>(GetApp()).MenuManager.MenuCustom_CurrentManiaApp.Audio;
+        if (G_MenuMusic !is null) {
+            G_MenuMusic.Stop();
+            audio.DestroySound(G_MenuMusic);
+            @G_MenuMusic = null;
+        }
+    }
 }
-
-
-
-
-
-
-
-
-// Meta::PluginCoroutine@ tmusictest = startnew(TMusicTest);
-
-// TurboMusic@ g_turboMusic;
-// string[]@ g_turboMusicPaths;
-
-// string[]@ TurboMusicPaths() {
-//     auto dir = "C:/Users/xertrov/OpenplanetTurbo/Extract/Media/Sounds/TMConsole/Loops";
-//     auto files = IO::IndexFolder(dir, false);
-//     string[] paths;
-//     for (uint i = 0; i < files.Length; i++) {
-//         if (files[i].EndsWith("/")) {
-//             paths.InsertLast(GetLastDirName(files[i]));
-//         }
-//     }
-//     print("Found " + paths.Length + " TurboMusic paths; " + Json::Write(paths.ToJson(), true));
-//     return paths;
-// }
-
-// void TMusicTest() {
-//     @g_turboMusicPaths = TurboMusicPaths();
-//     // LoadRandomTurboMusic();
-// }
-
-// void LoadRandomTurboMusic() {
-//     if (g_turboMusic !is null) g_turboMusic.StopAll();
-//     @g_turboMusic = TurboMusic("C:/Users/xertrov/OpenplanetTurbo/Extract/Media/Sounds/TMConsole/Loops/" + g_turboMusicPaths[Math::Rand(0, g_turboMusicPaths.Length)]);
-// }
-
-
-// class NamedSample {
-//     Audio::Sample@ sample;
-//     string name;
-//     int intensity;
-//     TurboMusicLayer@ layer;
-
-//     NamedSample(Audio::Sample@ s, const string &in name, int intensity) {
-//         @sample = s;
-//         this.name = name;
-//         this.intensity = intensity;
-//         @layer = TurboMusicLayer(this, 1.0, MusicFading::FadeIn, false);
-//     }
-
-// }
-
-
-// class TurboMusic : Music {
-//     string turboDirPath;
-
-//     NamedSample@ sLap;
-//     NamedSample@ sFreewheel;
-//     NamedSample@[] sLoop;
-
-//     TurboMusic(const string &in path) {
-//         turboDirPath = path.Replace("\\", "/");
-//         auto pathParts = turboDirPath.Split("/");
-//         // name is the last part of the path
-//         super(pathParts[pathParts.Length - 1]);
-//         LoadXML(turboDirPath + "/settings.xml");
-//         print("Loaded TurboMusic: " + path);
-//         PrintJson();
-//         yield();
-//         // PlayAll();
-//         StartPlaying();
-//     }
-
-
-//     NamedSample@ LoadSample(const string &in audioName, int intensity) {
-//         auto fullPath = turboDirPath + "/Tracks/" + audioName + ".ogg";
-//         if (!IO::FileExists(fullPath)) {
-//             warn("File does not exist: " + fullPath);
-//             return null;
-//         }
-//         print("Loading sample: " + fullPath);
-//         Audio::Sample@ s = Audio::LoadSample(ReadFileToBuf(fullPath), false);
-//         // auto v = Audio::Play(s, 0.5);
-//         // sleep(v.GetLength() * 1000);
-//         return NamedSample(s, audioName, intensity);
-//     }
-
-//     void StopAll() {
-//         for (uint i = 0; i < layers.Length; i++) {
-//             layers[i].voice.SetGain(0.0);
-//         }
-//         IsPlaying = false;
-//     }
-
-//     void LoadXML(const string &in xmlPath) {
-//         XML::Document@ doc = XML::Document(ReadFileToString(xmlPath));
-//         XML::Node root = doc.Root();
-//         auto music = root.Child("music");
-//         auto mChild = music.FirstChild();
-//         while (mChild) {
-//             ParseMusicChild(mChild);
-//             mChild = mChild.NextSibling();
-//         }
-//     }
-
-//     void ParseMusicChild(XML::Node &in node) {
-//         auto name = node.Name();
-//         if (name == "segment") ParseSegmentNode(node);
-//         else if (name == "tempo") ParseTempoNode(node);
-//         else warn("Unknown node: " + name);
-//     }
-
-//     // beats per minute
-//     float bpm;
-//     // seconds per beat
-//     float spb;
-//     // beats per bar
-//     float bpb;
-
-//     float get_CrossfadeDuration() {
-//         return (bpm / 60.0 * 4.0) * 0.5;
-//     }
-
-//     void ParseTempoNode(XML::Node &in node) {
-//         bpm = Text::ParseFloat(node.Attribute("beatsperminute"));
-//         bpb = Text::ParseFloat(node.Attribute("beatsperbar"));
-//         spb = 60.0 / bpm;
-//     }
-
-//     void ParseSegmentNode(XML::Node &in node) {
-//         auto name = node.Attribute("name");
-//         print("Segment: " + name);
-//         if (name == "loop") ParseSegmentLoopNode(node);
-//         else if (name == "lap") ParseSegmentLapNode(node);
-//         else if (name == "freewheel") ParseSegmentFreewheelNode(node);
-//         else warn("Unknown segment: " + name);
-//     }
-
-//     string lapVariantName;
-//     int lapVariantIntensity;
-
-//     void ParseSegmentLapNode(XML::Node &in node) {
-//         auto tg = node.Child("trackgroup");
-//         auto var = tg.Child("variant");
-//         lapVariantName = var.Attribute("name");
-//         lapVariantIntensity = Text::ParseInt(var.Attribute("intensity"));
-//         @sLap = this.LoadSample(lapVariantName, lapVariantIntensity);
-//     }
-
-//     string freewheelVariantName;
-//     int freewheelVariantIntensity;
-
-//     void ParseSegmentFreewheelNode(XML::Node &in node) {
-//         auto tg = node.Child("trackgroup");
-//         auto var = tg.Child("variant");
-//         freewheelVariantName = var.Attribute("name");
-//         freewheelVariantIntensity = Text::ParseInt(var.Attribute("intensity"));
-//         @sFreewheel = this.LoadSample(freewheelVariantName, freewheelVariantIntensity);
-//     }
-
-//     uint loopVariantMaxCycles;
-//     string loopVariantOrder;
-
-//     void ParseSegmentLoopNode(XML::Node &in node) {
-//         loopVariantMaxCycles = Text::ParseUInt(node.Attribute("variant_maxcycles"));
-//         auto tg = node.Child("trackgroup");
-//         loopVariantOrder = tg.Attribute("variant_order");
-//         ParseTrackGroup(tg);
-//     }
-
-//     TGVariant[] trackGroupVariants;
-//     int minIntensity = 999;
-//     int maxIntensity = -1;
-
-//     void ParseTrackGroup(XML::Node &in node) {
-//         auto child = node.FirstChild();
-//         string name;
-//         while (child) {
-//             name = child.Name();
-//             if (name == "variant") {
-//                 trackGroupVariants.InsertLast(TGVariant(child));
-//                 auto @var = trackGroupVariants[trackGroupVariants.Length - 1];
-//                 if (var.intensity < minIntensity) minIntensity = var.intensity;
-//                 if (var.intensity > maxIntensity) maxIntensity = var.intensity;
-//                 auto ns = this.LoadSample(var.name, var.intensity);
-//                 if (ns !is null) {
-//                     sLoop.InsertLast(ns);
-//                 } else {
-//                     trackGroupVariants.RemoveLast();
-//                 }
-//             } else {
-//                 warn("Unknown trackgroup child: " + name);
-//             }
-//             child = child.NextSibling();
-//         }
-//         print("Min intensity: " + minIntensity);
-//         print("Max intensity: " + maxIntensity);
-//     }
-
-//     void PrintNode(XML::Node &in node, int depth = 0) {
-//         print(SPACE_PAD.SubStr(0, depth*2) + "- " + node.Name());
-//         auto child = node.FirstChild();
-//         while (child) {
-//             PrintNode(child, depth + 1);
-//             child = child.NextSibling();
-//         }
-//     }
-
-//     Json::Value@ ToJson() {
-//         auto @root = Json::Object();
-//         root["name"] = name;
-//         root["bmp"] = bpm;
-//         root["bpb"] = bpb;
-//         auto @segments = Json::Array();
-//         for (uint i = 0; i < trackGroupVariants.Length; i++) {
-//             auto variant = Json::Object();
-//             variant["name"] = trackGroupVariants[i].name;
-//             variant["intensity"] = trackGroupVariants[i].intensity;
-//             variant["subgroups"] = trackGroupVariants[i].subgroups;
-//             segments.Add(variant);
-//         }
-
-//         auto @freewheelSegment = Json::Object();
-//         freewheelSegment["name"] = freewheelVariantName;
-//         freewheelSegment["intensity"] = freewheelVariantIntensity;
-//         auto @lapSegment = Json::Object();
-//         lapSegment["name"] = lapVariantName;
-//         lapSegment["intensity"] = lapVariantIntensity;
-
-//         root["segments"] = segments;
-//         root["freewheel"] = freewheelSegment;
-//         root["lapSegment"] = lapSegment;
-
-//         return root;
-//     }
-
-//     void PrintJson() {
-//         print(Json::Write(this.ToJson(), true));
-//     }
-
-
-
-
-//     void Debug_PlayAll() {
-//         for (uint i = 0; i < sLoop.Length; i++) {
-//             WaitTillDone(Audio::Play(sLoop[i].sample, 0.5));
-//         }
-//         auto v = Audio::Play(sFreewheel.sample, 0.5);
-//         WaitTillDone(v);
-//         @v = Audio::Play(sLap.sample, 0.5);
-//         WaitTillDone(v);
-//     }
-
-
-
-
-//     void StartPlaying() {
-//         startnew(CoroutineFunc(this.PlayLoop)).WithRunContext(MUSIC_RUN_CTX);
-//     }
-
-//     TurboMusicLayer@[] layers;
-
-//     int currIntensity = 0;
-//     // probability we will swap to a new variant
-//     float swapVariantP = .5;
-
-//     bool IsPlaying = false;
-
-//     void PlayLoop() {
-//         IsPlaying = true;
-//         currIntensity = minIntensity;
-//         swapVariantP = 2.0 / loopVariantMaxCycles;
-
-//         while (IsPlaying) {
-//             if (layers.Length == 0) {
-//                 FindAndPlayVariant(currIntensity, MusicFading::FadeIn, CrossfadeDuration);
-//             } else {
-//                 CheckForDoneLayersAndUpdate();
-//             }
-//             yield();
-//         }
-//     }
-
-
-//     bool FindAndPlayVariant(int intensity, MusicFading fade, float cfDuration, const string &in nameNot = "", float pos = 0.0) {
-//         print("FindAndPlayVariant: " + intensity + " fade: " + fade + " cfDuration: " + cfDuration + " nameNot: " + nameNot);
-
-//         auto varDist = 0;
-//         auto namedSample = FindVariant(intensity, varDist, nameNot);
-//         while (namedSample is null && varDist < 5) @namedSample = FindVariant(intensity, ++varDist, nameNot);
-//         if (namedSample is null) {
-//             warn("No variant found for intensity: " + intensity);
-//             return false;
-//         }
-//         print("Playing variant: " + namedSample.name);
-//         // layers.InsertLast(TurboMusicLayer(namedSample, cfDuration, fade));
-//         layers.InsertLast(namedSample.layer);
-//         namedSample.layer.ResetFadeIn(pos);
-//         // currIntensity = namedSample.intensity;
-//         return true;
-//     }
-
-//     NamedSample@ FindVariant(int intensity, int dist, const string &in nameNot = "") {
-//         uint startIx = Math::Rand(0, sLoop.Length - 1);
-//         uint modIx = sLoop.Length;
-//         for (uint i = 0; i < trackGroupVariants.Length; i++) {
-//             uint ix = (startIx + i) % modIx;
-//             if (Math::Abs(trackGroupVariants[ix].intensity - intensity) <= dist && trackGroupVariants[ix].name != nameNot && !sLoop[ix].layer.IsPlaying) {
-//                 return sLoop[ix];
-//             }
-//         }
-//         if (Math::Abs(lapVariantIntensity - intensity) <= dist && lapVariantName != nameNot && !sLap.layer.IsPlaying) {
-//             return sLap;
-//         }
-//         if (Math::Abs(freewheelVariantIntensity - intensity) <= dist && freewheelVariantName != nameNot && !sFreewheel.layer.IsPlaying) {
-//             return sFreewheel;
-//         }
-//         return null;
-//     }
-
-//     void UpdateIntensity() {
-//         auto p = VehicleState::GetViewingPlayer();
-//         if (p is null) return;
-//         auto v = VehicleState::GetVis(GetApp().GameScene, p);
-//         if (v is null) return;
-//         currIntensity = int(Math::Round(Math::Lerp(float(minIntensity), float(maxIntensity), Math::Clamp(Math::InvLerp(100.0, 500.0, 3.6*v.AsyncState.FrontSpeed), 0.0, 1.0))));
-//     }
-
-//     int trackUpperLim = 2;
-//     bool doneFirst = false;
-
-//     void CheckForDoneLayersAndUpdate() {
-//         UpdateIntensity();
-//         if (layers.Length == 0) return;
-
-//         float pos = layers[0].voice.GetPosition();
-//         float len = layers[0].voice.GetLength();
-//         bool l0Done = layers[0].IsDone;
-//         if (l0Done) pos = layers[0].lastPosDelta - layers[0].finalPartial;
-
-//         IsOnBeat = Math::Abs(((pos + g_dt * .5) % spb)) < g_dt;
-
-//         if (!doneFirst && l0Done) {
-//             doneFirst = true;
-//             FindAndPlayVariant(currIntensity, MusicFading::FadeIn, CrossfadeDuration, layers[layers.Length - 1].name, pos);
-//         }
-
-//         for (int i = layers.Length - 1; i >= 0; i--) {
-//             if (i > 0 && Math::Abs(layers[i].voice.GetPosition() - pos) > 0.015) {
-//                 layers[i].SetPosition(pos);
-//             }
-//             if (layers[i].Update()) {
-//                 auto @layer = layers[i];
-//                 print("Layer done: " + layer.name);
-//                 layers.RemoveAt(i);
-//                 switch (layer.fade) {
-//                     // FadeIn: repeat
-//                     // None: repeat
-//                     //    - but if it's the only one, a chance to swap to a new variant (which means fade out and add new variant)
-//                     // FadeOut: remove
-//                     case MusicFading::FadeIn:
-//                         layer.ResetNoFade(pos);
-//                         layers.InsertLast(layer);
-//                         trace("Repeating layer (faded in): " + layer.name);
-//                         break;
-//                     case MusicFading::None: {
-//                         bool hasRoom = layers.Length < trackUpperLim;
-//                         // layer.Repetitions < loopVariantMaxCycles
-//                         if (hasRoom && Math::Rand(.0, 1.0) < swapVariantP) {
-//                             trace("Swapping variant: " + layer.name);
-//                             layer.ResetFadeOut(pos);
-//                             layers.InsertLast(layer);
-//                             FindAndPlayVariant(currIntensity, MusicFading::FadeIn, CrossfadeDuration, layer.name, pos);
-//                         } else if (currIntensity == layer.intensity || layers.Length == 0) {
-//                             trace("Repeating layer: " + layer.name);
-//                             layer.ResetNoFade(pos);
-//                             layers.InsertLast(layer);
-//                         } else {
-//                             layer.ResetFadeOut(pos);
-//                             layers.InsertLast(layer);
-//                             print("layers.Length: " + layers.Length);
-//                             print("currIntensity: " + currIntensity + " layer.intensity: " + layer.intensity);
-//                             print("Dropping layer: " + layer.name);
-//                             if (layers.Length == 1) {
-//                                 FindAndPlayVariant(currIntensity, MusicFading::FadeIn, CrossfadeDuration, layer.name, pos);
-//                             }
-//                         }
-
-//                         if (layers.Length < trackUpperLim - 1 && Math::Rand(.0, 1.0) < swapVariantP) {
-//                             FindAndPlayVariant(currIntensity, MusicFading::FadeIn, CrossfadeDuration, layer.name, pos);
-//                         }
-//                         break;
-//                     }
-//                     case MusicFading::FadeOut:
-//                         // layer.voice.Pause();
-//                         layer.NullifyVoice();
-//                         // layer.voice.SetPosition(0.0);
-//                         break;
-//                 }
-//             }
-//         }
-
-
-//         bool allFadingOut = true;
-//         for (uint i = 0; i < layers.Length; i++) {
-//             if (!layers[i].IsFadingOut) {
-//                 allFadingOut = false;
-//                 break;
-//             }
-//         }
-//         if (allFadingOut) {
-//             layers[0].ResetNoFade(pos);
-//             FindAndPlayVariant(currIntensity, MusicFading::FadeIn, CrossfadeDuration, layers[0].name, pos);
-//         }
-
-//         float firstPos = layers[0].voice.GetPosition();
-//         if (firstPos < 0.01) {
-//             bool anyCorrectIntensity = false;
-//             for (uint i = 0; i < layers.Length; i++) {
-//                 if (layers[i].intensity == currIntensity) {
-//                     anyCorrectIntensity = true;
-//                     break;
-//                 }
-//             }
-//             if (!anyCorrectIntensity) {
-//                 layers[0].ResetFadeOut(pos);
-//                 FindAndPlayVariant(currIntensity, MusicFading::FadeIn, CrossfadeDuration * .2, "", pos);
-//             }
-
-//             for (uint i = 1; i < layers.Length; i++) {
-//                 layers[i].SetPosition(firstPos);
-//             }
-//         }
-
-//     }
-
-//     bool IsOnBeat;
-// }
-
-// enum MusicFading {
-//     None,
-//     FadeIn,
-//     FadeOut
-// }
-
-// class TurboMusicLayer {
-//     NamedSample@ s;
-//     Audio::Sample@ sample;
-//     Audio::Voice@ voice;
-//     string name;
-//     float crossfadeDuration;
-//     bool isFadingOut;
-//     // crossfade progress [0, 1], start, end
-//     float cfP, cfStart, cfEnd;
-//     vec2 volStartEnd;
-//     float currVol;
-//     int intensity;
-//     float duration;
-//     float progress;
-//     float Repetitions;
-
-//     ~TurboMusicLayer() {
-//         print("Destroying TurboMusicLayer: " + name);
-//         if (voice !is null) {
-//             voice.SetGain(0.0);
-//             @voice = null;
-//         }
-//     }
-
-
-//     TurboMusicLayer(NamedSample@ s, float crossfadeDuration = 1.0, MusicFading fade = MusicFading::FadeIn, bool playImmediately = true) {
-//         @this.s = s;
-//         @this.sample = s.sample;
-//         this.name = s.name;
-//         this.intensity = s.intensity;
-//         this.crossfadeDuration = crossfadeDuration;
-//         this.cfP = crossfadeDuration > 0.0 ? 0.0 : 1.0;
-//         this.cfStart = 0.0;
-//         this.cfEnd = crossfadeDuration;
-//         this.fade = fade;
-//         switch (fade) {
-//             case MusicFading::FadeIn:
-//                 volStartEnd.x = 0.0;
-//                 volStartEnd.y = 1.0;
-//                 break;
-//             case MusicFading::FadeOut:
-//                 volStartEnd.x = 1.0;
-//                 volStartEnd.y = 0.0;
-//                 break;
-//             default:
-//                 volStartEnd = vec2(1.0);
-//                 break;
-//         }
-//         currVol = volStartEnd.x;
-//         SetVoiceUpdateAndStart(playImmediately);
-
-//         if (fade == MusicFading::FadeOut) {
-//             cfEnd = voice.GetLength();
-//             cfStart = cfEnd - crossfadeDuration;
-//         }
-//     }
-
-//     void SetPosition(float pos) {
-//         trace("["+name+"] SetPosition: " + pos + " / " + (voice !is null));
-//         if (voice is null) return;
-//         // pos += g_dt
-//         voice.SetPosition(Math::Max(pos, 0.0) + 0.01);
-//     }
-
-//     void SetVoiceUpdateAndStart(bool andStart = true) {
-//         Update();
-//         SetVoice();
-//         if (andStart) StartVoice();
-//     }
-
-//     void NullifyVoice() {
-//         if (voice !is null) {
-//             voice.SetGain(0.0);
-//             @voice = null;
-//         }
-//     }
-
-//     void SetVoice() {
-//         // if (voice is null)
-//         NullifyVoice();
-//         @this.voice = Audio::Start(this.sample);
-//         voice.SetGain(currVol * Global::MusicVolume);
-//         duration = voice.GetLength();
-//         crossfadeDuration = duration * 0.7;
-//     }
-
-//     void StartVoice() {
-//         voice.SetGain(currVol * Global::MusicVolume);
-//         if (voice.IsPaused()) voice.Play();
-//     }
-
-//     void StartIfNotPlaying() {
-//         if (voice.IsPaused()) {
-//             voice.Play();
-//         }
-//     }
-
-//     void OptionallyReplaceVoice() {
-//         if (IsDone) {
-//             SetVoice();
-//         }
-//     }
-
-//     bool get_IsPlaying() {
-//         return voice !is null && !voice.IsPaused();
-//     }
-
-//     void ResetFadeIn(float pos) {
-//         cfP = 0.0;
-//         fade = MusicFading::FadeIn;
-//         volStartEnd = vec2(0.0, 1.0);
-//         currVol = 0.0;
-//         cfStart = 0.0;
-//         cfEnd = crossfadeDuration;
-//         SetVoice();
-//         SetPosition(pos);
-//         StartIfNotPlaying();
-//         Repetitions++;
-//         // print("ResetFadeIn: " + newPos);
-//     }
-
-//     void ResetNoFade(float pos) {
-//         cfP = 1.0;
-//         fade = MusicFading::None;
-//         volStartEnd = vec2(1.0);
-//         currVol = 1.0;
-//         cfStart = 0.0;
-//         cfEnd = crossfadeDuration;
-//         SetVoice();
-//         StartIfNotPlaying();
-//         SetPosition(pos);
-//         Repetitions++;
-//         // print("ResetNoFade: " + newPos);
-//     }
-
-//     void ResetFadeOut(float pos) {
-//         cfP = 0.0;
-//         fade = MusicFading::FadeOut;
-//         volStartEnd = vec2(1.0, 0.0);
-//         currVol = 1.0;
-//         SetVoice();
-//         SetPosition(pos);
-//         StartIfNotPlaying();
-//         cfStart = duration - crossfadeDuration;
-//         cfEnd = duration;
-//         Repetitions = 0;
-//         print("ResetFadeOut: " + pos + " / " + duration + " CF " + cfStart + " -> " + cfEnd);
-//     }
-
-//     MusicFading fade;
-//     bool IsFadingOut {
-//         get { return fade == MusicFading::FadeOut; }
-//     }
-
-//     float finalPartial, lastPosDelta, remaining, lastPos;
-
-//     // returns true if done
-//     bool Update(bool noDt = false) {
-//         if (cfP < 1.0) {
-//             // cfP = Math::Clamp(cfP + (noDt ? 0.0 : g_dt) / crossfadeDuration, 0.0, 1.0);
-//             if (voice !is null && voice.GetPosition() >= cfStart) {
-//                 cfP = Math::Clamp(cfP + (noDt ? 0.0 : g_dt) / crossfadeDuration, 0.0, 1.0);
-//             }
-//             currVol = Math::Lerp(volStartEnd.x, volStartEnd.y, EasedCfProgress());
-//         }
-//         progress += noDt ? 0.0 : g_dt;
-//         if (voice !is null) {
-//             voice.SetGain(currVol * Global::MusicVolume);
-//         }
-//         if (IsDone) {
-//             finalPartial = voice.GetPosition() - lastPos;
-//         } else if (voice !is null) {
-//             lastPosDelta = voice.GetPosition() - lastPos;
-//             remaining = voice.GetLength() - voice.GetPosition();
-//             lastPos = voice.GetPosition();
-//         }
-//         return IsDone;
-//     }
-
-//     bool get_IsDone() {
-//         return voice !is null && voice.GetPosition() >= voice.GetLength();
-//     }
-
-//     float EasedCfProgress() {
-//         return QuadInOut(cfP);
-//     }
-// }
-
-
-// float QuadInOut(float t) {
-//     return t < 0.5 ? 2.0 * t * t : 1.0 - Math::Pow(-2.0 * t + 2.0, 2.0) / 2.0;
-// }
-
-// float LinearInOut(float t) {
-//     return t;
-// }
-
-
-// class TGVariant {
-//     string name;
-//     int intensity;
-//     int subgroups;
-//     TGVariant() {}
-//     TGVariant(XML::Node &in node) {
-//         name = node.Attribute("name");
-//         intensity = Text::ParseInt(node.Attribute("intensity"));
-//         subgroups = Text::ParseInt(node.Attribute("subgroups"));
-//     }
-//     TGVariant(const string &in name, int intensity, int subgroups) {
-//         this.name = name;
-//         this.intensity = intensity;
-//         this.subgroups = subgroups;
-//     }
-// }
-
-// const string SPACE_PAD = "           ";
-
-
-
-// string ReadFileToString(const string &in path) {
-//     try {
-//         IO::File file(path, IO::FileMode::Read);
-//         return file.ReadToEnd();
-//     } catch {
-//         warn("Failed to read file: " + path);
-//         warn("Error: " + getExceptionInfo());
-//     }
-//     return "";
-// }
-
-// MemoryBuffer@ ReadFileToBuf(const string &in path) {
-//     try {
-//         IO::File file(path, IO::FileMode::Read);
-//         return file.Read(file.Size());
-//     } catch {
-//         warn("Failed to read file: " + path);
-//         warn("Error: " + getExceptionInfo());
-//     }
-//     return null;
-// }
-
-// void WaitTillDone(Audio::Voice@ v) {
-//     while (v.GetPosition() < v.GetLength()) {
-//         yield();
-//     }
-// }
-
-
-// string GetLastDirName(string path) {
-//     path = path.Replace("\\", "/");
-//     while (path.EndsWith("/")) path = path.SubStr(0, path.Length - 1);
-//     auto parts = path.Split("/");
-//     return parts[parts.Length - 1];
-// }
-
-
-
-
-
-// namespace TurboDebug {
-//     bool window = true;
-
-//     bool IsTurboMusicOnBeat() {
-//         if (g_turboMusic is null) return false;
-//         return g_turboMusic.IsOnBeat;
-//     }
-
-//     void RenderMenu() {
-//         auto frameBgActive = UI::GetStyleColor(UI::Col::FrameBg);
-//         if (IsTurboMusicOnBeat()) frameBgActive = vec4(0.0, 1.0, 0.0, 1.0);
-//         UI::PushStyleColor(UI::Col::FrameBg, frameBgActive);
-//         if (UI::MenuItem("TurboMusic Debug", "", window)) {
-//             window = !window;
-//         }
-//         UI::PopStyleColor();
-//     }
-
-//     void Render() {
-//         if (!window) return;
-//         if (UI::Begin("TurboMusic Debug", window)) {
-//             RenderInner();
-//         }
-//         UI::End();
-//     }
-
-//     void RenderInner() {
-//         if (g_turboMusic is null) {
-//             UI::Text("No TurboMusic loaded");
-//             return;
-//         }
-//         if (UI::Button("Randomize Music")) {
-//             startnew(LoadRandomTurboMusic);
-//         }
-//         if (UI::Button("Play All")) {
-//             g_turboMusic.Debug_PlayAll();
-//         }
-//         UI::SameLine();
-//         if (UI::Button("Start Playing")) {
-//             g_turboMusic.StartPlaying();
-//         }
-//         UI::SameLine();
-//         if (UI::Button("Stop Playing")) {
-//             g_turboMusic.IsPlaying = false;
-//         }
-//         if (UI::Button("+ Intensity")) {
-//             g_turboMusic.currIntensity = Math::Min(g_turboMusic.currIntensity + 1, g_turboMusic.maxIntensity);
-//         }
-//         UI::SameLine();
-//         if (UI::Button("- Intensity")) {
-//             g_turboMusic.currIntensity = Math::Max(g_turboMusic.currIntensity - 1, g_turboMusic.minIntensity);
-//         }
-
-
-//         UI::Text("Name: " + g_turboMusic.name);
-//         UI::Text("Layers: " + g_turboMusic.layers.Length);
-//         UI::Text("Curr Intensity: " + g_turboMusic.currIntensity);
-//         for (uint i = 0; i < g_turboMusic.layers.Length; i++) {
-//             UI::Text("Layer " + i);
-//             UI::Indent();
-//             UI::Text("Name: " + g_turboMusic.layers[i].name);
-//             UI::Text("Intensity: " + g_turboMusic.layers[i].intensity);
-//             UI::Text("Fading: " + g_turboMusic.layers[i].fade);
-//             UI::Text("Position: " + Text::Format("%.6f", g_turboMusic.layers[i].voice.GetPosition()));
-//             UI::Text("Length: " + g_turboMusic.layers[i].voice.GetLength());
-//             UI::Text("IsDone: " + g_turboMusic.layers[i].IsDone);
-//             auto v = g_turboMusic.layers[i].voice;
-//             if (v !is null) {
-//                 UI::Text("Gain: " + v.GetGain());
-//                 UI::Text("Pos > Len: " + (v.GetPosition() > v.GetLength()));
-//             }
-//             UI::Text("cfP: " + g_turboMusic.layers[i].cfP);
-//             UI::SliderFloat("CurrVol", g_turboMusic.layers[i].currVol, 0.0, 1.0);
-//             UI::Unindent();
-//         }
-//     }
-// }

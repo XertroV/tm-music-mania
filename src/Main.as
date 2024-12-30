@@ -5,6 +5,7 @@ const string MenuTitle = MenuIconColor + PluginIcon + "\\$z " + PluginName;
 
 void Main() {
     startnew(SetupIntercepts);
+    EnsureAssets();
     startnew(GameMusic::Main);
     startnew(Turbo::Main).WithRunContext(Meta::RunContext::GameLoop);
 }

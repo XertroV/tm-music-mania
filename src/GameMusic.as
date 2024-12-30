@@ -133,6 +133,7 @@ namespace GameMusic {
         auto mtIxs = GetMTIsPlaying();
         for (uint i = 0; i < mtIxs.Length; i++) {
             auto ix = mtIxs[i];
+            if (ix >= ap.Sources.Length) break;
             auto src = cast<CAudioSourceMusic>(ap.Sources[ix]);
             if (src is null) continue;
             UI::Text(tostring(ix) + ": " + GetTrackVolumesString(src));
