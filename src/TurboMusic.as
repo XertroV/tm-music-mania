@@ -512,7 +512,7 @@ namespace Turbo {
                 SetMusicLevel();
                 G_Debug_LastTargetLPFratioFromSpeed = easeOutCircle(time, max, -max + 0.25, duration);
                 G_Music.LPF_CutoffRatio = G_Debug_LastTargetLPFratioFromSpeed;
-                trace("Finish fade out: LPF: " + G_Music.LPF_CutoffRatio + " -> " + G_Debug_LastTargetLPFratioFromSpeed + " ( " + time + " / " + duration + "; m_raceStateTrigger_Finished: " + m_raceStateTrigger_Finished + "; GameTime: " + GameTime + ")");
+                // trace("Finish fade out: LPF: " + G_Music.LPF_CutoffRatio + " -> " + G_Debug_LastTargetLPFratioFromSpeed + " ( " + time + " / " + duration + "; m_raceStateTrigger_Finished: " + m_raceStateTrigger_Finished + "; GameTime: " + GameTime + ")");
             }
         }
     }
@@ -546,8 +546,10 @@ namespace Turbo {
                 if (sound is null) {
                     warn("Sound is null: " + TurboConst::SoundFinishLine);
                 }
-                audio.PlaySoundEventMix(sound, 5.0, vec3());
+                // audio.PlaySoundEventMix(sound, 5.0, vec3());
+                sound.VolumedB = 4.;
                 sound.Play();
+                startnew(SleepAndDestroy, sound);
             } else if (playerLapCount != lastPlayerLapCount && playerLapCount > 0) {
                 // end lap?
                 m_lapTrackNeeded = true;
@@ -611,6 +613,14 @@ namespace Turbo {
     uint lastPlayerLapCount = 0;
     bool playerRespawned = false;
     bool lastPlayerWasFinished = false;
+
+    void SleepAndDestroy(ref@ _sound) {
+        auto sound = cast<CAudioScriptSound>(_sound);
+        sleep(sound.PlayLength * 1000);
+        trace('removing sound with length: ' + sound.PlayLength);
+        sound.Stop();
+        cast<CTrackMania>(GetApp()).MenuManager.MenuCustom_CurrentManiaApp.Audio.DestroySound(sound);
+    }
 }
 
 
