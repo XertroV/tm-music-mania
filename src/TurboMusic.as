@@ -507,11 +507,12 @@ namespace Turbo {
         } else {
             if (m_isLastFinished) {
                 float max = TargetLPFratioFromSpeed;
-                float duration = G_Music.BeatDuration * 40.;
-                float time = 1. * (GameTime - m_raceStateTrigger_Finished - 1000); // / 1000.;
+                float duration = G_Music.BeatDuration * 5.;
+                float time = 1. * (GameTime - m_raceStateTrigger_Finished) / 1000.;
                 SetMusicLevel();
-                G_Debug_LastTargetLPFratioFromSpeed = easeOutCircle(time, max, (-max + 0.25), duration);
+                G_Debug_LastTargetLPFratioFromSpeed = easeOutCircle(time, max, -max + 0.25, duration);
                 G_Music.LPF_CutoffRatio = G_Debug_LastTargetLPFratioFromSpeed;
+                trace("Finish fade out: LPF: " + G_Music.LPF_CutoffRatio + " -> " + G_Debug_LastTargetLPFratioFromSpeed + " ( " + time + " / " + duration + "; m_raceStateTrigger_Finished: " + m_raceStateTrigger_Finished + "; GameTime: " + GameTime + ")");
             }
         }
     }
@@ -534,8 +535,10 @@ namespace Turbo {
         playerLapCount = playerScript.CurrentLapNumber;
         playerRespawned = playerScript.StartTime > GameTime;
         m_isLastFinished = app.CurrentPlayground.GameTerminals[0].UISequence_Current == SGamePlaygroundUIConfig::EUISequence::Finish;
-        if (playerCpIx != lastPlayerCpIx || lastPlayerWasFinished != m_isLastFinished) {
+        bool didFinish = !lastPlayerWasFinished && m_isLastFinished;
+        if (playerCpIx != lastPlayerCpIx || didFinish) {
             if (m_isLastFinished) {
+                if (didFinish) m_raceStateTrigger_Finished = GameTime;
                 print("Playing finish line sound: " + TurboConst::SoundFinishLine);
                 // end race?
                 m_switchTrackNeeded = true;
@@ -581,7 +584,7 @@ namespace Turbo {
     float easeOutCircle(float t, float b, float c, float d) {
         t /= d;
         t -= 1.0;
-        t = Math::Min(t, 0.9999);
+        if (t > 0.0) return c + b;
         // trace('t: ' + t + ' b: ' + b + ' c: ' + c + ' d: ' + d);
         return c * Math::Sqrt(1. - t*t) + b;
     }
