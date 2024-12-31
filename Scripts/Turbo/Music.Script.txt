@@ -1,3 +1,5 @@
+// Turbo_Update: Scripts/Libs/Nadeo/TMConsole/Ingame/Music.Script.txt
+
 /** ------------------------------- *
  *	MusicManager Library
  * 	Dynamic music made out of loops
