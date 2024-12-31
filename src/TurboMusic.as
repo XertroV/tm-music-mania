@@ -706,7 +706,8 @@ namespace Turbo {
             }
         }
 
-        return vis.AsyncState.WorldVel.Length() * 3.6 * vis.AsyncState.SimulationTimeCoef;
+        return vis.AsyncState.WorldVel.Length() * 3.6;
+        // trying to get slowmo working but nope: * vis.AsyncState.SimulationTimeCoef;
     }
 
     // t: current time, b: beginning value, c: change in value, d: duration
