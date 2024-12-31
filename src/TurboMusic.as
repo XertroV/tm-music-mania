@@ -45,6 +45,13 @@ namespace TurboConst {
     const string SoundFinishLine = "130 Finish Line.ogg";
     const string SoundStartLine = "starting.ogg";
     const string SoundStartLine2 = "starting2.ogg";
+    string GetSoundStartLine() {
+        switch (Math::Rand(0, 2)) {
+            case 0: return SoundStartLine;
+            case 1: return SoundStartLine2;
+        }
+        return SoundStartLine;
+    }
     // const string SoundStartLine = "130 Start.ogg";
 
     const string MusicStandBy0 = "110 Pit Stop Twang - Military Loop1.ogg";
@@ -74,6 +81,20 @@ namespace TurboConst {
     const string SoundCheckpointFast6 = "130 Checkpoint Fast 7.ogg";
     const string SoundCheckpointFast7 = "130 Checkpoint Fast 8.ogg";
 
+    string GetSoundCheckpointFast(int i) {
+        switch (i % 8) {
+            case 0: return SoundCheckpointFast0;
+            case 1: return SoundCheckpointFast1;
+            case 2: return SoundCheckpointFast2;
+            case 3: return SoundCheckpointFast3;
+            case 4: return SoundCheckpointFast4;
+            case 5: return SoundCheckpointFast5;
+            case 6: return SoundCheckpointFast6;
+            case 7: return SoundCheckpointFast7;
+        }
+        return SoundCheckpointFast7;
+    }
+
     // append number + .ogg
     const string SoundCheckpointSlow = "130 Checkpoint Slow ";
     const string SoundCheckpointSlow0 = "130 Checkpoint Slow 1.ogg";
@@ -84,6 +105,20 @@ namespace TurboConst {
     const string SoundCheckpointSlow5 = "130 Checkpoint Slow 6.ogg";
     const string SoundCheckpointSlow6 = "130 Checkpoint Slow 7.ogg";
     const string SoundCheckpointSlow7 = "130 Checkpoint Slow 8.ogg";
+
+    string GetSoundCheckpointSlow(int i) {
+        switch (i % 8) {
+            case 0: return SoundCheckpointSlow0;
+            case 1: return SoundCheckpointSlow1;
+            case 2: return SoundCheckpointSlow2;
+            case 3: return SoundCheckpointSlow3;
+            case 4: return SoundCheckpointSlow4;
+            case 5: return SoundCheckpointSlow5;
+            case 6: return SoundCheckpointSlow6;
+            case 7: return SoundCheckpointSlow7;
+        }
+        return SoundCheckpointSlow7;
+    }
 
     const string MusicMenuSimple = "110 Pit Stop Twang - Original - Edit 1 Oct 2015.ogg";
     const string MusicMenuSimple2 = "TMT_MENU_B1.ogg";
@@ -123,21 +158,8 @@ namespace Turbo {
         @G_MusicStandby = null;
         @G_SoundStandbyEvent = null;
         @G_MusicReplay = null;
+        // cleaned up in G_MusicAll
         @G_Music = null;
-    }
-
-    void CleanupMusic(CAudioScriptManager@ audio, CAudioScriptMusic@ music) {
-        if (music !is null) {
-            music.Stop();
-            audio.DestroyMusic(music);
-        }
-    }
-
-    void CleanupSound(CAudioScriptManager@ audio, CAudioScriptSound@ sound) {
-        if (sound !is null) {
-            sound.Stop();
-            audio.DestroySound(sound);
-        }
     }
 
     CAudioScriptMusic@ G_Music;
@@ -368,6 +390,8 @@ namespace Turbo {
     bool playgroundWasNull = true;
 
     void Main() {
+        warn("turbo music exiting immediately");
+        return;
         startnew(Main_WatchPlaygroundLoop);
         startnew(Main_WatchMenuLoop);
         startnew(Main_WatchEditorLoop);
@@ -487,7 +511,7 @@ namespace Turbo {
     ERaceState m_lastRaceState = ERaceState::Eliminated;
 
     void OnRaceStateUpdate(ERaceState state) {
-        auto audio = cast<CTrackMania>(GetApp()).MenuManager.MenuCustom_CurrentManiaApp.Audio;
+        auto audio = GetAudio();
 
         bool stateChanged = m_lastRaceState != state;
         m_lastRaceState = state;
@@ -591,6 +615,10 @@ namespace Turbo {
             trace("Music: Lap");
         }
 
+        Update_LPF(currSpeed);
+    }
+
+    void Update_LPF(float currSpeed) {
         float TargetLPFratioFromSpeed = LPF_CUTOFF_RATIO_MIN;
         float MinValue = LPF_CUTOFF_RATIO_MIN;
 
@@ -710,15 +738,6 @@ namespace Turbo {
         // trying to get slowmo working but nope: * vis.AsyncState.SimulationTimeCoef;
     }
 
-    // t: current time, b: beginning value, c: change in value, d: duration
-    float easeOutCircle(float t, float b, float c, float d) {
-        t /= d;
-        t -= 1.0;
-        if (t > 0.0) return c + b;
-        // trace('t: ' + t + ' b: ' + b + ' c: ' + c + ' d: ' + d);
-        return c * Math::Sqrt(1. - t*t) + b;
-    }
-
     // case "Canyon" 	: M_CutoffSpeedTreshold = 250.;
     // case "Valley"  	: M_CutoffSpeedTreshold = 175.;
     // case "Lagoon" 	: M_CutoffSpeedTreshold = 125.;
@@ -745,18 +764,8 @@ namespace Turbo {
     bool playerRespawned = false;
     bool lastPlayerWasFinished = false;
 
-    void SleepAndDestroy(ref@ _sound) {
-        auto sound = cast<CAudioScriptSound>(_sound);
-        sleep(int(sound.PlayLength * 1000));
-        trace('removing sound with length: ' + sound.PlayLength);
-        sound.Stop();
-        cast<CTrackMania>(GetApp()).MenuManager.MenuCustom_CurrentManiaApp.Audio.DestroySound(sound);
-    }
-
-
 
     CAudioScriptSound@ G_MenuMusic;
-
 
 
     void OnEnterMenu() {

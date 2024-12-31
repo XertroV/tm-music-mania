@@ -6,8 +6,11 @@ const string MenuTitle = MenuIconColor + PluginIcon + "\\$z " + PluginName;
 void Main() {
     startnew(SetupIntercepts);
     EnsureAssets();
+    // a short break to give some time before starting music stuff on game start
+    yield(10);
     startnew(GameMusic::Main);
     startnew(Turbo::Main).WithRunContext(Meta::RunContext::GameLoop);
+    startnew(Music::Main).WithRunContext(Meta::RunContext::GameLoop);
 }
 
 /** Called when the plugin is unloaded and completely removed from memory.

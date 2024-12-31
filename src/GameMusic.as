@@ -83,8 +83,10 @@ namespace GameMusic {
                 AddSimpleTooltip("dB; 0.0 is normal");
             }
 
-            UI::Text("G_Debug_SongName: " + Turbo::G_Debug_SongName);
-            UI::Text("G_Debug_LastTargetLPFratioFromSpeed: " + Turbo::G_Debug_LastTargetLPFratioFromSpeed);
+            if (GM_InGame !is null) {
+                GM_InGame.RenderDebug();
+            }
+
 
             if (Turbo::G_Music !is null) {
                 if (UI::Button("Explore")) {
