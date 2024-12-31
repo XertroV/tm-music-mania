@@ -27,3 +27,14 @@ void NotifyWarning(const string &in msg) {
 	warn(msg);
 	UI::ShowNotification(Meta::ExecutingPlugin().Name + ": Warning", msg, vec4(.7, .5, .2, .3), 15000);
 }
+
+
+
+namespace UX {
+	bool SmallButton(const string &in label, vec2 size = vec2(0, 0)) {
+		UI::PushStyleVar(UI::StyleVar::FramePadding, vec2(2, 1));
+		bool pressed = UI::Button(label, size);
+		UI::PopStyleVar();
+		return pressed;
+	}
+}

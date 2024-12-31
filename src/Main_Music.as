@@ -24,6 +24,8 @@ namespace Music {
     }
 
     void OnGameContextChanged() {
+        dev_trace("Resetting due to context change. IsInMenu: " + TM_State::IsInMenu + ", IsInPlayground: " + TM_State::IsInPlayground + ", IsInEditor: " + TM_State::IsInEditor);
+        startnew(GameMusic::Reset);
         if (TM_State::IsInMenu) {
             @GM_InGame = null;
             @GM_InGameSounds = null;
@@ -32,17 +34,15 @@ namespace Music {
             GM_Menu.OnContextEnter();
             startnew(Music::InMenuLoop).WithRunContext(Meta::RunContext::GameLoop);
         } else if (TM_State::IsInPlayground) {
-
-            GM_Menu.OnContextLeave();
-            if (GM_Editor !is null) GM_Editor.OnContextLeave();
+            // we need the game to load its music first so we can replace it
+            yield(10);
 
             if (GM_InGame is null) ChooseInGameMusic();
             else GM_InGame.OnContextEnter();
-
-            startnew(Music::InGameLoop).WithRunContext(Meta::RunContext::GameLoop);
-
+            startnew(Music::InGameLoop).WithRunContext(Meta::RunContext::AfterMainLoop);
         } else if (TM_State::IsInEditor) {
-            GM_Menu.OnContextLeave();
+            @GM_InGame = null;
+            @GM_InGameSounds = null;
             if (GM_Editor is null) ChooseEditorMusic();
             else GM_Editor.OnContextEnter();
         } else if (TM_State::IsLoading) {
@@ -174,6 +174,7 @@ class InGameRaceStateMonitor {
         auto playerScript = cast<CSmScriptPlayer>(player.ScriptAPI);
 
         playerCpIx = player.CurrentLaunchedRespawnLandmarkIndex;
+        // curPg.Arena.MapLandmarks[playerCpIx].Waypoint.IsFinish
         playerLapCount = playerScript.CurrentLapNumber;
         curRaceTime = TM_State::InPg_GameTime < 0 ? -1500 : TM_State::InPg_GameTime - playerScript.StartTime;
         if (playerScript.RaceWaypointTimes.Length > 0) {
@@ -185,7 +186,6 @@ class InGameRaceStateMonitor {
         playerRespawned = curRaceTime < 0;
         playerRespawnedThisFrame = playerRespawnedThisFrame && playerRespawned;
 
-        player.EndTime > 0
         if (TM_State::InPg_IsUiFinish) m_isLastFinished = true;
         else if (TM_State::InPg_IsUiPlaying) m_isLastFinished = false;
 

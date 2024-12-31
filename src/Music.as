@@ -95,10 +95,12 @@ class Music_TurboInGame : MusicOrSound {
                 case Turbo::ERaceState::Running:
                     dev_trace("RaceStateChanged to Running");
                     // SetSFXSceneLevel();
-                    LoadMusic(-1);
-                    ResetSounds(true);
-                    OnStartRace_Reset();
+                    PickNewMusicTrack();
                     break;
+            }
+        } else if (raceState.playerRespawnedThisFrame) {
+            if (raceState.RaceState == Turbo::ERaceState::Running) {
+                PickNewMusicTrack();
             }
         }
 
@@ -148,6 +150,12 @@ class Music_TurboInGame : MusicOrSound {
         }
 
         UpdateLPF(raceState);
+    }
+
+    void PickNewMusicTrack() {
+        LoadMusic(-1);
+        ResetSounds(true);
+        OnStartRace_Reset();
     }
 
 
@@ -245,13 +253,17 @@ class Music_TurboInGame : MusicOrSound {
             G_Debug_SongName = G_MusicDescs[musicToPlay][0];
             print("Loading music: " + G_Debug_SongName);
             @CurMusic = MusicAll[musicToPlay]; // (la musique précédente qu'on ecrase est stoppée par ResetSounds() juste avant) / (the previous music we overwrite is stopped by ResetSounds() just before)
-            CurMusic.VolumedB = -100.;
+            CurMusic.VolumedB = -10.;
             CurMusic.FadeDuration = 0.35;
             CurMusic.FadeTracksDuration = CurMusic.BeatDuration * 2;
             CurMusic.Play();
+            CurMusic.EnableSegment("loop");
+            CurMusic.NextVariant2(true);
 
             G_MusicGain = G_MusicDescs[musicToPlay][1];
             G_MusicDelay = 0;
+
+            SetMusicLevel();
 
             // int musicRandInd = 0;
             // if (G_MusicRandomIndice.Length > musicToPlay) {
@@ -320,6 +332,7 @@ class Music_TurboInGame : MusicOrSound {
         CurMusic.EnableSegment("lap");
         SetMusicLevel();
         CurMusic.Play();
+        CurMusic.NextVariant2(true);
         trace("CurMusic.Play() " + CurMusic.IdName);
 #if DEV
         // ExploreNod(CurMusic);
@@ -466,6 +479,31 @@ class GameSounds : MusicOrSound {
     GameSounds(const string &in name) {
         super(name);
     }
+
+    // finish ui sequence lags by 1 frame, so we delay CP sounds by 1 frame too :/
+    int queueCpNextFrame = -1;
+    bool queueCpNextFrame_Fast = false;
+
+    void UpdateRace(InGameRaceStateMonitor@ raceState) override {
+        // check queued cp sounds first to avoid clobbering
+        if (queueCpNextFrame >= 0) {
+            if (raceState.didFinishThisFrame || raceState.m_isLastFinished) {
+                // do nothing, we caught it
+            } else {
+                OnCheckpoint(queueCpNextFrame, queueCpNextFrame_Fast);
+            }
+            queueCpNextFrame = -1;
+        }
+
+
+        if (raceState.didFinishThisFrame) OnFinish();
+        else if (raceState.startedThisFrame) OnStart();
+        else if (raceState.cpTakenThisFrame >= 0 && !raceState.playerRespawned && !raceState.m_isLastFinished) {
+            queueCpNextFrame = raceState.cpTakenThisFrame;
+            queueCpNextFrame_Fast = raceState.cpThisFrameWasFast;
+            // OnCheckpoint(raceState.cpTakenThisFrame, raceState.cpThisFrameWasFast);
+        }
+    }
 }
 
 class GameSounds_Turbo : GameSounds {
@@ -534,14 +572,6 @@ class GameSounds_Turbo : GameSounds {
         sound.VolumedB = 0.;
         sound.Play();
         startnew(SleepAndDestroy, sound);
-    }
-
-    void UpdateRace(InGameRaceStateMonitor@ raceState) override {
-        if (raceState.didFinishThisFrame) OnFinish();
-        else if (raceState.startedThisFrame) OnStart();
-        else if (raceState.cpTakenThisFrame >= 0) {
-            OnCheckpoint(raceState.cpTakenThisFrame, raceState.cpThisFrameWasFast);
-        }
     }
 }
 

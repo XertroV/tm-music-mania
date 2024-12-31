@@ -21,6 +21,12 @@ namespace GameMusic {
         }
     }
 
+    void Reset() {
+        warn("GameMusic :: Resetting...");
+        TrimMusicTrackIndexes(0);
+        lastApSourcesLen = 0;
+    }
+
     [Setting hidden]
     bool windowOpen = true;
 
@@ -110,9 +116,29 @@ namespace GameMusic {
                 if (UI::BeginChild("All Sources")) {
                     UI::Indent();
                     auto ap = GetApp().AudioPort;
-                    for (uint i = 0; i < ap.Sources.Length; i++) {
-                        auto src = ap.Sources[i];
-                        UI::Text("[" + i + "] " + src.BalanceGroup + " | \\$<" + (src.IsPlaying ? "\\$4b4" : "") + src.IsPlaying + "\\$> | " + src.VolumedB + " | " + GetSoundSourceFidName(src));
+                    UI::ListClipper clip(ap.Sources.Length);
+                    while (clip.Step()) {
+                        for (int i = clip.DisplayStart; i < clip.DisplayEnd; i++) {
+                            auto item = ap.Sources[i];
+                            UI::PushID("a.s" + i);
+
+                            auto src = ap.Sources[i];
+                            UI::Text("[" + i + "] " + src.BalanceGroup + " | \\$<" + (src.IsPlaying ? "\\$4b4" : "") + src.IsPlaying + "\\$> | " + Time::Format(int64(src.PlayCursor * 1000)) + " | " + src.VolumedB + " | " + GetSoundSourceFidName(src));
+                            UI::SameLine();
+                            if (UX::SmallButton(Icons::Cubes + "##" + i)) {
+                                ExploreNod("AudioSource[" + i + "]", src);
+                            }
+                            UI::SameLine();
+                            if (UX::SmallButton(Icons::Play + " / " + Icons::Pause + "##" + i)) {
+                                if (src.IsPlaying) {
+                                    src.Stop();
+                                } else {
+                                    src.Play();
+                                }
+                            }
+
+                            UI::PopID();
+                        }
                     }
                     UI::Unindent();
                 }
@@ -182,6 +208,7 @@ namespace GameMusic {
         musicTracksWerePlaying.RemoveRange(fromIx, musicTracksWerePlaying.Length - fromIx);
         musicTracksFidNames.RemoveRange(fromIx, musicTracksFidNames.Length - fromIx);
         musicTracksIgnore.RemoveRange(fromIx, musicTracksIgnore.Length - fromIx);
+        lastGoodIx = GetIxAfterLastKnown();
     }
 
     bool SilenceCachedSources(CAudioPort@ ap) {
@@ -197,7 +224,6 @@ namespace GameMusic {
             if (src.BalanceGroup != CAudioSource::EAudioBalanceGroup::Music) {
                 // something changed but there are more sources. Remove higher indexes and break for re-find
                 TrimMusicTrackIndexes(i);
-                lastGoodIx = GetIxAfterLastKnown();
                 stale = true;
                 break;
             }

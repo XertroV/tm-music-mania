@@ -44,7 +44,7 @@ namespace TM_State {
 		IsInSolo = IsInPlayground && app.PlaygroundScript !is null && si.ServerLogin.Length == 0;
 		IsInServer = IsInPlayground && si.ServerLogin.Length > 0;
 
-        ContextChanged = IsInEditor != WasInEditor || IsInPlayground != WasInPlayground || IsInSolo != WasInSolo || IsInServer != WasInServer || IsInMenu != WasInMenu || IsLoading != WasLoading || IsMapNull != WasMapNull;
+        ContextChanged = IsInEditor != WasInEditor || IsInPlayground != WasInPlayground || IsInMenu != WasInMenu;
 
         UpdatePlayground(app, cast<CSmArenaClient>(app.CurrentPlayground));
 
@@ -81,11 +81,12 @@ namespace TM_State {
         InPg_LastUiSeq = InPg_UiSeq;
         if (curPg is null) {
             InPg_UiSeq = 0;
+            InPg_GameTime = -1;
         } else if (curPg.GameTerminals.Length == 0) {
             InPg_UiSeq = 0;
         } else {
-            // InPg_UiSeq = int(curPg.GameTerminals[0].UISequence_Current);
-            InPg_UiSeq = int(curPg.UIConfigs[0].UISequence);
+            InPg_UiSeq = int(curPg.GameTerminals[0].UISequence_Current);
+            // InPg_UiSeq = int(curPg.UIConfigs[0].UISequence);
             auto pgish = app.Network.PlaygroundInterfaceScriptHandler;
             InPg_GameTime = pgish.GameTime;
             InPg_InGameMenuDisplayed = pgish.IsInGameMenuDisplayed;
