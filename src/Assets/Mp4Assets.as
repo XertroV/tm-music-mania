@@ -1,5 +1,8 @@
 const string Mp4Assets_BaseUrl = "https://assets.xk.io/Mp4Music/";
-const string Mp4Assets_BaseDir = IO::FromAppFolder("GameData/Media/Sounds/Turbo/");
+const string Mp4Assets_RawBaseDir = "GameData/Media/Sounds/Mp4/";
+const string Mp4Assets_BaseDir = IO::FromAppFolder("GameData/Media/Sounds/Mp4/");
+
+const string MEDIA_SOUNDS_MP4 = "file://Media/Sounds/Mp4/";
 
 string[] smStormFiles;
 string[] canyonFiles;
@@ -59,8 +62,71 @@ string[]@ FilterOnlyMusicFiles(string[]@ assetFiles) {
     for (uint i = 0; i < assetFiles.Length; i++) {
         if (assetFiles[i].Length < 2) continue;
         if (assetFiles[i].EndsWith(".zip")) continue;
-        filteredFiles.InsertLast(assetFiles[i]);
-        trace("Filtered: " + assetFiles[i]);
+        string file = assetFiles[i];
+        filteredFiles.InsertLast(file);
+        trace("Filtered: " + file);
+
+        if (file.StartsWith("SMStorm/")) {
+            smStormFiles.InsertLast(file.SubStr(8));
+        } else if (file.StartsWith("Canyon/")) {
+            canyonFiles.InsertLast(file.SubStr(7));
+        } else if (file.StartsWith("Lagoon/")) {
+            lagoonFiles.InsertLast(file.SubStr(7));
+        } else if (file.StartsWith("Valley/")) {
+            valleyFiles.InsertLast(file.SubStr(7));
+        } else if (file.StartsWith("Stadium/")) {
+            stadiumFiles.InsertLast(file.SubStr(8));
+        }
     }
     return filteredFiles;
+}
+
+AssetDownloader@ mp4AssetDownloader = AssetDownloader("Mp4Assets", Mp4Assets_BaseUrl, Mp4Assets_RawBaseDir);
+
+void DownloadAllMp4Assets() {
+    auto @filesInDir = IO_IndexFolderTrimmed(Mp4Assets_BaseDir, true);
+    for (uint i = 0; i < _mp4AssetFiles.Length; i++) {
+        if (filesInDir.Find(_mp4AssetFiles[i]) != -1) {
+            trace("Skipping download of " + _mp4AssetFiles[i] + " as it already exists");
+            continue;
+        }
+        mp4AssetDownloader.DownloadAsset_InBg(_mp4AssetFiles[i]);
+        yield();
+    }
+    mp4AssetDownloader.AwaitDownloadAllAssets();
+    CheckMp4AssetsAndRegister();
+}
+
+void CheckMp4AssetsAndRegister() {
+    if (!IO::FolderExists(Mp4Assets_BaseDir)) {
+        warn("Mp4Assets folder does not exist: " + Mp4Assets_BaseDir);
+        return;
+    }
+    CheckMp4AssetsSubfolderAndRegister("SMStorm", smStormFiles);
+    CheckMp4AssetsSubfolderAndRegister("Canyon", canyonFiles);
+    CheckMp4AssetsSubfolderAndRegister("Lagoon", lagoonFiles);
+    CheckMp4AssetsSubfolderAndRegister("Valley", valleyFiles);
+    CheckMp4AssetsSubfolderAndRegister("Stadium", stadiumFiles);
+}
+
+void CheckMp4AssetsSubfolderAndRegister(const string &in subfolder, string[]@ files) {
+    // c:/.../GameData/Media/Sounds/Mp4/<subfolder>/
+    string subfolderDir = Mp4Assets_BaseDir + subfolder + "/";
+    if (!IO::FolderExists(subfolderDir)) {
+        warn("Mp4AssetPack subfolder does not exist: " + subfolderDir);
+        return;
+    }
+    for (uint i = 0; i < files.Length; i++) {
+        string file = files[i];
+        if (!IO::FileExists(subfolderDir + file)) {
+            warn("Mp4AssetPack file does not exist: " + subfolderDir + file);
+            return;
+        }
+    }
+    RegisterMp4AssetPack(subfolder, files);
+}
+
+void RegisterMp4AssetPack(const string &in subfolder, string[]@ files) {
+    trace("Registering Mp4AssetPack: " + subfolder);
+    Packs::AddPack(AudioPack_Playlist(subfolder, MEDIA_SOUNDS_MP4 + subfolder + "/", files, 0.0));
 }

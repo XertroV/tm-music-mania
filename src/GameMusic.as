@@ -48,104 +48,120 @@ namespace GameMusic {
     void Render() {
         if (!windowOpen) return;
         if (UI::Begin("Music Mania Debug", windowOpen, UI::WindowFlags::None)) {
-            UI::Text("Music Track Indexes: " + musicTrackIndexes.Length);
-            string[] musicTrackStrs;
-            for (uint i = 0; i < musicTrackIndexes.Length; i++) {
-                musicTrackStrs.InsertLast("\\$<" + (musicTracksIgnore[i] ? "\\$888" : "") + tostring(musicTrackIndexes[i]) + "\\$>");
+            UI::BeginTabBar("music debug tabs");
+
+            if (UI::BeginTabItem("Debug Main")) {
+                RenderDebugInner();
+                UI::EndTabItem();
             }
-            UI::TextWrapped("\\$i> " + string::Join(musicTrackStrs, ",").Replace("\\\\", "\\"));
-            UI::Text("\\$i" + Icons::PlayCircle + ": " + Json::Write(GetMTIsPlaying().ToJson()));
-            DrawPlayingVolumes();
-            if (UI::CollapsingHeader("Track FID File Names")) {
+
+            if (UI::BeginTabItem("Settings")) {
+                Packs::R_Packs_Settings();
+                UI::EndTabItem();
+            }
+
+            UI::EndTabBar();
+        }
+        UI::End();
+    }
+
+    void RenderDebugInner() {
+        UI::Text("Music Track Indexes: " + musicTrackIndexes.Length);
+        string[] musicTrackStrs;
+        for (uint i = 0; i < musicTrackIndexes.Length; i++) {
+            musicTrackStrs.InsertLast("\\$<" + (musicTracksIgnore[i] ? "\\$888" : "") + tostring(musicTrackIndexes[i]) + "\\$>");
+        }
+        UI::TextWrapped("\\$i> " + string::Join(musicTrackStrs, ",").Replace("\\\\", "\\"));
+        UI::Text("\\$i" + Icons::PlayCircle + ": " + Json::Write(GetMTIsPlaying().ToJson()));
+        DrawPlayingVolumes();
+        if (UI::CollapsingHeader("Track FID File Names")) {
+            UI::Indent();
+            for (uint i = 0; i < musicTracksFidNames.Length; i++) {
+                UI::Text("[" + i + "] " + musicTracksFidNames[i]);
+            }
+            if (UI::Button("Search FID Tree for .ogg")) {
+                startnew(SearchForOggFiles);
+            }
+            UI::SameLine();
+            if (UI::Button("Reset##ogg")) {
+                foundOggFiles.RemoveRange(0, foundOggFiles.Length);
+            }
+            if (foundOggFiles.Length > 0) {
+                if (UI::CollapsingHeader("Found .ogg Files")) {
+                    UI::Indent();
+                    for (uint i = 0; i < foundOggFiles.Length; i++) {
+                        auto fof = foundOggFiles[i];
+                        UI::Text("[" + i + "] " + fof.path);
+                    }
+                    UI::Unindent();
+                }
+            }
+            UI::Unindent();
+        }
+        UI::Text("AudioPort Sources Len: " + lastApSourcesLen);
+        targetVolume = UI::SliderFloat("Target Volume", targetVolume, -100.0f, 20.0f);
+        S_PrioritizeMusicInMap = UI::Checkbox("Prioritize Map Custom Music (when it exists)", S_PrioritizeMusicInMap);
+        S_SetMusicInMapVolume = UI::Checkbox("Set Custom Music Volume", S_SetMusicInMapVolume);
+        if (S_SetMusicInMapVolume) {
+            S_MusicInMapVolume = UI::SliderFloat("Custom Music Volume", S_MusicInMapVolume, -100.0f, 20.0f);
+            AddSimpleTooltip("dB; 0.0 is normal");
+        }
+
+        if (GM_InGame !is null) {
+            GM_InGame.RenderDebug();
+        }
+
+
+        if (Turbo::G_Music !is null) {
+            if (UI::Button("Explore")) {
+                ExploreNod(Turbo::G_Music);
+            }
+            if (UI::Button("Next Variant")) {
+                Turbo::G_Music.EnableSegment("loop");
+                Turbo::G_Music.NextVariant();
+            }
+            if (UI::Button("Next Variant2(false)")) {
+                Turbo::G_Music.EnableSegment("loop");
+                Turbo::G_Music.NextVariant2(false);
+            }
+            if (UI::Button("Next Variant2(true)")) {
+                Turbo::G_Music.EnableSegment("loop");
+                Turbo::G_Music.NextVariant2(true);
+            }
+        }
+
+        if (UI::CollapsingHeader("All Sources")) {
+            if (UI::BeginChild("All Sources")) {
                 UI::Indent();
-                for (uint i = 0; i < musicTracksFidNames.Length; i++) {
-                    UI::Text("[" + i + "] " + musicTracksFidNames[i]);
-                }
-                if (UI::Button("Search FID Tree for .ogg")) {
-                    startnew(SearchForOggFiles);
-                }
-                UI::SameLine();
-                if (UI::Button("Reset##ogg")) {
-                    foundOggFiles.RemoveRange(0, foundOggFiles.Length);
-                }
-                if (foundOggFiles.Length > 0) {
-                    if (UI::CollapsingHeader("Found .ogg Files")) {
-                        UI::Indent();
-                        for (uint i = 0; i < foundOggFiles.Length; i++) {
-                            auto fof = foundOggFiles[i];
-                            UI::Text("[" + i + "] " + fof.path);
+                auto ap = GetApp().AudioPort;
+                UI::ListClipper clip(ap.Sources.Length);
+                while (clip.Step()) {
+                    for (int i = clip.DisplayStart; i < clip.DisplayEnd; i++) {
+                        auto item = ap.Sources[i];
+                        UI::PushID("a.s" + i);
+
+                        auto src = ap.Sources[i];
+                        UI::Text("[" + i + "] " + src.BalanceGroup + " | \\$<" + (src.IsPlaying ? "\\$4b4" : "") + src.IsPlaying + "\\$> | " + Time::Format(int64(src.PlayCursor * 1000)) + " | " + src.VolumedB + " | " + GetSoundSourceFidName(src));
+                        UI::SameLine();
+                        if (UX::SmallButton(Icons::Cubes + "##" + i)) {
+                            ExploreNod("AudioSource[" + i + "]", src);
                         }
-                        UI::Unindent();
+                        UI::SameLine();
+                        if (UX::SmallButton(Icons::Play + " / " + Icons::Pause + "##" + i)) {
+                            if (src.IsPlaying) {
+                                src.Stop();
+                            } else {
+                                src.Play();
+                            }
+                        }
+
+                        UI::PopID();
                     }
                 }
                 UI::Unindent();
             }
-            UI::Text("AudioPort Sources Len: " + lastApSourcesLen);
-            targetVolume = UI::SliderFloat("Target Volume", targetVolume, -100.0f, 20.0f);
-            S_PrioritizeMusicInMap = UI::Checkbox("Prioritize Map Custom Music (when it exists)", S_PrioritizeMusicInMap);
-            S_SetMusicInMapVolume = UI::Checkbox("Set Custom Music Volume", S_SetMusicInMapVolume);
-            if (S_SetMusicInMapVolume) {
-                S_MusicInMapVolume = UI::SliderFloat("Custom Music Volume", S_MusicInMapVolume, -100.0f, 20.0f);
-                AddSimpleTooltip("dB; 0.0 is normal");
-            }
-
-            if (GM_InGame !is null) {
-                GM_InGame.RenderDebug();
-            }
-
-
-            if (Turbo::G_Music !is null) {
-                if (UI::Button("Explore")) {
-                    ExploreNod(Turbo::G_Music);
-                }
-                if (UI::Button("Next Variant")) {
-                    Turbo::G_Music.EnableSegment("loop");
-                    Turbo::G_Music.NextVariant();
-                }
-                if (UI::Button("Next Variant2(false)")) {
-                    Turbo::G_Music.EnableSegment("loop");
-                    Turbo::G_Music.NextVariant2(false);
-                }
-                if (UI::Button("Next Variant2(true)")) {
-                    Turbo::G_Music.EnableSegment("loop");
-                    Turbo::G_Music.NextVariant2(true);
-                }
-            }
-
-            if (UI::CollapsingHeader("All Sources")) {
-                if (UI::BeginChild("All Sources")) {
-                    UI::Indent();
-                    auto ap = GetApp().AudioPort;
-                    UI::ListClipper clip(ap.Sources.Length);
-                    while (clip.Step()) {
-                        for (int i = clip.DisplayStart; i < clip.DisplayEnd; i++) {
-                            auto item = ap.Sources[i];
-                            UI::PushID("a.s" + i);
-
-                            auto src = ap.Sources[i];
-                            UI::Text("[" + i + "] " + src.BalanceGroup + " | \\$<" + (src.IsPlaying ? "\\$4b4" : "") + src.IsPlaying + "\\$> | " + Time::Format(int64(src.PlayCursor * 1000)) + " | " + src.VolumedB + " | " + GetSoundSourceFidName(src));
-                            UI::SameLine();
-                            if (UX::SmallButton(Icons::Cubes + "##" + i)) {
-                                ExploreNod("AudioSource[" + i + "]", src);
-                            }
-                            UI::SameLine();
-                            if (UX::SmallButton(Icons::Play + " / " + Icons::Pause + "##" + i)) {
-                                if (src.IsPlaying) {
-                                    src.Stop();
-                                } else {
-                                    src.Play();
-                                }
-                            }
-
-                            UI::PopID();
-                        }
-                    }
-                    UI::Unindent();
-                }
-                UI::EndChild();
-            }
+            UI::EndChild();
         }
-        UI::End();
     }
 
     void DrawPlayingVolumes() {

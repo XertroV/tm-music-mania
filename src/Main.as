@@ -5,11 +5,13 @@ const string MenuTitle = MenuIconColor + PluginIcon + "\\$z " + PluginName;
 
 void Main() {
     startnew(SetupIntercepts);
-    EnsureAssets();
+    EnsureTurboAssets();
+    CheckMp4AssetsAndRegister();
     // a short break to give some time before starting music stuff on game start
     yield(10);
     startnew(GameMusic::Main);
     startnew(Turbo::Main).WithRunContext(Meta::RunContext::GameLoop);
+    yield();
     startnew(Music::Main).WithRunContext(Meta::RunContext::GameLoop);
 }
 

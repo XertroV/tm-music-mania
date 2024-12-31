@@ -6,8 +6,13 @@ class MusicOrSound {
     MusicOrSound(const string &in name) {
         this.name = name;
         dev_trace("MusicOrSound Created: " + name);
+        // if (name.EndsWith("/")) {
+        //     dev_warn("MusicOrSound Created: " + name);
+        //     PrintActiveContextStack();
+        // }
     }
     ~MusicOrSound() {
+        dev_trace("MusicOrSound Destroyed: " + name);
         CleanUp();
     }
     void Update() {}
@@ -47,10 +52,18 @@ class Music_TurboInGame : MusicOrSound {
     float G_MusicGain = 0.0;
     float G_Debug_LastTargetLPFratioFromSpeed = 0.0;
 
-    Music_TurboInGame() {
+    Music_TurboInGame(Json::Value@ musicList = null) {
         super("Turbo In-Game Music");
         InitRandomMusicIndicies();
         PreloadAllMusicAndSounds();
+        // for custom music lists
+        @_musicList = musicList;
+    }
+
+    private Json::Value@ _musicList;
+    Json::Value@ GetMusicList() {
+        if (_musicList is null) return TurboMusicList;
+        return _musicList;
     }
 
     void RenderDebug() override {
@@ -211,8 +224,9 @@ class Music_TurboInGame : MusicOrSound {
     }
 
     void InitRandomMusicIndicies() {
-        auto musicCount = Math::Min(TurboMusicList.Length, 6);
-        auto maxMusicCount = TurboMusicList.Length;
+        auto mList = GetMusicList();
+        auto musicCount = Math::Min(mList.Length, 6);
+        auto maxMusicCount = mList.Length;
         G_MusicRandomIndice.Resize(maxMusicCount);
         for (uint i = 0; i < maxMusicCount; i++) {
             G_MusicRandomIndice[i] = i;
@@ -225,7 +239,7 @@ class Music_TurboInGame : MusicOrSound {
         }
         G_MusicDescs.Reserve(musicCount);
         for (uint i = 0; i < musicCount; i++) {
-            G_MusicDescs.InsertLast(TurboMusicList[G_MusicRandomIndice[i]]);
+            G_MusicDescs.InsertLast(mList[G_MusicRandomIndice[i]]);
         }
     }
 
@@ -382,7 +396,8 @@ class Music_StdTrackSelection : MusicOrSound {
 
         @MusicPaths = musicPaths;
         if (MusicPaths is null) @MusicPaths = {};
-        if (MusicPaths.Length > 0) Init();
+        if (MusicPaths.Length > 0) startnew(CoroutineFunc(Init));
+        else dev_warn("MusicPaths is empty");
     }
 
     void CleanUp() override {
@@ -403,6 +418,7 @@ class Music_StdTrackSelection : MusicOrSound {
         if (_init) return;
         _init = true;
         SelectAndPreloadTrack();
+        dev_warn("Music_StdTrackSelection initialized; MusicAll.Length: " + MusicAll.Length);
     }
 
     // user presses button or w/e
@@ -430,6 +446,7 @@ class Music_StdTrackSelection : MusicOrSound {
     }
 
     void PreloadSelectedTrack() {
+        dev_warn("Preloading music: " + MusicPaths[curTrackIx]);
         auto audio = GetAudio();
         MusicAll.Resize(MusicPaths.Length);
         if (MusicAll[curTrackIx] is null) {
@@ -437,9 +454,34 @@ class Music_StdTrackSelection : MusicOrSound {
         }
         auto music = @MusicAll[curTrackIx];
         // see Turbo::GetMusicPanRadiusLfe for other settings
-        music.PanRadiusLfe = vec3(0., 1.,   -20.);
-        music.VolumedB = GetMusicVolume(MusicPaths[curTrackIx]);
+        auto panRadiusLfe = vec3(0., 1.,   -20.);
+        tmpVoldB = GetMusicVolume(MusicPaths[curTrackIx]);
+        music.PanRadiusLfe = panRadiusLfe;
+        music.VolumedB = tmpVoldB;
         music.Play();
+        // auto ptr = Dev_GetPtrForNod(music);
+        // dev_trace("Preloaded music: " + MusicPaths[curTrackIx] + " (ptr: " + Text::FormatPointer(ptr) + ")");
+        // IO::SetClipboard(Text::FormatPointer(ptr));
+        startnew(CoroutineFuncUserdata(this.FixMusicViaBalanceGroups), music);
+    }
+
+    float tmpVoldB = 0.0;
+
+    void FixMusicViaBalanceGroups(ref@ r) {
+        CAudioScriptSound@ music = cast<CAudioScriptSound>(r);
+        yield(5);
+        auto audioSource = cast<CAudioSource>(Dev::GetOffsetNod(music, 0x20));
+        if (audioSource !is null) {
+            dev_warn("Setting balance group for audio source: " + MusicPaths[curTrackIx]);
+            audioSource.BalanceGroup = CAudioSource::EAudioBalanceGroup::Custom1;
+            audioSource.VolumedB = tmpVoldB;
+            audioSource.Play();
+            yield(1);
+            audioSource.BalanceGroup = CAudioSource::EAudioBalanceGroup::Music;
+            audioSource.VolumedB = tmpVoldB;
+            audioSource.Play();
+            dev_warn("Set balance group for audio source: " + MusicPaths[curTrackIx]);
+        }
     }
 
     dictionary customVolume;

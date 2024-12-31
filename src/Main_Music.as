@@ -63,19 +63,20 @@ namespace Music {
 
     MusicOrSound@ ChooseInMenuMusic() {
         // todo: apply settings here when choosing menu music
-        @GM_Menu = Music_TurboInMenu();
+        dev_warn("Choosing menu music");
+        @GM_Menu = Packs::GetMenuMusic().ToMusicOrSound();
         return GM_Menu;
     }
 
     MusicOrSound@ ChooseEditorMusic() {
-        // todo: @GM_Editor =
+        @GM_Editor = Packs::GetEditorMusic().ToMusicOrSound();
         return GM_Editor;
     }
 
     MusicOrSound@ ChooseInGameMusic() {
         // todo: @GM_InGame =
-        @GM_InGame = Music_TurboInGame();
-        @GM_InGameSounds = GameSounds_Turbo();
+        @GM_InGame = Packs::GetInGameMusic().ToMusicOrSound();
+        @GM_InGameSounds = Packs::GetInGame_GameSounds().ToMusicOrSound();
         return GM_InGame;
     }
 

@@ -1,20 +1,22 @@
 const string TurboAssets_BaseUrl = "https://assets.xk.io/TurboMusic/";
 const string TurboAssets_DestDir = IO::FromAppFolder("GameData/Media/Sounds/Turbo/");
+const string TurboAssets_RawDestDir = "GameData/Media/Sounds/Turbo/";
 
 string[]@ initialTurboAssetDirList;
 
-void EnsureAssets() {
-	if (!IO::FolderExists(TurboAssets_DestDir)) {
-		IO::CreateFolder(TurboAssets_DestDir, true);
-	}
-	@initialTurboAssetDirList = IO::IndexFolder(TurboAssets_DestDir, true);
-	for (uint i = 0; i < initialTurboAssetDirList.Length; i++) {
-		auto @parts = initialTurboAssetDirList[i].Split("/Media/Sounds/Turbo/");
-		initialTurboAssetDirList[i] = parts[parts.Length - 1];
-	}
+// creates DestDir for us
+AssetDownloader@ turboAssetDownloader = AssetDownloader("TurboAssets", TurboAssets_BaseUrl, TurboAssets_RawDestDir);
+
+void EnsureTurboAssets() {
+	@initialTurboAssetDirList = IO_IndexFolderTrimmed(TurboAssets_DestDir, true);
+	// for (uint i = 0; i < initialTurboAssetDirList.Length; i++) {
+	// 	auto @parts = initialTurboAssetDirList[i].Split("/Media/Sounds/Turbo/");
+	// 	initialTurboAssetDirList[i] = parts[parts.Length - 1];
+	// }
 	trace("initialTurboAssetDirList: " + Json::Write(initialTurboAssetDirList.ToJson()));
 	QueueEnsureTurboAssetsDownloaded();
-	AwaitDownloadAllAssets();
+	turboAssetDownloader.AwaitDownloadAllAssets();
+	AddTurboToAudioPackRegistry();
 }
 
 void QueueEnsureTurboAssetsDownloaded() {
@@ -91,6 +93,35 @@ void QueueEnsureTurboAssetsDownloaded() {
 	QueueEnsureTurboAsset("starting.ogg");
 	QueueEnsureTurboAsset("starting2.ogg");
 	QueueEnsureTurboAsset("TMT_MENU_B1.ogg");
+	QueueEnsureTurboAsset("MapEditor/PlaceDeco_Tree.wav");
+	QueueEnsureTurboAsset("MapEditor/PlaceTerrain_Beach.wav");
+	QueueEnsureTurboAsset("MapEditor/PlaceTerrain_Mountain.wav");
+	QueueEnsureTurboAsset("MapEditor/PlaceTrack_Road.wav");
+	QueueEnsureTurboAsset("MapEditor/PlaceTrack_ThemePark.wav");
+	QueueEnsureTurboAsset("MapEditor/RandomGeneration.zip");
+	QueueEnsureTurboAsset("MapEditor/RdmGen_Finished.ogg");
+	QueueEnsureTurboAsset("MapEditor/SFX_UI_AutomaticFinishTrack.ogg");
+	QueueEnsureTurboAsset("MapEditor/SFX_UI_BlocMove.wav");
+	QueueEnsureTurboAsset("MapEditor/SFX_UI_BlocMoveDown.wav");
+	QueueEnsureTurboAsset("MapEditor/SFX_UI_BlocMoveUp.wav");
+	QueueEnsureTurboAsset("MapEditor/SFX_UI_BlocPlaceCheckpoint.wav");
+	QueueEnsureTurboAsset("MapEditor/SFX_UI_BlocPlaceCommon.wav");
+	QueueEnsureTurboAsset("MapEditor/SFX_UI_BlocPlaceDeco.wav");
+	QueueEnsureTurboAsset("MapEditor/SFX_UI_BlocPlaceFinish.wav");
+	QueueEnsureTurboAsset("MapEditor/SFX_UI_BlocPlaceStart.wav");
+	QueueEnsureTurboAsset("MapEditor/SFX_UI_BlocRemove.wav");
+	QueueEnsureTurboAsset("MapEditor/SFX_UI_BlocRotate.wav");
+	QueueEnsureTurboAsset("MapEditor/SFX_UI_ClicInterfaceLeftRight.wav");
+	QueueEnsureTurboAsset("MapEditor/SFX_UI_ClicInterfaceUpDown.wav");
+	QueueEnsureTurboAsset("MapEditor/SFX_UI_ClicRosace.wav");
+	QueueEnsureTurboAsset("MapEditor/SFX_UI_Pop-UpQuestionScreen.wav");
+	QueueEnsureTurboAsset("MapEditor/SFX_UI_Pop-Up_InterfaceBlocCategory.wav");
+	QueueEnsureTurboAsset("MapEditor/SFX_UI_Pop-Up_InterfaceSmall.wav");
+	QueueEnsureTurboAsset("MapEditor/SFX_UI_TerminateValidateTrack.ogg");
+	QueueEnsureTurboAsset("MapEditor/SFX_UI_TestTrack.wav");
+	QueueEnsureTurboAsset("MapEditor/SFX_UI_WrongAction.wav");
+	QueueEnsureTurboAsset("MapEditor/SFX_WhooshCam.ogg");
+	QueueEnsureTurboAsset("MapEditor/TMT_Trackbuilder_1.ogg");
 }
 
 void QueueEnsureTurboAsset(const string &in asset) {
@@ -99,9 +130,6 @@ void QueueEnsureTurboAsset(const string &in asset) {
 		warn("Unexpected File exists but not in init list: " + asset);
 		return;
 	}
-	startnew(DownloadTurboAsset, asset);
-}
-
-void DownloadTurboAsset(const string &in asset) {
-    DownloadAsset(TurboAssets_BaseUrl, TurboAssets_DestDir, asset);
+	turboAssetDownloader.DownloadAsset_InBg(asset);
+	yield();
 }

@@ -43,6 +43,7 @@ bool InitializeMusicFids() {
 
 namespace TurboConst {
     const string SoundFinishLine = "130 Finish Line.ogg";
+
     const string SoundStartLine = "starting.ogg";
     const string SoundStartLine2 = "starting2.ogg";
     string GetSoundStartLine() {
@@ -129,6 +130,40 @@ namespace TurboConst {
             case 1: return MusicMenuSimple2;
         }
         return MusicMenuSimple;
+    }
+
+    // for sound pack
+    string[]@ GetSoundsFinishRace() {
+        return {SoundFinishLine};
+    }
+    string[]@ GetSoundsFinishLap() { return {}; }
+    string[]@ GetSoundsRespawn() { return {}; }
+    string[]@ GetSoundsStartRace() { return {}; }
+
+    string[]@ GetSoundsCheckpointFast() {
+        return {
+            SoundCheckpointFast0,
+            SoundCheckpointFast1,
+            SoundCheckpointFast2,
+            SoundCheckpointFast3,
+            SoundCheckpointFast4,
+            SoundCheckpointFast5,
+            SoundCheckpointFast6,
+            SoundCheckpointFast7
+        };
+    }
+
+    string[]@ GetSoundsCheckpointSlow() {
+        return {
+            SoundCheckpointSlow0,
+            SoundCheckpointSlow1,
+            SoundCheckpointSlow2,
+            SoundCheckpointSlow3,
+            SoundCheckpointSlow4,
+            SoundCheckpointSlow5,
+            SoundCheckpointSlow6,
+            SoundCheckpointSlow7
+        };
     }
 }
 
