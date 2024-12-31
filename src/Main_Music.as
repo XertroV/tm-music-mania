@@ -9,7 +9,11 @@ MusicOrSound@ GM_EditorSounds;
 
 namespace Music {
     void Main() {
-        @GM_Menu = Music_TurboInMenu();
+        // todo: instantiating music in the wrong mania app context can cause problems where it doesn't play back properly and things get stuck.
+        // todo: we shouldn't create this until we're in the menu.
+        if (TM_State::IsInMenu) {
+            ChooseInMenuMusic();
+        }
         startnew(Music::MainInGameLoop).WithRunContext(Meta::RunContext::GameLoop);
     }
 
@@ -24,18 +28,25 @@ namespace Music {
     }
 
     void OnGameContextChanged() {
+        // we need the game to load its music first so we can replace it
+        yield(4);
         dev_trace("Resetting due to context change. IsInMenu: " + TM_State::IsInMenu + ", IsInPlayground: " + TM_State::IsInPlayground + ", IsInEditor: " + TM_State::IsInEditor);
         startnew(GameMusic::Reset);
+        yield(4);
+
         if (TM_State::IsInMenu) {
             @GM_InGame = null;
             @GM_InGameSounds = null;
             @GM_Editor = null;
             @GM_EditorSounds = null;
-            GM_Menu.OnContextEnter();
+
+            if (GM_Menu is null) ChooseInMenuMusic();
+            else GM_Menu.OnContextEnter();
+
             startnew(Music::InMenuLoop).WithRunContext(Meta::RunContext::GameLoop);
         } else if (TM_State::IsInPlayground) {
             // we need the game to load its music first so we can replace it
-            yield(10);
+            // yield(10);
 
             if (GM_InGame is null) ChooseInGameMusic();
             else GM_InGame.OnContextEnter();
@@ -50,14 +61,22 @@ namespace Music {
         }
     }
 
-    void ChooseEditorMusic() {
-        // todo: @GM_Editor =
+    MusicOrSound@ ChooseInMenuMusic() {
+        // todo: apply settings here when choosing menu music
+        @GM_Menu = Music_TurboInMenu();
+        return GM_Menu;
     }
 
-    void ChooseInGameMusic() {
+    MusicOrSound@ ChooseEditorMusic() {
+        // todo: @GM_Editor =
+        return GM_Editor;
+    }
+
+    MusicOrSound@ ChooseInGameMusic() {
         // todo: @GM_InGame =
         @GM_InGame = Music_TurboInGame();
         @GM_InGameSounds = GameSounds_Turbo();
+        return GM_InGame;
     }
 
     void InMenuLoop() {

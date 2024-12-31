@@ -1,12 +1,13 @@
-const string Assets_BaseUrl = "https://assets.xk.io/TurboMusic/";
-const string Assets_DestDir = IO::FromAppFolder("GameData/Media/Sounds/Turbo/");
+const string TurboAssets_BaseUrl = "https://assets.xk.io/TurboMusic/";
+const string TurboAssets_DestDir = IO::FromAppFolder("GameData/Media/Sounds/Turbo/");
+
 string[]@ initialTurboAssetDirList;
 
 void EnsureAssets() {
-	if (!IO::FolderExists(Assets_DestDir)) {
-		IO::CreateFolder(Assets_DestDir, true);
+	if (!IO::FolderExists(TurboAssets_DestDir)) {
+		IO::CreateFolder(TurboAssets_DestDir, true);
 	}
-	@initialTurboAssetDirList = IO::IndexFolder(Assets_DestDir, true);
+	@initialTurboAssetDirList = IO::IndexFolder(TurboAssets_DestDir, true);
 	for (uint i = 0; i < initialTurboAssetDirList.Length; i++) {
 		auto @parts = initialTurboAssetDirList[i].Split("/Media/Sounds/Turbo/");
 		initialTurboAssetDirList[i] = parts[parts.Length - 1];
@@ -94,46 +95,13 @@ void QueueEnsureTurboAssetsDownloaded() {
 
 void QueueEnsureTurboAsset(const string &in asset) {
 	if (initialTurboAssetDirList.Find(asset) > -1) return;
-	if (IO::FileExists(Assets_DestDir + asset)) {
+	if (IO::FileExists(TurboAssets_DestDir + asset)) {
 		warn("Unexpected File exists but not in init list: " + asset);
 		return;
 	}
 	startnew(DownloadTurboAsset, asset);
 }
 
-int _TurboAssetDlSemaphore = 0;
-int _TotalDownloadsStarted = 0;
-int _TotalDownloadsDone = 0;
-const int MAX_CONCURRENT_DOWNLOADS = 20;
-
 void DownloadTurboAsset(const string &in asset) {
-	_TotalDownloadsStarted++;
-	while (_TurboAssetDlSemaphore >= MAX_CONCURRENT_DOWNLOADS) yield();
-	_TurboAssetDlSemaphore++;
-	try {
-		string url = Assets_BaseUrl + asset.Replace(" ", "%20");
-		string dest = Assets_DestDir + asset;
-		trace("Downloading " + asset + " from " + url);
-
-		Net::HttpRequest@ req = Net::HttpGet(url);
-		while (!req.Finished()) yield();
-		if (req.ResponseCode() != 200) {
-			NotifyWarning("Failed (code="+req.ResponseCode()+") to download " + asset + " from " + url + " | error: " + req.Error() + " | response: " + req.String());
-		} else {
-			req.SaveToFile(dest);
-			trace("Downloaded " + asset + " to " + dest);
-		}
-	} catch {
-		NotifyError("Failed to download " + asset + " / exception: " + getExceptionInfo());
-	}
-	_TurboAssetDlSemaphore--;
-	_TotalDownloadsDone++;
-}
-
-void AwaitDownloadAllAssets() {
-	yield(3);
-	if (_TurboAssetDlSemaphore == 0) return;
-	Notify("Waiting for " + _TotalDownloadsStarted + " assets to download...");
-	while (_TurboAssetDlSemaphore > 0) yield();
-	NotifySuccess("Downloaded " + _TotalDownloadsDone + " assets.");
+    DownloadAsset(TurboAssets_BaseUrl, TurboAssets_DestDir, asset);
 }
