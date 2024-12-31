@@ -664,8 +664,8 @@ namespace Turbo {
         m_isLastFinished = app.CurrentPlayground.GameTerminals[0].UISequence_Current == SGamePlaygroundUIConfig::EUISequence::Finish;
         bool didFinish = !lastPlayerWasFinished && m_isLastFinished;
         if (playerCpIx != lastPlayerCpIx || didFinish) {
-            if (m_isLastFinished) {
-                if (didFinish) m_raceStateTrigger_Finished = GameTime;
+            if (m_isLastFinished && didFinish) {
+                m_raceStateTrigger_Finished = GameTime;
                 print("Playing finish line sound: " + TurboConst::SoundFinishLine);
                 // end race?
                 m_switchTrackNeeded = true;
