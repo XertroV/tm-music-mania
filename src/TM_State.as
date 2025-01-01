@@ -1,7 +1,13 @@
 namespace TM_State {
+	uint CurrMapUidValue;
+	uint lastMapUidValue;
+	string CurrMapUid;
+
     bool IsMapNull;
 	bool WasMapNull;
-	// bool DidMapChange;
+	bool DidMapChange;
+    bool MapHasEmbeddedMusic;
+
 	bool IsInMenu;
 	bool IsLoading;
 	bool IsInSolo;
@@ -17,6 +23,7 @@ namespace TM_State {
 	bool WasInEditor;
 
     bool ContextChanged;
+    int ContextFlags;
 
 
 
@@ -45,19 +52,47 @@ namespace TM_State {
 		IsInServer = IsInPlayground && si.ServerLogin.Length > 0;
 
         ContextChanged = IsInEditor != WasInEditor || IsInPlayground != WasInPlayground || IsInMenu != WasInMenu;
+        if (ContextChanged) {
+            ContextFlags = (IsInEditor ? 1 : 0) | (IsInPlayground ? 2 : 0) | (IsInMenu ? 4 : 0);
+        }
 
         UpdatePlayground(app, cast<CSmArenaClient>(app.CurrentPlayground));
 
-		// DidMapChange = false;
-		// if (IsMapNull && !WasMapNull) {
-		// 	lastMapUidValue = CurrMapUidValue;
-		// 	CurrMapUidValue = 0;
-		// 	DidMapChange = true;
-		// 	CurrMapUid = "";
-		// } else if (!IsMapNull) {
-		// 	CheckUpdateMap(app.RootMap);
-		// }
+		DidMapChange = false;
+		if (IsMapNull && !WasMapNull) {
+			lastMapUidValue = CurrMapUidValue;
+			CurrMapUidValue = 0;
+			DidMapChange = true;
+			CurrMapUid = "";
+            MapHasEmbeddedMusic = false;
+		} else if (!IsMapNull) {
+			CheckUpdateMap(app.RootMap);
+		}
 	}
+
+    void CheckUpdateMap(CGameCtnChallenge@ map) {
+		if (map.Id.Value != CurrMapUidValue) {
+			lastMapUidValue = CurrMapUidValue;
+			CurrMapUidValue = map.Id.Value;
+			DidMapChange = true;
+			CurrMapUid = map.IdName;
+            MapHasEmbeddedMusic = map.HasCustomMusic;
+		}
+    }
+
+    bool ContextIsNoneOrMatch(int ctxFlags) {
+        return ContextFlags == 0 || ContextFlags == ctxFlags;
+    }
+
+    void WhileContextIsNoneOrMatch(int ctxFlags) {
+        while (ContextIsNoneOrMatch(ctxFlags)) {
+            yield();
+        }
+    }
+
+    void WhileContextIsSame() {
+        WhileContextIsNoneOrMatch(ContextFlags);
+    }
 
     CTrackManiaMenus@ GetMenusFromSwitcher(CGameSwitcher@ switcher) {
         if (switcher.ModuleStack.Length == 0) {

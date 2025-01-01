@@ -529,6 +529,8 @@ class Music_StdTrackSelection : MusicOrSound {
 
     void OnContextEnter() override {
         On_NextTrack();
+        // we can technically double up on these loops, but they resolve cleanly anyway. better than no loops running.
+        startnew(CoroutineFuncUserdataInt64(this.WatchForEndMusicTrack), int64(curTrackIx));
     }
 
     void OnContextLeave() override {
@@ -607,7 +609,8 @@ class Music_StdTrackSelection : MusicOrSound {
     void WatchForEndMusicTrack(int64 _curTrackIx) {
         int initCurrIx = _curTrackIx;
         bool wasCursorNearlyDone = false;
-        while (TM_State::IsInPlayground && curTrackIx == initCurrIx && MusicAll.Length > curTrackIx && MusicAll[curTrackIx] !is null) {
+        auto tmCtxFlags = TM_State::ContextFlags;
+        while (TM_State::ContextIsNoneOrMatch(tmCtxFlags) && curTrackIx == initCurrIx && MusicAll.Length > curTrackIx && MusicAll[curTrackIx] !is null) {
             auto @music = MusicAll[curTrackIx];
             auto source = cast<CAudioSource>(Dev::GetOffsetNod(music, 0x20));
             if (source.PlayCursorUi > 0.95) {

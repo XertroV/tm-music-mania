@@ -212,6 +212,32 @@ namespace Music {
     void RenderMenuMain() {
         if (UI::BeginMenu(MenuMainTitle)) {
             RenderMenu_CurrentMusicStats();
+
+            if (TM_State::MapHasEmbeddedMusic) {
+                UI::SeparatorText("Map Music");
+
+                auto map = GetApp().RootMap;
+                auto plugSound = map.CustomMusic;
+                auto musicPackDesc = map.CustomMusicPackDesc;
+
+                if (plugSound !is null) {
+                    plugSound.VolumedB = UI::SliderFloat("Map music vol dB", plugSound.VolumedB, -40., 12.);
+                }
+
+                if (musicPackDesc !is null) {
+                    UI::Text("Pack.Name: " + musicPackDesc.Name);
+                    UI::Text("Pack.Url: " + musicPackDesc.Url);
+                    auto fid = musicPackDesc.Fid;
+                    if (fid !is null) {
+                        if (fid.Nod !is null) {
+                            auto nodTy = Reflection::TypeOf(fid.Nod);
+                            UI::Text("Nod Type: " + nodTy.Name);
+                            UI::Text("BaseType: " + nodTy.BaseType);
+                        }
+                    }
+                }
+            }
+
             UI::SeparatorText("\\$8f8\\$iAvailable Packs");
             RenderMenu_ListPacks();
             UI::SeparatorText("Settings");
