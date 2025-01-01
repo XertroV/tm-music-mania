@@ -101,7 +101,7 @@ string[]@ OldAssets_FilterOnlyMusicFiles(string[]@ assetFiles) {
     return filteredFiles;
 }
 
-AssetDownloader@ oldAssetDownloader = AssetDownloader("OldTmAssets", OldAssets_BaseUrl, OldAssets_RawBaseDir);
+AssetDownloader@ oldAssetDownloader = AssetDownloader(OLD_TM_AP_NAME, OldAssets_BaseUrl, OldAssets_RawBaseDir);
 
 void DownloadAllOldTmAssets() {
     auto @filesInDir = IO_IndexFolderTrimmed(OldAssets_BaseDir, true);
@@ -126,7 +126,7 @@ void CheckOldTmAssetsAndRegister() {
     gotAll = CheckOldTmAssetsSubfolderAndRegister("Old Menus", oldTm_MenuFiles) && gotAll;
     gotAll = CheckOldTmAssetsSubfolderAndRegister("Old Races", oldTm_RaceFiles) && gotAll;
     if (gotAll) {
-        SetGotAssetPack("OldTmAssets");
+        SetGotAssetPack(OLD_TM_AP_NAME);
     }
 }
 

@@ -13,6 +13,7 @@ void Main() {
     CheckOldTmAssetsAndRegister();
     CheckWiiAssetsAndRegister();
     CheckDsAssetsAndRegister();
+    CheckVSAssetsAndRegister();
 
     // a short break to give some time before starting music stuff on game start
     yield(4);

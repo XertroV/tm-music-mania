@@ -38,7 +38,7 @@ string[]@ DsAssets_FilterOnlyMusicFiles(string[]@ assetFiles) {
     return result;
 }
 
-AssetDownloader@ dsAssetDownloader = AssetDownloader("DsAssets", DsAssets_BaseUrl, DsAssets_RawBaseDir);
+AssetDownloader@ dsAssetDownloader = AssetDownloader(DS_AP_NAME, DsAssets_BaseUrl, DsAssets_RawBaseDir);
 
 void DownloadAllDsAssets() {
     auto @filesInDir = IO_IndexFolderTrimmed(DsAssets_BaseDir, true);
@@ -63,7 +63,7 @@ void CheckDsAssetsAndRegister() {
     gotAll = CheckDsAssetsSubfolderAndRegister("DS", dsFiles) && gotAll;
     gotAll = CheckDsAssetsSubfolderAndRegister("DS_Turbo", dsTurboFiles) && gotAll;
     if (gotAll) {
-        SetGotAssetPack("DsAssets");
+        SetGotAssetPack(DS_AP_NAME);
     }
 }
 

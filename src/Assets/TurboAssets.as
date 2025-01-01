@@ -5,7 +5,7 @@ const string TurboAssets_RawDestDir = "GameData/Media/Sounds/Turbo/";
 string[]@ initialTurboAssetDirList;
 
 // creates DestDir for us
-AssetDownloader@ turboAssetDownloader = AssetDownloader("TurboAssets", TurboAssets_BaseUrl, TurboAssets_RawDestDir);
+AssetDownloader@ turboAssetDownloader = AssetDownloader(TM_TURBO_AP_NAME, TurboAssets_BaseUrl, TurboAssets_RawDestDir);
 
 void EnsureTurboAssets() {
 	@initialTurboAssetDirList = IO_IndexFolderTrimmed(TurboAssets_DestDir, true);

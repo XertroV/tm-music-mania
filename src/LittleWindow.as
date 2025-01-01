@@ -30,6 +30,6 @@ namespace LittleWindow {
             trackName = music.GetCurrTrackName();
             trackTime = music.GetTimeProgressString();
         }
-        UI::Text(trackProg + " [ " + trackTime + " ] " + trackName);
+        UI::Text("\\$<\\$aaa" + trackProg + "\\$>  [ " + trackTime + " ]  \\$ccc" + trackName);
     }
 }

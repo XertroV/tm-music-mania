@@ -81,7 +81,7 @@ string[]@ Mp4Assets_FilterOnlyMusicFiles(string[]@ assetFiles) {
     return filteredFiles;
 }
 
-AssetDownloader@ mp4AssetDownloader = AssetDownloader("Mp4Assets", Mp4Assets_BaseUrl, Mp4Assets_RawBaseDir);
+AssetDownloader@ mp4AssetDownloader = AssetDownloader(MP4_AP_NAME, Mp4Assets_BaseUrl, Mp4Assets_RawBaseDir);
 
 void DownloadAllMp4Assets() {
     auto @filesInDir = IO_IndexFolderTrimmed(Mp4Assets_BaseDir, true);
@@ -109,7 +109,7 @@ void CheckMp4AssetsAndRegister() {
     gotAll = CheckMp4AssetsSubfolderAndRegister("Valley", valleyFiles) && gotAll;
     gotAll = CheckMp4AssetsSubfolderAndRegister("Stadium", stadiumFiles) && gotAll;
     if (gotAll) {
-        SetGotAssetPack("Mp4Assets");
+        SetGotAssetPack(MP4_AP_NAME);
     }
 }
 

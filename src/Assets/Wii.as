@@ -81,7 +81,7 @@ string[]@ WiiAssets_FilterOnlyMusicFiles(string[]@ assetFiles) {
     return result;
 }
 
-AssetDownloader@ wiiAssetDownloader = AssetDownloader("WiiAssets", WiiAssets_BaseUrl, WiiAssets_RawBaseDir);
+AssetDownloader@ wiiAssetDownloader = AssetDownloader(WII_AP_NAME, WiiAssets_BaseUrl, WiiAssets_RawBaseDir);
 
 void DownloadAllWiiAssets() {
     auto @filesInDir = IO_IndexFolderTrimmed(WiiAssets_BaseDir, true);
@@ -114,7 +114,7 @@ void CheckWiiAssetsAndRegister() {
     gotAll = CheckWiiAssetsSubfolderAndRegister("Wii Editor", wiiEditorFiles) && gotAll;
     gotAll = CheckWiiAssetsSubfolderAndRegister("Wii Misc", wiiMiscFiles) && gotAll;
     if (gotAll) {
-        SetGotAssetPack("WiiAssets");
+        SetGotAssetPack(WII_AP_NAME);
     }
 }
 

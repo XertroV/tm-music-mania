@@ -19,7 +19,7 @@ void AddTurboToAudioPackRegistry() {
         TurboConst::GetSoundsRespawn()
     )).WithBuiltin());
 
-    SetGotAssetPack("TurboAssets");
+    SetGotAssetPack(TM_TURBO_AP_NAME);
 }
 
 namespace Packs {
@@ -160,14 +160,14 @@ namespace Packs {
     }
 
     void R_DownloadPacks() {
-        UI::BeginDisabled(!mp4AssetDownloader.IsDone || DoWeHaveAssetPack("Mp4Assets"));
+        UI::BeginDisabled(!mp4AssetDownloader.IsDone || DoWeHaveAssetPack(MP4_AP_NAME));
         if (UI::Button("Download Mp4 Packs")) {
             startnew(DownloadAllMp4Assets);
         }
         UI::TextWrapped("Includes music from Canyon, Lagoon, Stadium, Valley, and SM Storm");
         UI::EndDisabled();
 
-        UI::BeginDisabled(!oldAssetDownloader.IsDone || DoWeHaveAssetPack("OldTmAssets"));
+        UI::BeginDisabled(!oldAssetDownloader.IsDone || DoWeHaveAssetPack(OLD_TM_AP_NAME));
         if (UI::Button("Download Old Tm Packs")) {
             startnew(DownloadAllOldTmAssets);
         }
