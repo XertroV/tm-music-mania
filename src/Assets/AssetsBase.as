@@ -1,7 +1,7 @@
 
 const string AssetBase_DestDir = IO::FromAppFolder("GameData/Media/Sounds/");
 
-const int MAX_CONCURRENT_DOWNLOADS = 20;
+const int MAX_CONCURRENT_DOWNLOADS = 10;
 
 dictionary _DownloadedAssetPacks;
 
