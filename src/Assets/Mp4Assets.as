@@ -64,7 +64,7 @@ string[]@ Mp4Assets_FilterOnlyMusicFiles(string[]@ assetFiles) {
         if (assetFiles[i].EndsWith(".zip")) continue;
         string file = assetFiles[i];
         filteredFiles.InsertLast(file);
-        trace("Filtered: " + file);
+        // trace("Filtered: " + file);
 
         if (file.StartsWith("SMStorm/")) {
             smStormFiles.InsertLast(file.SubStr(8));

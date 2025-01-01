@@ -23,6 +23,19 @@ namespace Music {
         startnew(Music::MainInGameLoop).WithRunContext(Meta::RunContext::GameLoop);
     }
 
+    // safe to pass null to disable game sounds
+    void SetGameSoundPack(AudioPack@ pack) {
+        if (Packs::UpdateGameSoundsChoice(pack) && TM_State::IsInPlayground) {
+            dev_trace("UpdateGameSoundsChoice: Game sounds changed");
+            if (GM_InGameSounds !is null) GM_InGameSounds.CleanUp();
+            if (pack is null) {
+                @GM_InGameSounds = null;
+            } else {
+                @GM_InGameSounds = cast<GameSounds>(pack.ToMusicOrSound());
+            }
+        }
+    }
+
     void SetCurrentMusicChoice(AudioPack@ music) {
         if (TM_State::IsInMenu) {
             if (Packs::UpdateMenuMusicChoice(music)) {
@@ -90,6 +103,12 @@ namespace Music {
 
     string GetCurrentMusicPackName() {
         auto music = GetCurrentMusic();
+        if (music is null) return "null";
+        return music.GetOriginName();
+    }
+
+    string GetCurrentGameSoundPackName() {
+        auto music = GetCurrentGameSounds();
         if (music is null) return "null";
         return music.GetOriginName();
     }
@@ -164,7 +183,11 @@ namespace Music {
 
     MusicOrSound@ ChooseInGameMusic(bool andGameSounds = true) {
         if (GM_InGame !is null) GM_InGame.CleanUp();
-        @GM_InGame = Packs::GetInGameMusic().ToMusicOrSound();
+        if (TM_State::MapHasEmbeddedMusic && GameMusic::S_PrioritizeMusicInMap) {
+            // do nothing if the map has music and we want to prioritize it.
+        } else {
+            @GM_InGame = Packs::GetInGameMusic().ToMusicOrSound();
+        }
 
         if (andGameSounds) {
             if (GM_InGameSounds !is null) GM_InGameSounds.CleanUp();
@@ -193,10 +216,12 @@ namespace Music {
         // -- main loop --
         while (TM_State::IsInPlayground) {
             // wait for music to be loaded if there is no selection
-            if (GM_InGame is null && GM_InGameSounds is null) {
+            if (GM_InGame is null && GM_InGameSounds is null && TM_State::IsInPlayground) {
                 yield();
                 continue;
             }
+
+            if (!TM_State::IsInPlayground) break;
 
             // monitor for spawns, finishes, cps, etc.
             RaceStateMonitor.Update(app);
@@ -232,7 +257,7 @@ namespace Music {
                         if (fid.Nod !is null) {
                             auto nodTy = Reflection::TypeOf(fid.Nod);
                             UI::Text("Nod Type: " + nodTy.Name);
-                            UI::Text("BaseType: " + nodTy.BaseType);
+                            UI::Text("BaseType: " + nodTy.BaseType.Name);
                         }
                     }
                 }
@@ -250,8 +275,8 @@ namespace Music {
         UI::SeparatorText("Global Volumes");
 
         // UI::PushItemWidth(200.);
-        Global::GameVolume = UI::SliderFloat("Game Vol dB", Global::GameVolume, -40., 6.);
         Global::MusicVolume = UI::SliderFloat("Music Vol dB", Global::MusicVolume, -40., 6.);
+        Global::GameVolume = UI::SliderFloat("Game Vol dB", Global::GameVolume, -40., 6.);
         // UI::PopItemWidth();
 
         UI::SeparatorText("Music");
@@ -271,11 +296,11 @@ namespace Music {
 
     void RenderMenu_ListPacks() {
         bool listInGame = TM_State::IsInPlayground;
-        bool listEditor = TM_State::IsInEditor;
+        bool listEditor = !listInGame && TM_State::IsInEditor;
         bool listMenu = TM_State::IsInMenu;
-        int flags = listInGame ? (AudioPackType::Loops_Turbo | AudioPackType::Playlist | AudioPackType::GameSounds)
-            : listEditor ? (AudioPackType::Loops_Editor | AudioPackType::Playlist)
-            : listMenu ? (AudioPackType::Playlist) : 0;
+        // int flags = listInGame ? (AudioPackType::Loops_Turbo | AudioPackType::Playlist | AudioPackType::GameSounds)
+        //     : listEditor ? (AudioPackType::Loops_Editor | AudioPackType::Playlist)
+        //     : listMenu ? (AudioPackType::Playlist) : 0;
 
         UI::BeginDisabled(!listInGame);
         if (UI::BeginMenu("InGame Music (Loops)")) {
@@ -287,7 +312,7 @@ namespace Music {
             UI::EndMenu();
         }
         if (UI::BeginMenu("Game Sounds")) {
-            RenderMenu_ListPack(Packs::GameSounds);
+            RenderMenu_ListPack(Packs::GameSounds, true);
             UI::EndMenu();
         }
         UI::EndDisabled();
@@ -311,10 +336,17 @@ namespace Music {
         UI::EndDisabled();
     }
 
-    void RenderMenu_ListPack(AudioPack@[]@ packs) {
+    void RenderMenu_ListPack(AudioPack@[]@ packs, bool includeNull = false, bool isGameSounds = true) {
         if (packs.Length == 0) {
             UI::Text("No packs here :(");
             return;
+        }
+
+        if (includeNull) {
+            if (UI::MenuItem("\\$bbb<None>", "", GetCurrentGameSounds() is null)) {
+                if (isGameSounds) SetGameSoundPack(null);
+                else SetCurrentMusicChoice(null);
+            }
         }
 
         for (uint i = 0; i < packs.Length; i++) {
@@ -328,7 +360,9 @@ namespace Music {
         AddSimpleTooltip("When enabled, the playing track will loop until the map changes.\nOtherwise, when a track finishes, a new track will play.");
         S_Playlist_Sequential = UI::Checkbox("[Playlist] Sequential", S_Playlist_Sequential);
         AddSimpleTooltip("When enabled, the playlist will advance through the tracks in order. Otherwise, it will play them randomly.");
+
         UI::Separator();
+
         GameMusic::S_PrioritizeMusicInMap = UI::Checkbox("[General] Prioritize embedded music", GameMusic::S_PrioritizeMusicInMap);
         AddSimpleTooltip("When enabled, music embedded in a map will play instead of music from the current pack.");
         GameMusic::S_SetMusicInMapVolume = UI::Checkbox("[General] Set volume on embedded music", GameMusic::S_SetMusicInMapVolume);
@@ -338,6 +372,11 @@ namespace Music {
             GameMusic::S_MusicInMapVolume = UI::SliderFloat("[General] Embedded music v. dB", GameMusic::S_MusicInMapVolume, -40., 6.);
             AddSimpleTooltip("Default: 0.0 dB. Suggested: 6.0 dB.\nCtrl+click to input exact values.");
         }
+
+        UI::Separator();
+
+        LittleWindow::S_ShowLittleWindow = UI::Checkbox("[UI] Show Little Window", LittleWindow::S_ShowLittleWindow);
+
         UX::PopThinControls();
     }
 }

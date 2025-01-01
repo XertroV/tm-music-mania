@@ -43,6 +43,20 @@ class MusicOrSound {
     void RenderMenuTools() {
         UI::TextWrapped("\\$f00\\$i implement RenderMenuTools for " + name + " (Origin: " + GetOriginName() + ")");
     }
+
+    int GetCurrTrackIx() {
+        return -1;
+    }
+
+    string GetCurrTrackName() {
+        throw("GetCurrTrackName not implemented for " + name);
+        return "No track";
+    }
+
+    string GetTimeProgressString() {
+        throw("GetTimeProgressString not implemented for " + name);
+        return "0:00 / 0:00";
+    }
 }
 
 // Manages turbo-like music (tracks and loops) in-game
@@ -281,7 +295,7 @@ class Music_TurboInGame : MusicOrSound {
         }
     }
 
-
+    int G_LastMusicToPlayIx = -1;
 
     void LoadMusic(int musicIx) {
         ResetSounds(true);
@@ -300,6 +314,8 @@ class Music_TurboInGame : MusicOrSound {
         if (musicIx < -1) {
             musicToPlay = MusicAll.Length + musicIx + 1;
         }
+
+        G_LastMusicToPlayIx = musicToPlay;
 
         if (MusicAll[musicToPlay] !is null) {
             G_Debug_SongName = G_MusicDescs[musicToPlay][0];
@@ -412,6 +428,18 @@ class Music_TurboInGame : MusicOrSound {
         if (UX::SmallButton("Next Track")) {
             LoadMusic(-1);
         }
+    }
+
+    int GetCurrTrackIx() override {
+        return G_LastMusicToPlayIx;
+    }
+
+    string GetCurrTrackName() override {
+        return G_Debug_SongName;
+    }
+
+    string GetTimeProgressString() override {
+        return "-:--";
     }
 }
 
@@ -678,6 +706,34 @@ class Music_StdTrackSelection : MusicOrSound {
         }
     }
 
+    CAudioScriptSound@ GetCurrMusic() {
+        if (curTrackIx < 0 || curTrackIx >= MusicAll.Length) {
+            warn("Invalid curTrackIx: " + curTrackIx);
+            return null;
+        }
+        return MusicAll[curTrackIx];
+    }
+
+    int GetCurrTrackIx() override {
+        return curTrackIx;
+    }
+
+    string GetCurrTrackName() override {
+        if (curTrackIx < 0 || curTrackIx >= MusicShortPaths.Length) {
+            return "No track";
+        }
+        return MusicShortPaths[curTrackIx];
+    }
+
+    string GetTimeProgressString() override {
+        auto music = GetCurrMusic();
+        if (music is null) {
+            return "-:-- / -:--";
+        }
+        auto totalLen = Time::Format(int64(music.PlayLength * 1000.), false, true, false, true);
+        auto playLen = Time::Format(int64(music.PlayCursor * 1000.), false, true, false, true);
+        return playLen + " / " + totalLen;
+    }
 }
 
 class Music_TurboInMenu : Music_StdTrackSelection {
@@ -798,6 +854,18 @@ class GameSounds : MusicOrSound {
         sound.VolumedB = 0.;
         sound.Play();
         startnew(SleepAndDestroy, sound);
+    }
+
+    int GetCurrTrackIx() override {
+        return 0;
+    }
+
+    string GetCurrTrackName() override {
+        return name;
+    }
+
+    string GetTimeProgressString() override {
+        return "-:--";
     }
 }
 

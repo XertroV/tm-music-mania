@@ -41,6 +41,12 @@ void RenderInterface() {
     // TurboDebug::Render();
 }
 
+/** Render function called every frame.
+*/
+void Render() {
+    LittleWindow::Render();
+}
+
 /** Render function called every frame intended only for menu items in `UI`.
 */
 void RenderMenu() {

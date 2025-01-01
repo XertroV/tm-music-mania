@@ -89,7 +89,7 @@ string[]@ OldAssets_FilterOnlyMusicFiles(string[]@ assetFiles) {
         if (assetFiles[i].Length < 2) continue;
         string file = assetFiles[i];
         filteredFiles.InsertLast(file);
-        trace("Filtered: " + file);
+        // trace("Filtered: " + file);
 
         string lFile = file.ToLower();
         if (lFile.Contains("menu") || lFile.Contains("heartbeat")) {

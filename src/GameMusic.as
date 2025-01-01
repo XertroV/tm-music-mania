@@ -39,6 +39,7 @@ namespace GameMusic {
     [Setting hidden]
     float S_MusicInMapVolume = 3.0;
 
+#if SIG_DEVELOPER
     void RenderMenu() {
         if (UI::MenuItem("Music Mania Debug", "", windowOpen)) {
             windowOpen = !windowOpen;
@@ -153,6 +154,7 @@ namespace GameMusic {
                         UI::SameLine();
                         if (UX::SmallButton(Icons::Cubes + "##" + i)) {
                             ExploreNod("AudioSource[" + i + "]", src);
+                            IO::SetClipboard(Text::FormatPointer(Dev_GetPtrForNod(src)));
                         }
                         UI::SameLine();
                         if (UX::SmallButton(Icons::Play + " / " + Icons::Pause + "##" + i)) {
@@ -171,6 +173,10 @@ namespace GameMusic {
             UI::EndChild();
         }
     }
+#else
+    void Render() {}
+    void RenderMenu() {}
+#endif
 
     void DrawPlayingVolumes() {
         if (UI::CollapsingHeader("Playing Volumes")) {

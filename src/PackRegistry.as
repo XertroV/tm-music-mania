@@ -116,12 +116,12 @@ namespace Packs {
     }
 
     bool UpdateGameSoundsChoice(AudioPack@ pack) {
-        if (pack.ty != AudioPackType::GameSounds) {
+        if (pack !is null && pack.ty != AudioPackType::GameSounds) {
             warn("UpdateGameSoundsChoice: expected GameSounds, got " + tostring(pack.ty));
             return false;
         }
-        bool changed = S_PackChoice_InGameSounds != pack.name;
-        S_PackChoice_InGameSounds = pack.name;
+        bool changed = (pack is null && S_PackChoice_InGameSounds.Length > 0) || S_PackChoice_InGameSounds != pack.name;
+        S_PackChoice_InGameSounds = pack is null ? "" : pack.name;
         return changed;
     }
 
@@ -318,6 +318,11 @@ abstract class AudioPack {
         throw("override ToMusicOrSound: " + (tyAndName));
         return null;
     }
+
+    int GetTrackCount() {
+        throw("override GetTrackCount: " + (tyAndName));
+        return 0;
+    }
 }
 
 
@@ -333,6 +338,10 @@ class AudioPack_Null : AudioPack_Playlist {
 
     MusicOrSound@ ToMusicOrSound() override {
         return null;
+    }
+
+    int GetTrackCount() override {
+        return 0;
     }
 }
 
@@ -392,6 +401,10 @@ class AudioPack_LoopsGeneric : AudioPack {
         if (musicLoops !is null) {
             musicLoops.PickNewMusicTrack(ix);
         }
+    }
+
+    int GetTrackCount() override {
+        return loops.Length;
     }
 }
 
@@ -565,6 +578,10 @@ class AudioPack_Playlist : AudioPack {
             musicStdPlaylist.SelectAndPreloadTrack(ix);
         }
     }
+
+    int GetTrackCount() override {
+        return tracks.Length;
+    }
 }
 
 
@@ -627,14 +644,22 @@ class AudioPack_GameSounds : AudioPack {
     }
 
     void RenderSongChoiceMenu() override {
-        if (UI::BeginMenu(name)) {
-            for (uint i = 0; i < spec.checkpointFast.Length; i++) {
-                if (UI::MenuItem(spec.checkpointFast[i], "", false)) {
-                    dev_warn("Selected: " + spec.checkpointFast[i]);
-                }
-            }
-            UI::EndMenu();
+        if (UI::MenuItem(name, "", Music::GetCurrentGameSoundPackName() == name)) {
+            dev_warn("ap_gamesounds: Selected: " + name);
+            Music::SetGameSoundPack(this);
         }
+        // if (UI::BeginMenu(name)) {
+        //     for (uint i = 0; i < spec.checkpointFast.Length; i++) {
+        //         if (UI::MenuItem(spec.checkpointFast[i], "", false)) {
+        //             dev_warn("Selected: " + spec.checkpointFast[i]);
+        //         }
+        //     }
+        //     UI::EndMenu();
+        // }
+    }
+
+    int GetTrackCount() override {
+        return 1;
     }
 }
 
