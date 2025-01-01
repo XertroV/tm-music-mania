@@ -39,7 +39,10 @@ namespace GameMusic {
     [Setting hidden]
     float S_MusicInMapVolume = 3.0;
 
+    // Dev stuff disabled via `x` suffix
+
 #if SIG_DEVELOPERx
+
     void RenderMenu() {
         if (UI::MenuItem("Music Mania Debug", "", windowOpen)) {
             windowOpen = !windowOpen;
@@ -338,7 +341,7 @@ namespace GameMusic {
 }
 
 
-#if TURBO
+#if TURBO && FALSE
 
 void SearchForOggFiles() {
     auto ap = GetApp().AudioPort;
@@ -431,6 +434,8 @@ void SearchForOggFiles() {
 #endif
 
 
+#if FALSE
+
 FoundOggFile@[] foundOggFiles;
 
 class FoundOggFile {
@@ -464,3 +469,5 @@ class FoundOggFile {
         print("Found .ogg file: " + path);
     }
 }
+
+#endif

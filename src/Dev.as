@@ -1,4 +1,4 @@
-// don't blame me if you crash your game
+#if SIG_DEVELOPERx
 uint64 Dev_GetPtrForNod(CMwNod@ nod) {
     if (nod is null) throw("null nod passed"); // return 0 here if you prefer, but remember to check it later!
     uint64 vtablePtr = Dev::GetOffsetUint64(nod, 0); // store the vtable ptr to restore later
@@ -10,3 +10,4 @@ uint64 Dev_GetPtrForNod(CMwNod@ nod) {
 #endif
     return nodPtr; // ^_^
 }
+#endif
