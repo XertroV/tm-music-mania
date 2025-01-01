@@ -7,6 +7,7 @@ void Main() {
     startnew(SetupIntercepts);
     EnsureTurboAssets();
     CheckMp4AssetsAndRegister();
+    CheckOldTmAssetsAndRegister();
     // a short break to give some time before starting music stuff on game start
     yield(10);
     startnew(GameMusic::Main);

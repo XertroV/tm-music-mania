@@ -7,6 +7,12 @@ MusicOrSound@ GM_Editor;
 MusicOrSound@ GM_InGameSounds;
 MusicOrSound@ GM_EditorSounds;
 
+enum MusicCtx {
+    InGame,
+    Menu,
+    Editor
+}
+
 namespace Music {
     void Main() {
         // todo: instantiating music in the wrong mania app context can cause problems where it doesn't play back properly and things get stuck.
@@ -15,6 +21,21 @@ namespace Music {
             ChooseInMenuMusic();
         }
         startnew(Music::MainInGameLoop).WithRunContext(Meta::RunContext::GameLoop);
+    }
+
+    void ReloadMusicFor(MusicCtx ctx) {
+        switch (ctx) {
+            case MusicCtx::InGame:
+                @GM_InGame = null;
+                @GM_InGameSounds = null;
+                break;
+            case MusicCtx::Menu:
+                @GM_Menu = null;
+                break;
+            case MusicCtx::Editor:
+                @GM_Editor = null;
+                break;
+        }
     }
 
     void MainInGameLoop() {

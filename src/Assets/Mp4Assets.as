@@ -55,9 +55,9 @@ SMStorm_music.zip
 TMStadium_music.zip
 """;
 
-string[]@ _mp4AssetFiles = FilterOnlyMusicFiles(Mp4AssetFiles.Split("\n"));
+string[]@ _mp4AssetFiles = Mp4Assets_FilterOnlyMusicFiles(Mp4AssetFiles.Split("\n"));
 
-string[]@ FilterOnlyMusicFiles(string[]@ assetFiles) {
+string[]@ Mp4Assets_FilterOnlyMusicFiles(string[]@ assetFiles) {
     array<string> filteredFiles;
     for (uint i = 0; i < assetFiles.Length; i++) {
         if (assetFiles[i].Length < 2) continue;
@@ -102,28 +102,33 @@ void CheckMp4AssetsAndRegister() {
         warn("Mp4Assets folder does not exist: " + Mp4Assets_BaseDir);
         return;
     }
-    CheckMp4AssetsSubfolderAndRegister("SMStorm", smStormFiles);
-    CheckMp4AssetsSubfolderAndRegister("Canyon", canyonFiles);
-    CheckMp4AssetsSubfolderAndRegister("Lagoon", lagoonFiles);
-    CheckMp4AssetsSubfolderAndRegister("Valley", valleyFiles);
-    CheckMp4AssetsSubfolderAndRegister("Stadium", stadiumFiles);
+    bool gotAll = true;
+    gotAll = CheckMp4AssetsSubfolderAndRegister("SMStorm", smStormFiles) && gotAll;
+    gotAll = CheckMp4AssetsSubfolderAndRegister("Canyon", canyonFiles) && gotAll;
+    gotAll = CheckMp4AssetsSubfolderAndRegister("Lagoon", lagoonFiles) && gotAll;
+    gotAll = CheckMp4AssetsSubfolderAndRegister("Valley", valleyFiles) && gotAll;
+    gotAll = CheckMp4AssetsSubfolderAndRegister("Stadium", stadiumFiles) && gotAll;
+    if (gotAll) {
+        SetGotAssetPack("Mp4Assets");
+    }
 }
 
-void CheckMp4AssetsSubfolderAndRegister(const string &in subfolder, string[]@ files) {
+bool CheckMp4AssetsSubfolderAndRegister(const string &in subfolder, string[]@ files) {
     // c:/.../GameData/Media/Sounds/Mp4/<subfolder>/
     string subfolderDir = Mp4Assets_BaseDir + subfolder + "/";
     if (!IO::FolderExists(subfolderDir)) {
         warn("Mp4AssetPack subfolder does not exist: " + subfolderDir);
-        return;
+        return false;
     }
     for (uint i = 0; i < files.Length; i++) {
         string file = files[i];
         if (!IO::FileExists(subfolderDir + file)) {
             warn("Mp4AssetPack file does not exist: " + subfolderDir + file);
-            return;
+            return false;
         }
     }
     RegisterMp4AssetPack(subfolder, files);
+    return true;
 }
 
 void RegisterMp4AssetPack(const string &in subfolder, string[]@ files) {

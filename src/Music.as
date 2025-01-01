@@ -458,7 +458,9 @@ class Music_StdTrackSelection : MusicOrSound {
         auto panRadiusLfe = vec3(0., 1.,   -20.);
         tmpVoldB = GetMusicVolume(MusicPaths[curTrackIx]);
         music.PanRadiusLfe = panRadiusLfe;
-        music.VolumedB = tmpVoldB;
+        music.VolumedB = 0.0;
+        auto source = cast<CAudioSource>(Dev::GetOffsetNod(music, 0x20));
+        source.PlugSound.VolumedB = tmpVoldB;
         music.Play();
         // auto ptr = Dev_GetPtrForNod(music);
         // dev_trace("Preloaded music: " + MusicPaths[curTrackIx] + " (ptr: " + Text::FormatPointer(ptr) + ")");
@@ -480,12 +482,12 @@ class Music_StdTrackSelection : MusicOrSound {
         if (audioSource !is null) {
             dev_warn("Setting balance group for audio source: " + MusicPaths[curTrackIx]);
             audioSource.BalanceGroup = CAudioSource::EAudioBalanceGroup::Custom1;
-            audioSource.VolumedB = tmpVoldB;
+            audioSource.VolumedB = 0.0;
             audioSource.Play();
-            yield(1);
-            audioSource.BalanceGroup = CAudioSource::EAudioBalanceGroup::Music;
-            audioSource.VolumedB = tmpVoldB;
-            audioSource.Play();
+            // yield(1);
+            // audioSource.BalanceGroup = CAudioSource::EAudioBalanceGroup::Music;
+            // audioSource.VolumedB = 0.0;
+            // audioSource.Play();
             dev_warn("Set balance group for audio source: " + MusicPaths[curTrackIx]);
         }
     }

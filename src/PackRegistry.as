@@ -102,16 +102,38 @@ namespace Packs {
         LoopsEditor = 8
     }
 
+
     void R_Packs_Settings() {
         UI::BeginTabBar("PacksTabBar");
-        S_PackChoice_InGame = R_PackChoice("In-Game Music", S_PackChoice_InGame, PackTy::LoopsTurbo | PackTy::Playlist);
-        S_PackChoice_InGameSounds = R_PackChoice("In-Game Sounds", S_PackChoice_InGameSounds, PackTy::GameSounds);
-        S_PackChoice_Menu = R_PackChoice("Menu Music", S_PackChoice_Menu, PackTy::Playlist);
-        S_PackChoice_Editor = R_PackChoice("Editor Music", S_PackChoice_Editor, PackTy::LoopsEditor | PackTy::Playlist);
+        S_PackChoice_InGame = R_PackChoice("In-Game Music", S_PackChoice_InGame, MusicCtx::InGame, PackTy::LoopsTurbo | PackTy::Playlist);
+        S_PackChoice_InGameSounds = R_PackChoice("In-Game Sounds", S_PackChoice_InGameSounds, MusicCtx::InGame, PackTy::GameSounds);
+        S_PackChoice_Menu = R_PackChoice("Menu Music", S_PackChoice_Menu, MusicCtx::Menu, PackTy::Playlist);
+        S_PackChoice_Editor = R_PackChoice("Editor Music", S_PackChoice_Editor, MusicCtx::Editor, PackTy::LoopsEditor | PackTy::Playlist);
+
+        if (UI::BeginTabItem("Download Packs")) {
+            R_DownloadPacks();
+            UI::EndTabItem();
+        }
         UI::EndTabBar();
     }
 
-    string R_PackChoice(const string &in name, const string &in currentChoice, int allowedPackTypes = PackTy::Playlist) {
+    void R_DownloadPacks() {
+        UI::BeginDisabled(!mp4AssetDownloader.IsDone || DoWeHaveAssetPack("Mp4Assets"));
+        if (UI::Button("Download Mp4 Packs")) {
+            startnew(DownloadAllMp4Assets);
+        }
+        UI::TextWrapped("Includes music from Canyon, Lagoon, Stadium, Valley, and SM Storm");
+        UI::EndDisabled();
+
+        UI::BeginDisabled(!oldAssetDownloader.IsDone || DoWeHaveAssetPack("OldTmAssets"));
+        if (UI::Button("Download Old Tm Packs")) {
+            startnew(DownloadAllOldTmAssets);
+        }
+        UI::TextWrapped("Includes music from TMO, TMS, TMU, TMN ESWC, and TMNF");
+        UI::EndDisabled();
+    }
+
+    string R_PackChoice(const string &in name, const string &in currentChoice, MusicCtx mCtx, int allowedPackTypes = PackTy::Playlist) {
         if (UI::BeginTabItem(name)) {
             string choice = currentChoice;
             UI::Text("Current: " + choice);
@@ -135,6 +157,9 @@ namespace Packs {
             //     choice = UI::SelectString("Choose Pack", choice, GetPackNames(allowedPackTypes));
             // }
             UI::EndTabItem();
+            if (choice != currentChoice) {
+                Music::ReloadMusicFor(mCtx);
+            }
             return choice;
         }
         return currentChoice;

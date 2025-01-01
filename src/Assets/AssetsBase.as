@@ -3,6 +3,17 @@ const string AssetBase_DestDir = IO::FromAppFolder("GameData/Media/Sounds/");
 
 const int MAX_CONCURRENT_DOWNLOADS = 20;
 
+dictionary _DownloadedAssetPacks;
+
+bool DoWeHaveAssetPack(const string &in name) {
+    return _DownloadedAssetPacks.Exists(name);
+}
+
+void SetGotAssetPack(const string &in name) {
+    _DownloadedAssetPacks[name] = true;
+}
+
+
 class AssetDownloader {
     string name;
     string destDirRaw;
@@ -34,6 +45,10 @@ class AssetDownloader {
     }
     float get_DownloadsPctDone() {
         return float(_TotalDownloadsDone) / float(_TotalDownloadsStarted) * 100.0;
+    }
+
+    bool get_IsDone() {
+        return _TotalDownloadsDone == _TotalDownloadsStarted;
     }
 
     Meta::PluginCoroutine@ DownloadAsset_InBg(const string &in asset) {
