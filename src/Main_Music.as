@@ -199,7 +199,7 @@ namespace Music {
     void InMenuLoop() {
         yield();
         while (TM_State::IsInMenu) {
-            GM_Menu.Update();
+            if (GM_Menu !is null) GM_Menu.Update();
             yield();
         }
     }
@@ -264,7 +264,14 @@ namespace Music {
             }
 
             UI::SeparatorText("\\$8f8\\$iAvailable Packs");
+
             RenderMenu_ListPacks();
+
+            if (DLC::IsAnyAvailable()) {
+                UI::SeparatorText("\\$f80\\$i DLC " + Icons::Download);
+                DLC::RenderDownloadMenu();
+            }
+
             UI::SeparatorText("Settings");
             RenderMenu_Settings();
             UI::EndMenu();
@@ -302,34 +309,39 @@ namespace Music {
         //     : listEditor ? (AudioPackType::Loops_Editor | AudioPackType::Playlist)
         //     : listMenu ? (AudioPackType::Playlist) : 0;
 
+        string disabledCol = "\\$888";
+
         UI::BeginDisabled(!listInGame);
-        if (UI::BeginMenu("InGame Music (Loops)")) {
+        string prefix = listInGame ? "" : disabledCol;
+        if (UI::BeginMenu(prefix+"InGame Music (Loops)")) {
             RenderMenu_ListPack(Packs::LoopsTurbo);
             UI::EndMenu();
         }
-        if (UI::BeginMenu("InGame Music (Playlists)")) {
+        if (UI::BeginMenu(prefix+"InGame Music (Playlists)")) {
             RenderMenu_ListPack(Packs::Playlists);
             UI::EndMenu();
         }
-        if (UI::BeginMenu("Game Sounds")) {
+        if (UI::BeginMenu(prefix+"Game Sounds")) {
             RenderMenu_ListPack(Packs::GameSounds, true);
             UI::EndMenu();
         }
         UI::EndDisabled();
 
         UI::BeginDisabled(!listEditor);
-        if (UI::BeginMenu("Editor Music (Loops)")) {
+        prefix = listEditor ? "" : disabledCol;
+        if (UI::BeginMenu(prefix+"Editor Music (Loops)")) {
             RenderMenu_ListPack(Packs::EditorLoops);
             UI::EndMenu();
         }
-        if (UI::BeginMenu("Editor Music (Playlists)")) {
+        if (UI::BeginMenu(prefix+"Editor Music (Playlists)")) {
             RenderMenu_ListPack(Packs::Playlists);
             UI::EndMenu();
         }
         UI::EndDisabled();
 
         UI::BeginDisabled(!listMenu);
-        if (UI::BeginMenu("Menu Music")) {
+        prefix = listMenu ? "" : disabledCol;
+        if (UI::BeginMenu(prefix+"Menu Music")) {
             RenderMenu_ListPack(Packs::Playlists);
             UI::EndMenu();
         }

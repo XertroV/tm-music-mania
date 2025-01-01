@@ -18,6 +18,8 @@ void AddTurboToAudioPackRegistry() {
         TurboConst::GetSoundsStartRace(),
         TurboConst::GetSoundsRespawn()
     )).WithBuiltin());
+
+    SetGotAssetPack("TurboAssets");
 }
 
 namespace Packs {
@@ -58,7 +60,7 @@ namespace Packs {
 
     void AddToLookupIfNotExists(AudioPack@ pack) {
         if (PackLookup.Exists(pack.name)) {
-            throw("Pack already exists: " + pack.name);
+            warn("Pack already exists: " + pack.name);
             return;
         }
         @PackLookup[pack.name] = pack;

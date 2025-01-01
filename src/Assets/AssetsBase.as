@@ -46,6 +46,9 @@ class AssetDownloader {
     float get_DownloadsPctDone() {
         return float(_TotalDownloadsDone) / float(_TotalDownloadsStarted) * 100.0;
     }
+    string get_DownloadsDoneOverStarted() {
+        return tostring(_TotalDownloadsDone) + " / " + _TotalDownloadsStarted;
+    }
 
     bool get_IsDone() {
         return _TotalDownloadsDone == _TotalDownloadsStarted;
@@ -113,31 +116,3 @@ class AssetDownloader {
         NotifySuccess("["+name+"] Downloaded " + _TotalDownloadsDone + " assets.");
     }
 }
-
-// int _AssetDlSemaphore = 0;
-// int _TotalDownloadsStarted = 0;
-// int _TotalDownloadsDone = 0;
-
-// void DownloadAsset(const string &in baseUrl, const string &in destDir, const string &in asset) {
-// 	_TotalDownloadsStarted++;
-// 	while (_AssetDlSemaphore >= MAX_CONCURRENT_DOWNLOADS) yield();
-// 	_AssetDlSemaphore++;
-// 	try {
-// 		string url = baseUrl + asset.Replace(" ", "%20");
-// 		string dest = destDir + asset;
-// 		trace("Downloading <" + asset + "> from " + url);
-
-// 		Net::HttpRequest@ req = Net::HttpGet(url);
-// 		while (!req.Finished()) yield();
-// 		if (req.ResponseCode() != 200) {
-// 			NotifyWarning("Failed (code="+req.ResponseCode()+") to download " + asset + " from " + url + " | error: " + req.Error() + " | response: " + req.String());
-// 		} else {
-// 			req.SaveToFile(dest);
-// 			trace("Downloaded " + asset + " to " + dest);
-// 		}
-// 	} catch {
-// 		NotifyError("Failed to download " + asset + " / exception: " + getExceptionInfo());
-// 	}
-// 	_AssetDlSemaphore--;
-// 	_TotalDownloadsDone++;
-// }

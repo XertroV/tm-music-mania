@@ -39,7 +39,7 @@ namespace GameMusic {
     [Setting hidden]
     float S_MusicInMapVolume = 3.0;
 
-#if SIG_DEVELOPER
+#if SIG_DEVELOPERx
     void RenderMenu() {
         if (UI::MenuItem("Music Mania Debug", "", windowOpen)) {
             windowOpen = !windowOpen;

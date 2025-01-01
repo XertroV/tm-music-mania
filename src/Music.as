@@ -402,9 +402,6 @@ class Music_TurboInGame : MusicOrSound {
         CurMusic.Play();
         CurMusic.NextVariant2(true);
         trace("CurMusic.Play() " + CurMusic.IdName);
-#if DEV
-        // ExploreNod(CurMusic);
-#endif
     }
 
     void SetMusicLevel() {

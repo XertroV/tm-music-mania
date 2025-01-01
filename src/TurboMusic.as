@@ -324,18 +324,15 @@ namespace Turbo {
     const float LPF_CUTOFF_RATIO_MIN = 0.42;
 
     void OnStartRace_Reset() {
-        G_Music.LPF_CutoffRatio = LPF_CUTOFF_RATIO_MIN;
-        G_Music.UpdateMode = TurboMusicUpdateMode;
-        G_Music.Dbg_ForceSequential = false;
-        G_Music.Dbg_ForceIntensity = false;
-        G_Music.Dbg_ForceRandom = false;
-        G_Music.EnableSegment("lap");
-        SetMusicLevel();
-        G_Music.Play();
-        trace("G_Music.Play() " + G_Music.IdName);
-#if DEV
-        // ExploreNod(G_Music);
-#endif
+        // G_Music.LPF_CutoffRatio = LPF_CUTOFF_RATIO_MIN;
+        // G_Music.UpdateMode = TurboMusicUpdateMode;
+        // G_Music.Dbg_ForceSequential = false;
+        // G_Music.Dbg_ForceIntensity = false;
+        // G_Music.Dbg_ForceRandom = false;
+        // G_Music.EnableSegment("lap");
+        // SetMusicLevel();
+        // G_Music.Play();
+        // trace("G_Music.Play() " + G_Music.IdName);
     }
 
     void SetMusicLevel() {
