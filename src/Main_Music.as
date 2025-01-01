@@ -17,9 +17,9 @@ namespace Music {
     void Main() {
         // todo: instantiating music in the wrong mania app context can cause problems where it doesn't play back properly and things get stuck.
         // todo: we shouldn't create this until we're in the menu.
-        if (TM_State::IsInMenu) {
-            ChooseInMenuMusic();
-        }
+        // if (TM_State::IsInMenu) {
+        //     ChooseInMenuMusic();
+        // }
         startnew(Music::MainInGameLoop).WithRunContext(Meta::RunContext::GameLoop);
     }
 
@@ -31,6 +31,9 @@ namespace Music {
                     GM_Menu.CleanUp();
                     @GM_Menu = null;
                 }
+                ChooseInMenuMusic();
+            } else {
+                dev_trace("UpdateMenuMusicChoice: Menu music unchanged");
             }
         } else if (TM_State::IsInPlayground) {
             if (Packs::UpdateInGameMusicChoice(music)) {
@@ -39,6 +42,9 @@ namespace Music {
                     GM_InGame.CleanUp();
                     @GM_InGame = null;
                 }
+                ChooseInGameMusic(false);
+            } else {
+                dev_trace("UpdateInGameMusicChoice: InGame music unchanged");
             }
         } else if (TM_State::IsInEditor) {
             if (Packs::UpdateEditorMusicChoice(music)) {
@@ -47,6 +53,9 @@ namespace Music {
                     GM_Editor.CleanUp();
                     @GM_Editor = null;
                 }
+                ChooseEditorMusic();
+            } else {
+                dev_trace("UpdateEditorMusicChoice: Editor music unchanged");
             }
         } else {
             dev_warn("SetCurrentMusicChoice: not in a valid context");
@@ -82,8 +91,7 @@ namespace Music {
     string GetCurrentMusicPackName() {
         auto music = GetCurrentMusic();
         if (music is null) return "null";
-        if (music.origin is null) return "null-origin";
-        return music.origin.name;
+        return music.GetOriginName();
     }
 
     MusicOrSound@ GetCurrentGameSounds() {
@@ -154,11 +162,14 @@ namespace Music {
         return GM_Editor;
     }
 
-    MusicOrSound@ ChooseInGameMusic() {
+    MusicOrSound@ ChooseInGameMusic(bool andGameSounds = true) {
         if (GM_InGame !is null) GM_InGame.CleanUp();
-        if (GM_InGameSounds !is null) GM_InGameSounds.CleanUp();
         @GM_InGame = Packs::GetInGameMusic().ToMusicOrSound();
-        @GM_InGameSounds = Packs::GetInGame_GameSounds().ToMusicOrSound();
+
+        if (andGameSounds) {
+            if (GM_InGameSounds !is null) GM_InGameSounds.CleanUp();
+            @GM_InGameSounds = Packs::GetInGame_GameSounds().ToMusicOrSound();
+        }
         return GM_InGame;
     }
 
@@ -196,6 +207,112 @@ namespace Music {
         }
         @RaceStateMonitor = null;
         dev_warn("Exited InGameLoop");
+    }
+
+    void RenderMenuMain() {
+        if (UI::BeginMenu(MenuMainTitle)) {
+            RenderMenu_CurrentMusicStats();
+            UI::SeparatorText("\\$8f8\\$iAvailable Packs");
+            RenderMenu_ListPacks();
+            UI::SeparatorText("Settings");
+            RenderMenu_Settings();
+            UI::EndMenu();
+        }
+    }
+
+    void RenderMenu_CurrentMusicStats() {
+        UI::SeparatorText("Global Volumes");
+
+        // UI::PushItemWidth(200.);
+        Global::GameVolume = UI::SliderFloat("Game Vol dB", Global::GameVolume, -40., 6.);
+        Global::MusicVolume = UI::SliderFloat("Music Vol dB", Global::MusicVolume, -40., 6.);
+        // UI::PopItemWidth();
+
+        UI::SeparatorText("Music");
+
+        UI::BeginDisabled();
+        UI::MenuItem("Current Pack: " + GetCurrentMusicPackName());
+        if (TM_State::IsInPlayground) {
+            UI::MenuItem("\\$i   Game Sounds: " + (GM_InGameSounds is null ? "null" : GM_InGameSounds.GetOriginName()));
+        }
+        UI::EndDisabled();
+
+        auto curMusic = GetCurrentMusic();
+        if (curMusic !is null) {
+            curMusic.RenderMenuTools();
+        }
+    }
+
+    void RenderMenu_ListPacks() {
+        bool listInGame = TM_State::IsInPlayground;
+        bool listEditor = TM_State::IsInEditor;
+        bool listMenu = TM_State::IsInMenu;
+        int flags = listInGame ? (AudioPackType::Loops_Turbo | AudioPackType::Playlist | AudioPackType::GameSounds)
+            : listEditor ? (AudioPackType::Loops_Editor | AudioPackType::Playlist)
+            : listMenu ? (AudioPackType::Playlist) : 0;
+
+        UI::BeginDisabled(!listInGame);
+        if (UI::BeginMenu("InGame Music (Loops)")) {
+            RenderMenu_ListPack(Packs::LoopsTurbo);
+            UI::EndMenu();
+        }
+        if (UI::BeginMenu("InGame Music (Playlists)")) {
+            RenderMenu_ListPack(Packs::Playlists);
+            UI::EndMenu();
+        }
+        if (UI::BeginMenu("Game Sounds")) {
+            RenderMenu_ListPack(Packs::GameSounds);
+            UI::EndMenu();
+        }
+        UI::EndDisabled();
+
+        UI::BeginDisabled(!listEditor);
+        if (UI::BeginMenu("Editor Music (Loops)")) {
+            RenderMenu_ListPack(Packs::EditorLoops);
+            UI::EndMenu();
+        }
+        if (UI::BeginMenu("Editor Music (Playlists)")) {
+            RenderMenu_ListPack(Packs::Playlists);
+            UI::EndMenu();
+        }
+        UI::EndDisabled();
+
+        UI::BeginDisabled(!listMenu);
+        if (UI::BeginMenu("Menu Music")) {
+            RenderMenu_ListPack(Packs::Playlists);
+            UI::EndMenu();
+        }
+        UI::EndDisabled();
+    }
+
+    void RenderMenu_ListPack(AudioPack@[]@ packs) {
+        if (packs.Length == 0) {
+            UI::Text("No packs here :(");
+            return;
+        }
+
+        for (uint i = 0; i < packs.Length; i++) {
+            packs[i].RenderSongChoiceMenu();
+        }
+    }
+
+    void RenderMenu_Settings() {
+        UX::PushThinControls();
+        S_Playlist_RepeatOne = UI::Checkbox("[Playlist] Repeat One", S_Playlist_RepeatOne);
+        AddSimpleTooltip("When enabled, the playing track will loop until the map changes.\nOtherwise, when a track finishes, a new track will play.");
+        S_Playlist_Sequential = UI::Checkbox("[Playlist] Sequential", S_Playlist_Sequential);
+        AddSimpleTooltip("When enabled, the playlist will advance through the tracks in order. Otherwise, it will play them randomly.");
+        UI::Separator();
+        GameMusic::S_PrioritizeMusicInMap = UI::Checkbox("[General] Prioritize embedded music", GameMusic::S_PrioritizeMusicInMap);
+        AddSimpleTooltip("When enabled, music embedded in a map will play instead of music from the current pack.");
+        GameMusic::S_SetMusicInMapVolume = UI::Checkbox("[General] Set volume on embedded music", GameMusic::S_SetMusicInMapVolume);
+        AddSimpleTooltip("When enabled, the volume of embedded music will be adjusted.");
+        if (GameMusic::S_SetMusicInMapVolume) {
+            UI::SetNextItemWidth(120.);
+            GameMusic::S_MusicInMapVolume = UI::SliderFloat("[General] Embedded music v. dB", GameMusic::S_MusicInMapVolume, -40., 6.);
+            AddSimpleTooltip("Default: 0.0 dB. Suggested: 6.0 dB.\nCtrl+click to input exact values.");
+        }
+        UX::PopThinControls();
     }
 }
 

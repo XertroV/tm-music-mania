@@ -220,13 +220,13 @@ namespace Packs {
 
 enum AudioPackType {
     // like mp4, tm2020
-    Playlist,
+    Playlist = 1,
     // like turbo (low pass filter based on speed, etc)
-    Loops_Turbo,
+    Loops_Turbo = 2,
     // gamepad editor does this apparently
-    Loops_Editor,
+    Loops_Editor = 4,
     // game sounds like checkpoint, finish, etc
-    GameSounds
+    GameSounds = 8
 }
 
 AudioPackType ParseAudioPackType(const string &in str) {
@@ -372,6 +372,26 @@ class AudioPack_LoopsGeneric : AudioPack {
             jLoops.Add(loops[i].ToJsonArr());
         }
         return jLoops;
+    }
+
+    void RenderSongChoiceMenu() override {
+        if (UI::BeginMenu(name)) {
+            for (uint i = 0; i < loops.Length; i++) {
+                if (UI::MenuItem(loops[i].name, "", false)) {
+                    Music::SetCurrentMusicChoice(this);
+                    this.SetCurrMusicPlayingIx(i);
+                    dev_warn("todo: Selected: " + loops[i].name);
+                }
+            }
+            UI::EndMenu();
+        }
+    }
+
+    void SetCurrMusicPlayingIx(int64 ix) {
+        auto musicLoops = cast<Music_TurboInGame>(Music::GetCurrentMusic());
+        if (musicLoops !is null) {
+            musicLoops.PickNewMusicTrack(ix);
+        }
     }
 }
 
@@ -604,6 +624,17 @@ class AudioPack_GameSounds : AudioPack {
     MusicOrSound@ ToMusicOrSound() override {
         dev_warn("AP_GameSounds::ToMusicOrSound " + name);
         return GameSounds(name, baseDir, spec).WithOriginPack(this);
+    }
+
+    void RenderSongChoiceMenu() override {
+        if (UI::BeginMenu(name)) {
+            for (uint i = 0; i < spec.checkpointFast.Length; i++) {
+                if (UI::MenuItem(spec.checkpointFast[i], "", false)) {
+                    dev_warn("Selected: " + spec.checkpointFast[i]);
+                }
+            }
+            UI::EndMenu();
+        }
     }
 }
 

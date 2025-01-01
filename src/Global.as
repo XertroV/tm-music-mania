@@ -1,5 +1,6 @@
 namespace Global {
-    float _gameMusicVolume = 1.0;
+    //
+    float _gameMusicVolume = 0.0;
     bool IsMuteWhenUnfocused = false;
     bool IsGameFocused = false;
 
@@ -8,7 +9,7 @@ namespace Global {
         CAudioPort@ ap = app.AudioPort;
         _gameMusicVolume = ap.MusicVolume;
         // _gameMusicVolume = Math::InvLerp(-40.0, 0.0, Math::Clamp(ap.MusicVolume, -40.0, 0.0));
-        _gameMusicVolume = ConvertVolumeDbToAmp(_gameMusicVolume, vec2(-40.0, 0.0));
+        // _gameMusicVolume = ConvertVolumeDbToAmp(_gameMusicVolume, vec2(-40.0, 0.0));
         IsMuteWhenUnfocused = ap.MuteWhenUnfocused;
         IsGameFocused = app.InputPort.IsFocused;
     }
@@ -19,6 +20,18 @@ namespace Global {
             return 0.0;
         }
         return _gameMusicVolume;
+    }
+
+    void set_MusicVolume(float voldB) {
+        GetApp().AudioPort.MusicVolume = voldB;
+    }
+
+    float get_GameVolume() {
+        return GetApp().AudioPort.SoundVolume;
+    }
+
+    void set_GameVolume(float voldB) {
+        GetApp().AudioPort.SoundVolume = voldB;
     }
 }
 

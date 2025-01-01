@@ -34,6 +34,15 @@ class MusicOrSound {
     void OnContextLeave() {}
 
     void RenderDebug() {}
+
+    string GetOriginName() {
+        if (origin is null) return "null";
+        return origin.name;
+    }
+
+    void RenderMenuTools() {
+        UI::TextWrapped("\\$f00\\$i implement RenderMenuTools for " + name + " (Origin: " + GetOriginName() + ")");
+    }
 }
 
 // Manages turbo-like music (tracks and loops) in-game
@@ -173,10 +182,31 @@ class Music_TurboInGame : MusicOrSound {
         UpdateLPF(raceState);
     }
 
-    void PickNewMusicTrack() {
-        LoadMusic(-1);
+    void PickNewMusicTrack(int musicIx = -1) {
+        auto loadedMusicIx = EnsureMusicIxLoadedAndGetIx(musicIx);
+        LoadMusic(loadedMusicIx);
         ResetSounds(true);
         OnStartRace_Reset();
+    }
+
+    int EnsureMusicIxLoadedAndGetIx(int musicIx) {
+        if (musicIx < 0) return musicIx;
+        auto musicList = GetMusicList();
+        if (musicIx >= musicList.Length) {
+            dev_warn("Invalid musicIx: " + musicIx);
+            return -1;
+        }
+        auto musicJ = musicList[musicIx];
+        string musicName = string(musicJ[0]);
+        for (uint i = 0; i < G_MusicDescs.Length; i++) {
+            if (G_MusicDescs[i][0] == musicName) {
+                return i;
+            }
+        }
+        dev_warn("Music not found in G_MusicDescs: " + musicName);
+        G_MusicDescs.InsertLast(musicJ);
+        MusicAll.InsertLast(GetAudio().CreateMusic(MEDIA_SOUNDS_TURBO + musicName));
+        return G_MusicDescs.Length - 1;
     }
 
 
@@ -374,6 +404,15 @@ class Music_TurboInGame : MusicOrSound {
             CurMusic.VolumedB = -100.;
         }
     }
+
+    void RenderMenuTools() override {
+        UI::BeginDisabled();
+        UI::MenuItem("Track: " + G_Debug_SongName);
+        UI::EndDisabled();
+        if (UX::SmallButton("Next Track")) {
+            LoadMusic(-1);
+        }
+    }
 }
 
 namespace Turbo {
@@ -417,7 +456,7 @@ class Music_StdTrackSelection : MusicOrSound {
     }
 
     void RenderDebug() override {
-        UI::Text("Song: " + curTrackIx + " - " + debug_CurrMusicPath);
+        UI::Text("Song: " + (curTrackIx+1) + " - " + debug_CurrMusicPath + " ["+Time::Format(int64(debug_CurrMusicLength * 1000.), false, true, false, true)+"]");
         UI::Text("Total Songs: " + MusicPaths.Length);
         if (UX::SmallButton("Next Track")) {
             startnew(CoroutineFunc(On_NextTrack));
@@ -444,6 +483,39 @@ class Music_StdTrackSelection : MusicOrSound {
         //     }
         //     UI::EndMenu();
         // }
+    }
+
+    void RenderMenuTools() override {
+        UI::BeginDisabled();
+        UI::MenuItem("Song: " + (curTrackIx+1) + " - " + debug_CurrMusicPath + "  ["+Time::Format(int64(debug_CurrMusicLength * 1000.), true, true, false, true)+"]");
+        UI::EndDisabled();
+        if (curTrackIx < 0 || curTrackIx >= MusicAll.Length) {
+            warn("Invalid curTrackIx: " + curTrackIx);
+            return;
+        }
+
+        auto music = MusicAll[curTrackIx];
+        if (music !is null) {
+            auto source = cast<CAudioSource>(Dev::GetOffsetNod(music, 0x20));
+            // UI::PushItemWidth(200.);
+            float origCursorUi = source.PlayCursorUi;
+            float newCursorUi = UI::SliderFloat("Play Cursor", origCursorUi, 0., 1., Time::Format(int64(source.PlayCursor * 1000.)));
+            if (newCursorUi != origCursorUi) {
+                source.PlayCursorUi = newCursorUi;
+            }
+            source.VolumedB = UI::SliderFloat("Track vol dB", source.VolumedB, -41., 12.);
+            if (source.PlugSound !is null) {
+                source.PlugSound.VolumedB = UI::SliderFloat("Sound vol dB", source.PlugSound.VolumedB, -41., 12.);
+            }
+
+            // UI::PopItemWidth();
+        }
+
+        UI::Dummy(vec2(0., 2.), 0.);
+        if (UX::SmallButton("Next Track")) {
+            startnew(CoroutineFunc(On_NextTrack));
+        }
+        UI::Dummy(vec2(0., 2.), 0.);
     }
 
     void SetThisAsCurrentMusicChoice() {
@@ -476,7 +548,7 @@ class Music_StdTrackSelection : MusicOrSound {
 
     // user presses button or w/e
     void On_NextTrack() {
-        SelectAndPreloadTrack();
+        SelectAndPreloadTrack(S_Playlist_Sequential ? curTrackIx + 1 : -1);
     }
 
     void SelectAndPreloadTrack(int trackIx = -1) {
@@ -497,6 +569,7 @@ class Music_StdTrackSelection : MusicOrSound {
     }
 
     string debug_CurrMusicPath;
+    float debug_CurrMusicLength;
 
     void ChooseNewCurrentTrack(int trackIx = -1) {
         // if (_chooseRandomly)
@@ -512,9 +585,8 @@ class Music_StdTrackSelection : MusicOrSound {
         if (music is null) {
             @music = audio.CreateSoundEx(MusicPaths[curTrackIx], 0.0, true, true, false);
             @MusicAll[curTrackIx] = music;
-            if (!S_Playlist_RepeatOne) {
-                startnew(CoroutineFunc(this.WatchForEndMusicTrack));
-            }
+            debug_CurrMusicLength = music.PlayLength;
+            startnew(CoroutineFuncUserdataInt64(this.WatchForEndMusicTrack), int64(curTrackIx));
         }
         // see Turbo::GetMusicPanRadiusLfe for other settings
         auto panRadiusLfe = vec3(0., 1.,   -20.);
@@ -527,14 +599,15 @@ class Music_StdTrackSelection : MusicOrSound {
         // auto ptr = Dev_GetPtrForNod(music);
         // dev_trace("Preloaded music: " + MusicPaths[curTrackIx] + " (ptr: " + Text::FormatPointer(ptr) + ")");
         // IO::SetClipboard(Text::FormatPointer(ptr));
-        startnew(CoroutineFuncUserdata(this.FixMusicViaBalanceGroups), music);
+        this.FixMusicViaBalanceGroups(music);
+        // startnew(CoroutineFuncUserdata(this.FixMusicViaBalanceGroups), music);
     }
 
     // watch for end of track and play next
-    void WatchForEndMusicTrack() {
-        int initCurrIx = curTrackIx;
+    void WatchForEndMusicTrack(int64 _curTrackIx) {
+        int initCurrIx = _curTrackIx;
         bool wasCursorNearlyDone = false;
-        while (TM_State::IsInPlayground && curTrackIx == initCurrIx && MusicAll[curTrackIx] !is null) {
+        while (TM_State::IsInPlayground && curTrackIx == initCurrIx && MusicAll.Length > curTrackIx && MusicAll[curTrackIx] !is null) {
             auto @music = MusicAll[curTrackIx];
             auto source = cast<CAudioSource>(Dev::GetOffsetNod(music, 0x20));
             if (source.PlayCursorUi > 0.95) {
@@ -543,7 +616,7 @@ class Music_StdTrackSelection : MusicOrSound {
                 dev_warn("Music track ended: " + MusicShortPaths[curTrackIx]);
                 // go next
                 if (!S_Playlist_RepeatOne) {
-                    SelectAndPreloadTrack(S_Playlist_Sequential ? curTrackIx + 1 : -1);
+                    On_NextTrack();
                     break;
                 } else {
                     wasCursorNearlyDone = false;
@@ -553,13 +626,14 @@ class Music_StdTrackSelection : MusicOrSound {
             }
             yield();
         }
+        dev_trace("WatchForEndMusicTrack ended; musicAll.Length: " + MusicAll.Length + "; curTrackIx: " + curTrackIx);
     }
 
     float tmpVoldB = 0.0;
 
     void FixMusicViaBalanceGroups(ref@ r) {
         CAudioScriptSound@ music = cast<CAudioScriptSound>(r);
-        yield(1);
+        // yield(1);
         dev_trace("Fixing music balance group: " + MusicPaths[curTrackIx]);
         auto audioSource = cast<CAudioSource>(Dev::GetOffsetNod(music, 0x20));
         if (audioSource.PlayCursorUi > 0.0) {
@@ -576,6 +650,8 @@ class Music_StdTrackSelection : MusicOrSound {
             // audioSource.VolumedB = 0.0;
             // audioSource.Play();
             dev_warn("Set balance group for audio source: " + MusicPaths[curTrackIx]);
+        } else {
+            dev_warn("Audio source is null for music: " + MusicPaths[curTrackIx]);
         }
     }
 

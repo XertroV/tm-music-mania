@@ -37,4 +37,13 @@ namespace UX {
 		UI::PopStyleVar();
 		return pressed;
 	}
+
+	void PushThinControls() {
+		UI::PushStyleVar(UI::StyleVar::FramePadding, vec2(2, 1));
+		// UI::PushStyleVar(UI::StyleVar::ItemSpacing, vec2(2, 1));
+	}
+
+	void PopThinControls() {
+		UI::PopStyleVar(1);
+	}
 }

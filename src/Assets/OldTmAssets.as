@@ -8,77 +8,77 @@ string[] oldTm_MenuFiles;
 string[] oldTm_RaceFiles;
 
 const string OldAssetsIndex = """
-TMNF/Heartbeat(unverified-source).ogg
 TMN ESWC/04.Menu.ogg
 TMN ESWC/Race/01.Tictac.ogg
 TMN ESWC/Race/02.Pulp.ogg
 TMN ESWC/Race/03.Start-Off.ogg
-TMS/Coast/Mattie & Ben Track 4.ogg
-TMS/Coast/21ST Century Beatnik One T.ogg
-TMS/Coast/Jason Alner-Latin Trick.ogg
-TMS/Coast/Big Wednesday Dont Worry.ogg
-TMS/Island/Zsolt Marx - Breathe 1.ogg
-TMS/Island/Dan Money.ogg
-TMS/Island/Mike Myler.ogg
-TMS/Island/Zsolt Marx Fill Your Pages.ogg
-TMS/Bay/NBF Take Back.ogg
-TMS/Bay/Hi-Jera Track 1.ogg
-TMS/Bay/The Brit Hoolas.ogg
-TMS/Bay/Silvermaker.ogg
-TMS/Dom Lyne - Mutants.ogg
-TMU/Race/TMU-Coast.ogg
-TMU/Race/TMU-Stadium-Start-Off-remix.ogg
-TMU/Race/TMU-Snow.ogg
-TMU/Race/TMU-Stadium-Tictac-remix.ogg
-TMU/Race/TMU-Desert.ogg
-TMU/Race/TMU-Stadium-Pulp-remix.ogg
-TMU/Race/TMU-Island.ogg
-TMU/Race/TMU-Rally.ogg
-TMU/Race/TMU-Bay.ogg
-TMU/TMU-Menu.ogg
+TMNF/Heartbeat(unverified-source).ogg
+TMO/Alpine/Effects/AlpineBronze.wav
+TMO/Alpine/Effects/AlpineCheckPoint.wav
+TMO/Alpine/Effects/AlpineFinish.wav
+TMO/Alpine/Effects/AlpineGold.wav
+TMO/Alpine/Effects/AlpineLap.wav
+TMO/Alpine/Effects/AlpineNadeo.wav
+TMO/Alpine/Effects/AlpineNewRecord.wav
+TMO/Alpine/Effects/AlpineRaceDefeat.wav
+TMO/Alpine/Effects/AlpineSilver.wav
+TMO/Alpine/Effects/AlpineZoom.wav
+TMO/Alpine/Effects/AmbAlpine.ogg
+TMO/Alpine/Race/alpine_edit.ogg
+TMO/Alpine/Race/alpine_race.ogg
+TMO/Alpine/Race/alpine_replay.ogg
+TMO/menu_mod.ogg
+TMO/Rally/Effects/AmbiWater.ogg
+TMO/Rally/Effects/moulin.wav
+TMO/Rally/Effects/RallyBronze.wav
+TMO/Rally/Effects/RallyCheckPoint.wav
+TMO/Rally/Effects/RallyFinish.wav
+TMO/Rally/Effects/RallyGold.wav
+TMO/Rally/Effects/RallyLap.wav
+TMO/Rally/Effects/RallyNadeo.wav
+TMO/Rally/Effects/RallyNewRecord.wav
+TMO/Rally/Effects/RallyRaceDefeat.wav
+TMO/Rally/Effects/RallySilver.wav
+TMO/Rally/Effects/RallyZoom.wav
+TMO/Rally/Race/rally_edit.ogg
+TMO/Rally/Race/rally_race.ogg
+TMO/Rally/Race/rally_replay.ogg
+TMO/Speed/Effects/desert.ogg
+TMO/Speed/Effects/SpeedBronze.wav
+TMO/Speed/Effects/SpeedCheckPoint.wav
+TMO/Speed/Effects/SpeedGold.wav
+TMO/Speed/Effects/SpeedLap.wav
+TMO/Speed/Effects/SpeedNadeo.wav
+TMO/Speed/Effects/SpeedNewRecord.wav
+TMO/Speed/Effects/SpeedRaceDefeat.wav
+TMO/Speed/Effects/SpeedSilver.wav
+TMO/Speed/Effects/SpeedZoom.wav
 TMO/Speed/Race/speed_edit.ogg
 TMO/Speed/Race/speed_race.ogg
 TMO/Speed/Race/speed_replay.ogg
-TMO/Speed/Effects/SpeedCheckPoint.wav
-TMO/Speed/Effects/SpeedBronze.wav
-TMO/Speed/Effects/SpeedSilver.wav
-TMO/Speed/Effects/SpeedZoom.wav
-TMO/Speed/Effects/SpeedNadeo.wav
-TMO/Speed/Effects/SpeedLap.wav
-TMO/Speed/Effects/SpeedNewRecord.wav
-TMO/Speed/Effects/desert.ogg
-TMO/Speed/Effects/SpeedGold.wav
-TMO/Speed/Effects/SpeedRaceDefeat.wav
-TMO/Alpine/Race/alpine_race.ogg
-TMO/Alpine/Race/alpine_replay.ogg
-TMO/Alpine/Race/alpine_edit.ogg
-TMO/Alpine/Effects/AlpineZoom.wav
-TMO/Alpine/Effects/AlpineGold.wav
-TMO/Alpine/Effects/AlpineNewRecord.wav
-TMO/Alpine/Effects/AlpineBronze.wav
-TMO/Alpine/Effects/AlpineLap.wav
-TMO/Alpine/Effects/AlpineCheckPoint.wav
-TMO/Alpine/Effects/AlpineNadeo.wav
-TMO/Alpine/Effects/AmbAlpine.ogg
-TMO/Alpine/Effects/AlpineFinish.wav
-TMO/Alpine/Effects/AlpineSilver.wav
-TMO/Alpine/Effects/AlpineRaceDefeat.wav
-TMO/Rally/Race/rally_replay.ogg
-TMO/Rally/Race/rally_race.ogg
-TMO/Rally/Race/rally_edit.ogg
-TMO/Rally/Effects/RallyNadeo.wav
-TMO/Rally/Effects/RallyZoom.wav
-TMO/Rally/Effects/RallyBronze.wav
-TMO/Rally/Effects/RallyNewRecord.wav
-TMO/Rally/Effects/RallyLap.wav
-TMO/Rally/Effects/moulin.wav
-TMO/Rally/Effects/RallyGold.wav
-TMO/Rally/Effects/RallyCheckPoint.wav
-TMO/Rally/Effects/RallySilver.wav
-TMO/Rally/Effects/RallyFinish.wav
-TMO/Rally/Effects/AmbiWater.ogg
-TMO/Rally/Effects/RallyRaceDefeat.wav
-TMO/menu_mod.ogg
+TMS/Bay/Hi-Jera Track 1.ogg
+TMS/Bay/NBF Take Back.ogg
+TMS/Bay/Silvermaker.ogg
+TMS/Bay/The Brit Hoolas.ogg
+TMS/Coast/21ST Century Beatnik One T.ogg
+TMS/Coast/Big Wednesday Dont Worry.ogg
+TMS/Coast/Jason Alner-Latin Trick.ogg
+TMS/Coast/Mattie & Ben Track 4.ogg
+TMS/Dom Lyne - Mutants.ogg
+TMS/Island/Dan Money.ogg
+TMS/Island/Mike Myler.ogg
+TMS/Island/Zsolt Marx - Breathe 1.ogg
+TMS/Island/Zsolt Marx Fill Your Pages.ogg
+TMU/Race/TMU-Bay.ogg
+TMU/Race/TMU-Coast.ogg
+TMU/Race/TMU-Desert.ogg
+TMU/Race/TMU-Island.ogg
+TMU/Race/TMU-Rally.ogg
+TMU/Race/TMU-Snow.ogg
+TMU/Race/TMU-Stadium-Pulp-remix.ogg
+TMU/Race/TMU-Stadium-Start-Off-remix.ogg
+TMU/Race/TMU-Stadium-Tictac-remix.ogg
+TMU/TMU-Menu.ogg
 """;
 
 string[]@ _oldTmAssetFiles = OldAssets_FilterOnlyMusicFiles(OldAssetsIndex.Split("\n"));

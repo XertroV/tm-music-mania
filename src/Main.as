@@ -1,7 +1,8 @@
 const string PluginName = Meta::ExecutingPlugin().Name;
-const string MenuIconColor = "\\$f5d";
-const string PluginIcon = Icons::Cogs;
+const string MenuIconColor = "\\$4f9";
+const string PluginIcon = Icons::Headphones;
 const string MenuTitle = MenuIconColor + PluginIcon + "\\$z " + PluginName;
+const string MenuMainTitle = MenuIconColor + PluginIcon + "\\$z Music";
 
 void Main() {
     startnew(SetupIntercepts);
@@ -45,4 +46,10 @@ void RenderInterface() {
 void RenderMenu() {
     GameMusic::RenderMenu();
     // TurboDebug::RenderMenu();
+}
+
+/** Render function called every frame intended only for menu items in the main menu of the `UI`.
+*/
+void RenderMenuMain() {
+    Music::RenderMenuMain();
 }
