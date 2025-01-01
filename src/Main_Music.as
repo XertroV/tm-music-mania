@@ -112,6 +112,8 @@ namespace Music {
 
             yield();
         }
+        @RaceStateMonitor = null;
+        dev_warn("Exited InGameLoop");
     }
 }
 

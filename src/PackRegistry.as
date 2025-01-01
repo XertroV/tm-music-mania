@@ -10,7 +10,7 @@ void AddTurboToAudioPackRegistry() {
 
     Packs::AddPack(AudioPack_LoopsTurbo("Turbo In-Game Music", MEDIA_SOUNDS_TURBO, TurboMusicList).WithBuiltin());
 
-    Packs::AddPack(AudioPack_GameSounds("Turbo In-Game Sounds", GameSoundsSpec(
+    Packs::AddPack(AudioPack_GameSounds("Turbo In-Game Sounds", MEDIA_SOUNDS_TURBO, GameSoundsSpec(
         TurboConst::GetSoundsCheckpointFast(),
         TurboConst::GetSoundsCheckpointSlow(),
         TurboConst::GetSoundsFinishLap(),
@@ -159,7 +159,9 @@ enum AudioPackType {
     // like turbo (low pass filter based on speed, etc)
     Loops_Turbo,
     // gamepad editor does this apparently
-    Loops_Editor
+    Loops_Editor,
+    // game sounds like checkpoint, finish, etc
+    GameSounds
 }
 
 AudioPackType ParseAudioPackType(const string &in str) {
@@ -169,6 +171,8 @@ AudioPackType ParseAudioPackType(const string &in str) {
         return AudioPackType::Loops_Turbo;
     } else if (str == "Loops_Editor") {
         return AudioPackType::Loops_Editor;
+    } else if (str == "GameSounds") {
+        return AudioPackType::GameSounds;
     }
     throw("Invalid AudioPackType: " + str);
     return AudioPackType::Playlist;
@@ -186,6 +190,8 @@ AudioPack@ AudioPack_FromJson(Json::Value@ j) {
             return AudioPack_Playlist(j);
         case AudioPackType::Loops_Turbo:
             return AudioPack_LoopsTurbo(j);
+        case AudioPackType::GameSounds:
+            return AudioPack_GameSounds(j);
         case AudioPackType::Loops_Editor:
             throw("Loops_Editor not implemented");
             break;
@@ -474,26 +480,35 @@ class Playlist_Track {
 
 class AudioPack_GameSounds : AudioPack {
     GameSoundsSpec@ spec;
+    string baseDir;
 
-    AudioPack_GameSounds(const string &in name, GameSoundsSpec@ spec) {
-        super(AudioPackType::Playlist, name);
+    AudioPack_GameSounds(const string &in name, const string &in baseDir, GameSoundsSpec@ spec) {
+        super(AudioPackType::GameSounds, name);
+        this.baseDir = baseDir;
         @this.spec = spec;
     }
 
     AudioPack_GameSounds(Json::Value@ j) {
         super(j);
         @spec = GameSoundsSpec(j["spec"]);
+        baseDir = string(j["baseDir"]);
     }
 
     Json::Value@ ToJson() override {
         Json::Value@ j = AudioPack::ToJson();
         j["spec"] = spec.ToJson();
+        j["baseDir"] = baseDir;
         return j;
     }
 
     AudioPack_GameSounds@ WithBuiltin() {
         isBuiltin = true;
         return this;
+    }
+
+    MusicOrSound@ ToMusicOrSound() override {
+        dev_warn("AP_GameSounds::ToMusicOrSound " + name);
+        return GameSounds(name, baseDir, spec);
     }
 }
 
@@ -543,6 +558,10 @@ class GameSoundsSpec {
         j["startRace"] = startRace.ToJson();
         j["respawn"] = respawn.ToJson();
         return j;
+    }
+
+    string[]@ GetCheckpoints(bool fast) {
+        return fast ? checkpointFast : checkpointSlow;
     }
 }
 

@@ -14,6 +14,7 @@ class MusicOrSound {
     ~MusicOrSound() {
         dev_trace("MusicOrSound Destroyed: " + name);
         CleanUp();
+        dev_trace("MusicOrSound Cleaned up: " + name);
     }
     void Update() {}
     void UpdateRace(InGameRaceStateMonitor@ raceState) {}
@@ -470,7 +471,12 @@ class Music_StdTrackSelection : MusicOrSound {
     void FixMusicViaBalanceGroups(ref@ r) {
         CAudioScriptSound@ music = cast<CAudioScriptSound>(r);
         yield(5);
+        dev_trace("Fixing music balance group: " + MusicPaths[curTrackIx]);
         auto audioSource = cast<CAudioSource>(Dev::GetOffsetNod(music, 0x20));
+        if (audioSource.PlayCursorUi > 0.0) {
+            dev_trace("Skipping balance group fix for music: " + MusicPaths[curTrackIx] + " (PlayCursorUi: " + audioSource.PlayCursorUi + ")");
+            return;
+        }
         if (audioSource !is null) {
             dev_warn("Setting balance group for audio source: " + MusicPaths[curTrackIx]);
             audioSource.BalanceGroup = CAudioSource::EAudioBalanceGroup::Custom1;
@@ -518,8 +524,47 @@ class Music_TurboInMenu : Music_StdTrackSelection {
 
 // Sound Effects for e.g., end race, checkpoints, etc
 class GameSounds : MusicOrSound {
-    GameSounds(const string &in name) {
+    CAudioScriptSound@[] StartLine;
+    CAudioScriptSound@[] FinishLine;
+    CAudioScriptSound@[] FinishLap;
+    CAudioScriptSound@[] CheckpointsFaster;
+    CAudioScriptSound@[] CheckpointsSlower;
+    CAudioScriptSound@[] Respawn;
+    CAudioScriptSound@ SoundStandbyEvent;
+    GameSoundsSpec@ Spec;
+    string baseDir;
+
+    GameSounds(const string &in name, const string &in baseDir, GameSoundsSpec@ spec = null) {
         super(name);
+        @Spec = spec;
+        this.baseDir = baseDir;
+        if (spec !is null) {
+            PreloadSpecSounds();
+        }
+    }
+
+    void PreloadSpecSounds() {
+        dev_warn("Preloading sounds for " + name + " @ " + baseDir);
+        auto audio = GetAudio();
+        LoadFilesToScriptSounds(audio, baseDir, Spec.startRace, StartLine);
+        LoadFilesToScriptSounds(audio, baseDir, Spec.finishRace, FinishLine);
+        LoadFilesToScriptSounds(audio, baseDir, Spec.finishLap, FinishLap);
+        LoadFilesToScriptSounds(audio, baseDir, Spec.checkpointFast, CheckpointsFaster);
+        LoadFilesToScriptSounds(audio, baseDir, Spec.checkpointSlow, CheckpointsSlower);
+        LoadFilesToScriptSounds(audio, baseDir, Spec.respawn, Respawn);
+    }
+
+    void CleanUp() override {
+        auto audio = GetAudio();
+        CleanupSounds(audio, FinishLine);
+        CleanupSounds(audio, FinishLap);
+        CleanupSounds(audio, StartLine);
+        CleanupSounds(audio, Respawn);
+        CleanupSounds(audio, CheckpointsFaster);
+        CleanupSounds(audio, CheckpointsSlower);
+        CleanupSound(audio, SoundStandbyEvent);
+        @SoundStandbyEvent = null;
+
     }
 
     // finish ui sequence lags by 1 frame, so we delay CP sounds by 1 frame too :/
@@ -546,27 +591,69 @@ class GameSounds : MusicOrSound {
             // OnCheckpoint(raceState.cpTakenThisFrame, raceState.cpThisFrameWasFast);
         }
     }
+
+    void OnStart() override {
+        if (Spec.startRace.Length == 0) return;
+        auto sound = GetAudio().CreateSound(baseDir + ChooseRandom(Spec.startRace));
+        sound.VolumedB = 0.;
+        sound.Play();
+        startnew(SleepAndDestroy, sound);
+    }
+
+    void OnFinish() override {
+        if (Spec.finishRace.Length == 0) return;
+        auto sound = GetAudio().CreateSound(baseDir + ChooseRandom(Spec.finishRace));
+        sound.VolumedB = 0.;
+        sound.Play();
+        startnew(SleepAndDestroy, sound);
+    }
+
+    void OnCheckpoint(int cpCount, bool fast) override {
+        auto @s_cps = Spec.GetCheckpoints(fast);
+        if (s_cps.Length == 0) return;
+        cpCount = Math::Clamp(cpCount, 0, s_cps.Length - 1);
+        auto sound = GetAudio().CreateSound(baseDir + s_cps[cpCount]);
+        // auto sound = GetAudio().CreateSound(MEDIA_SOUNDS_TURBO + (fast ? TurboConst::GetSoundCheckpointFast(cpCount) : TurboConst::GetSoundCheckpointSlow(cpCount)));
+        sound.VolumedB = 0.;
+        sound.Play();
+        startnew(SleepAndDestroy, sound);
+    }
+
+    void OnLap(int lapCount) override {
+        if (Spec.finishLap.Length == 0) return;
+        auto sound = GetAudio().CreateSound(baseDir + ChooseRandom(Spec.finishLap));
+        sound.VolumedB = 0.;
+        sound.Play();
+        startnew(SleepAndDestroy, sound);
+    }
+}
+
+string ChooseRandom(string[]@ arr) {
+    if (arr.Length == 0) throw("ChooseRandom: empty array");
+    return arr[Math::Rand(0, arr.Length)];
+}
+
+void LoadFilesToScriptSounds(CAudioScriptManager@ audio, const string &in baseDir, string[]@ files, CAudioScriptSound@[]@ sounds) {
+    if (files is null) return;
+    sounds.Reserve(files.Length);
+    for (uint i = 0; i < files.Length; i++) {
+        sounds.InsertLast(audio.CreateSound(baseDir + files[i]));
+    }
 }
 
 class GameSounds_Turbo : GameSounds {
-    CAudioScriptSound@ FinishLine;
-    CAudioScriptSound@ StartLine;
-    CAudioScriptSound@ StartLine2;
-    CAudioScriptSound@[] CheckpointsFaster;
-    CAudioScriptSound@[] CheckpointsSlower;
-    CAudioScriptSound@ SoundStandbyEvent;
-
     GameSounds_Turbo() {
-        super("Turbo GameSounds");
+        throw("deprecate me");
+        super("Turbo GameSounds", "file://",  GameSoundsSpec());
         startnew(CoroutineFunc(PreloadSounds)); // .WithRunContext(Meta::RunContext::GameLoop);
         dev_trace("GameSounds_Turbo created");
     }
 
     void PreloadSounds() {
         auto audio = GetAudio();
-        @FinishLine = audio.CreateSound(MEDIA_SOUNDS_TURBO + TurboConst::SoundFinishLine);
-        @StartLine = audio.CreateSound(MEDIA_SOUNDS_TURBO + TurboConst::SoundStartLine);
-        @StartLine2 = audio.CreateSound(MEDIA_SOUNDS_TURBO + TurboConst::SoundStartLine2);
+        FinishLine.InsertLast(audio.CreateSound(MEDIA_SOUNDS_TURBO + TurboConst::SoundFinishLine));
+        StartLine.InsertLast(audio.CreateSound(MEDIA_SOUNDS_TURBO + TurboConst::SoundStartLine));
+        StartLine.InsertLast(audio.CreateSound(MEDIA_SOUNDS_TURBO + TurboConst::SoundStartLine2));
         @SoundStandbyEvent = audio.CreateSoundEx(MEDIA_SOUNDS_TURBO + TurboConst::SoundGameStart, 0.0, true, false, false);
         if (CheckpointsFaster.Length > 0 || CheckpointsSlower.Length > 0) {
             throw('Checkpoints already preloaded; faster: ' + CheckpointsFaster.Length + ', slower: ' + CheckpointsSlower.Length);
@@ -577,20 +664,6 @@ class GameSounds_Turbo : GameSounds {
             CheckpointsFaster.InsertLast(audio.CreateSound(MEDIA_SOUNDS_TURBO + TurboConst::SoundCheckpointFast + i + ".ogg"));
             CheckpointsSlower.InsertLast(audio.CreateSound(MEDIA_SOUNDS_TURBO + TurboConst::SoundCheckpointSlow + i + ".ogg"));
         }
-    }
-
-    void CleanUp() override {
-        auto audio = GetAudio();
-        CleanupSound(audio, FinishLine);
-        CleanupSound(audio, StartLine);
-        CleanupSound(audio, StartLine2);
-        CleanupSound(audio, SoundStandbyEvent);
-        @FinishLine = null;
-        @StartLine = null;
-        @StartLine2 = null;
-        @SoundStandbyEvent = null;
-        CleanupSounds(audio, CheckpointsFaster);
-        CleanupSounds(audio, CheckpointsSlower);
     }
 
     void OnStart() override {
