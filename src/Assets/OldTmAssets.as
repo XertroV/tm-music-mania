@@ -123,8 +123,8 @@ void CheckOldTmAssetsAndRegister() {
         return;
     }
     bool gotAll = true;
-    gotAll = CheckOldTmAssetsSubfolderAndRegister("Old_Menus", oldTm_MenuFiles) && gotAll;
-    gotAll = CheckOldTmAssetsSubfolderAndRegister("Old_Races", oldTm_RaceFiles) && gotAll;
+    gotAll = CheckOldTmAssetsSubfolderAndRegister("Old Menus", oldTm_MenuFiles) && gotAll;
+    gotAll = CheckOldTmAssetsSubfolderAndRegister("Old Races", oldTm_RaceFiles) && gotAll;
     if (gotAll) {
         SetGotAssetPack("OldTmAssets");
     }

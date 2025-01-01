@@ -106,11 +106,11 @@ class AssetDownloader {
         yield(3);
         if (_DlSemaphore == 0) return;
         Notify("["+name+"] Waiting for " + _TotalDownloadsStarted + " assets to download...");
-        int nextUpdate = _TotalDownloadsStarted / 5;
+        int nextUpdate = Math::Max(1, _TotalDownloadsStarted / 5);
         while (_TotalDownloadsDone < _TotalDownloadsStarted) {
             while (_TotalDownloadsDone < nextUpdate && _TotalDownloadsDone < _TotalDownloadsStarted) yield();
             Notify("["+name+"] Downloads " + Text::Format("%02.1f%%", DownloadsPctDone) + " done ( " + _TotalDownloadsDone + " / " + _TotalDownloadsStarted + " )");
-            nextUpdate += _TotalDownloadsStarted / 5;
+            nextUpdate += Math::Max(1, _TotalDownloadsStarted / 5);
         }
         while (_DlSemaphore > 0) yield();
         NotifySuccess("["+name+"] Downloaded " + _TotalDownloadsDone + " assets.");

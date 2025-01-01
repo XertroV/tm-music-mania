@@ -705,7 +705,7 @@ class Music_StdTrackSelection : MusicOrSound {
 
     CAudioScriptSound@ GetCurrMusic() {
         if (curTrackIx < 0 || curTrackIx >= MusicAll.Length) {
-            warn("Invalid curTrackIx: " + curTrackIx);
+            // warn("Invalid curTrackIx: " + curTrackIx);
             return null;
         }
         return MusicAll[curTrackIx];

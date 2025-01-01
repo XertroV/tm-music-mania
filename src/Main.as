@@ -6,11 +6,16 @@ const string MenuMainTitle = MenuIconColor + PluginIcon + "\\$z Music";
 
 void Main() {
     startnew(SetupIntercepts);
+    // download turbo assets by default
     EnsureTurboAssets();
+    // check if we have these downloaded
     CheckMp4AssetsAndRegister();
     CheckOldTmAssetsAndRegister();
+    CheckWiiAssetsAndRegister();
+    CheckDsAssetsAndRegister();
+
     // a short break to give some time before starting music stuff on game start
-    yield(10);
+    yield(4);
     startnew(GameMusic::Main);
     startnew(Turbo::Main).WithRunContext(Meta::RunContext::GameLoop);
     yield();
