@@ -91,10 +91,10 @@ string[]@ OldAssets_FilterOnlyMusicFiles(string[]@ assetFiles) {
         filteredFiles.InsertLast(file);
         trace("Filtered: " + file);
 
-        file = file.ToLower();
-        if (file.Contains("menu") || file.Contains("heartbeat")) {
+        string lFile = file.ToLower();
+        if (lFile.Contains("menu") || lFile.Contains("heartbeat")) {
             oldTm_MenuFiles.InsertLast(file);
-        } else if (!file.Contains("effects")) {
+        } else if (!lFile.Contains("effects")) {
             oldTm_RaceFiles.InsertLast(file);
         }
     }
@@ -132,7 +132,7 @@ void CheckOldTmAssetsAndRegister() {
 
 bool CheckOldTmAssetsSubfolderAndRegister(const string &in name, string[]@ files) {
     // c:/.../GameData/Media/Sounds/old/
-    string subfolderDir = OldAssets_BaseDir + "/";
+    string subfolderDir = OldAssets_BaseDir; // + "/";
     if (!IO::FolderExists(subfolderDir)) {
         warn("OldAssetPack subfolder does not exist: " + subfolderDir);
         return false;
@@ -150,5 +150,5 @@ bool CheckOldTmAssetsSubfolderAndRegister(const string &in name, string[]@ files
 
 void RegisterOldAssetPack(const string &in name, string[]@ files) {
     trace("Registering OldAssetPack: " + name);
-    Packs::AddPack(AudioPack_Playlist(name, MEDIA_SOUNDS_OLD + "/", files, 0.0));
+    Packs::AddPack(AudioPack_Playlist(name, MEDIA_SOUNDS_OLD, files, 0.0));
 }

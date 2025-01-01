@@ -95,6 +95,46 @@ namespace Packs {
     [Setting hidden]
     string S_PackChoice_Editor = "Turbo Editor Music";
 
+    bool UpdateMenuMusicChoice(AudioPack@ pack) {
+        if (pack.ty != AudioPackType::Playlist) {
+            warn("UpdateMenuMusicChoice: expected Playlist, got " + tostring(pack.ty));
+            return false;
+        }
+        bool changed = S_PackChoice_Menu != pack.name;
+        S_PackChoice_Menu = pack.name;
+        return changed;
+    }
+
+    bool UpdateInGameMusicChoice(AudioPack@ pack) {
+        if (pack.ty & (AudioPackType::Loops_Turbo | AudioPackType::Playlist) == 0) {
+            warn("UpdateInGameMusicChoice: expected Loops_Turbo|Playlist, got " + tostring(pack.ty));
+            return false;
+        }
+        bool changed = S_PackChoice_InGame != pack.name;
+        S_PackChoice_InGame = pack.name;
+        return changed;
+    }
+
+    bool UpdateGameSoundsChoice(AudioPack@ pack) {
+        if (pack.ty != AudioPackType::GameSounds) {
+            warn("UpdateGameSoundsChoice: expected GameSounds, got " + tostring(pack.ty));
+            return false;
+        }
+        bool changed = S_PackChoice_InGameSounds != pack.name;
+        S_PackChoice_InGameSounds = pack.name;
+        return changed;
+    }
+
+    bool UpdateEditorMusicChoice(AudioPack@ pack) {
+        if (pack.ty & (AudioPackType::Loops_Editor | AudioPackType::Playlist) == 0) {
+            warn("UpdateEditorMusicChoice: expected Loops_Editor|Playlist, got " + tostring(pack.ty));
+            return false;
+        }
+        bool changed = S_PackChoice_Editor != pack.name;
+        S_PackChoice_Editor = pack.name;
+        return changed;
+    }
+
     enum PackTy {
         LoopsTurbo = 1,
         GameSounds = 2,
@@ -110,7 +150,7 @@ namespace Packs {
         S_PackChoice_Menu = R_PackChoice("Menu Music", S_PackChoice_Menu, MusicCtx::Menu, PackTy::Playlist);
         S_PackChoice_Editor = R_PackChoice("Editor Music", S_PackChoice_Editor, MusicCtx::Editor, PackTy::LoopsEditor | PackTy::Playlist);
 
-        if (UI::BeginTabItem("Download Packs")) {
+        if (UI::BeginTabItem("DLC")) {
             R_DownloadPacks();
             UI::EndTabItem();
         }
@@ -258,7 +298,7 @@ abstract class AudioPack {
     bool DrawChoiceRow(bool isSelected) {
         UI::PushID(name);
 
-        UI::Text(tyAndName);
+        UI::Text((isSelected ? "\\$8e8" : "") + tyAndName);
         UI::SameLine();
 
         UI::BeginDisabled(isSelected);
@@ -268,6 +308,10 @@ abstract class AudioPack {
         UI::PopID();
         return clicked;
 
+    }
+
+    void RenderSongChoiceMenu() {
+        throw("RenderSongChoiceMenu: Override me " + tyAndName);
     }
 
     MusicOrSound@ ToMusicOrSound() {
@@ -387,7 +431,7 @@ class AudioPack_LoopsTurbo : AudioPack_LoopsGeneric {
 
     MusicOrSound@ ToMusicOrSound() override {
         dev_warn("AP_LoopsTurbo::ToMusicOrSound " + name);
-        return Music_TurboInGame(GetLoopsJsonArr());
+        return Music_TurboInGame(GetLoopsJsonArr()).WithOriginPack(this);
     }
 }
 
@@ -469,11 +513,37 @@ class AudioPack_Playlist : AudioPack {
         for (uint i = 0; i < tracks.Length; i++) {
             paths.InsertLast(baseDir + tracks[i].name);
         }
-        auto ret = Music_StdTrackSelection(baseDir, paths, true, true);
+        auto ret = Music_StdTrackSelection(name, baseDir, paths, true, true)
+            .WithOriginPack(this);
         for (uint i = 0; i < tracks.Length; i++) {
             ret.SetCustomVolume(tracks[i].volume, tracks[i].name);
         }
         return ret;
+    }
+
+    void RenderSongChoiceMenu() override {
+        auto musicStdPlaylist = cast<Music_StdTrackSelection>(Music::GetCurrentMusic());
+        auto currMusic = musicStdPlaylist !is null ? musicStdPlaylist.debug_CurrMusicPath : "";
+        if (UI::BeginMenu(name)) {
+            for (uint i = 0; i < tracks.Length; i++) {
+                if (UI::MenuItem(tracks[i].name, "", currMusic == tracks[i].name)) {
+                    Music::SetCurrentMusicChoice(this);
+                    startnew(CoroutineFuncUserdataInt64(this.SetCurrMusicPlayingIx), int64(i));
+                    dev_warn("Selected: " + tracks[i].name);
+                }
+            }
+            UI::EndMenu();
+        }
+    }
+
+    void SetCurrMusicPlayingIx(int64 ix) {
+        while (Music::GetCurrentMusic() is null) {
+            yield();
+        }
+        auto musicStdPlaylist = cast<Music_StdTrackSelection>(Music::GetCurrentMusic());
+        if (musicStdPlaylist !is null) {
+            musicStdPlaylist.SelectAndPreloadTrack(ix);
+        }
     }
 }
 
@@ -533,7 +603,7 @@ class AudioPack_GameSounds : AudioPack {
 
     MusicOrSound@ ToMusicOrSound() override {
         dev_warn("AP_GameSounds::ToMusicOrSound " + name);
-        return GameSounds(name, baseDir, spec);
+        return GameSounds(name, baseDir, spec).WithOriginPack(this);
     }
 }
 

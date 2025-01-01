@@ -23,19 +23,72 @@ namespace Music {
         startnew(Music::MainInGameLoop).WithRunContext(Meta::RunContext::GameLoop);
     }
 
+    void SetCurrentMusicChoice(AudioPack@ music) {
+        if (TM_State::IsInMenu) {
+            if (Packs::UpdateMenuMusicChoice(music)) {
+                dev_trace("UpdateMenuMusicChoice: Menu music changed");
+                if (GM_Menu !is null) {
+                    GM_Menu.CleanUp();
+                    @GM_Menu = null;
+                }
+            }
+        } else if (TM_State::IsInPlayground) {
+            if (Packs::UpdateInGameMusicChoice(music)) {
+                dev_trace("UpdateInGameMusicChoice: InGame music changed");
+                if (GM_InGame !is null) {
+                    GM_InGame.CleanUp();
+                    @GM_InGame = null;
+                }
+            }
+        } else if (TM_State::IsInEditor) {
+            if (Packs::UpdateEditorMusicChoice(music)) {
+                dev_trace("UpdateEditorMusicChoice: Editor music changed");
+                if (GM_Editor !is null) {
+                    GM_Editor.CleanUp();
+                    @GM_Editor = null;
+                }
+            }
+        } else {
+            dev_warn("SetCurrentMusicChoice: not in a valid context");
+        }
+    }
+
     void ReloadMusicFor(MusicCtx ctx) {
         switch (ctx) {
             case MusicCtx::InGame:
+                if (GM_InGame !is null) GM_InGame.CleanUp();
+                if (GM_InGameSounds !is null) GM_InGameSounds.CleanUp();
                 @GM_InGame = null;
                 @GM_InGameSounds = null;
                 break;
             case MusicCtx::Menu:
+                if (GM_Menu !is null) GM_Menu.CleanUp();
                 @GM_Menu = null;
                 break;
             case MusicCtx::Editor:
+                if (GM_Editor !is null) GM_Editor.CleanUp();
                 @GM_Editor = null;
                 break;
         }
+    }
+
+    MusicOrSound@ GetCurrentMusic() {
+        if (TM_State::IsInMenu) return GM_Menu;
+        if (TM_State::IsInPlayground) return GM_InGame;
+        if (TM_State::IsInEditor) return GM_Editor;
+        return null;
+    }
+
+    string GetCurrentMusicPackName() {
+        auto music = GetCurrentMusic();
+        if (music is null) return "null";
+        if (music.origin is null) return "null-origin";
+        return music.origin.name;
+    }
+
+    MusicOrSound@ GetCurrentGameSounds() {
+        if (TM_State::IsInPlayground) return GM_InGameSounds;
+        return null;
     }
 
     void MainInGameLoop() {
@@ -56,6 +109,10 @@ namespace Music {
         yield(4);
 
         if (TM_State::IsInMenu) {
+            if (GM_InGame !is null) GM_InGame.CleanUp();
+            if (GM_InGameSounds !is null) GM_InGameSounds.CleanUp();
+            if (GM_Editor !is null) GM_Editor.CleanUp();
+            if (GM_EditorSounds !is null) GM_EditorSounds.CleanUp();
             @GM_InGame = null;
             @GM_InGameSounds = null;
             @GM_Editor = null;
@@ -83,19 +140,23 @@ namespace Music {
     }
 
     MusicOrSound@ ChooseInMenuMusic() {
-        // todo: apply settings here when choosing menu music
         dev_warn("Choosing menu music");
+        if (GM_Menu !is null) GM_Menu.CleanUp();
         @GM_Menu = Packs::GetMenuMusic().ToMusicOrSound();
         return GM_Menu;
     }
 
     MusicOrSound@ ChooseEditorMusic() {
+        if (GM_Editor !is null) GM_Editor.CleanUp();
+        if (GM_EditorSounds !is null) GM_EditorSounds.CleanUp();
         @GM_Editor = Packs::GetEditorMusic().ToMusicOrSound();
+        @GM_EditorSounds = null;
         return GM_Editor;
     }
 
     MusicOrSound@ ChooseInGameMusic() {
-        // todo: @GM_InGame =
+        if (GM_InGame !is null) GM_InGame.CleanUp();
+        if (GM_InGameSounds !is null) GM_InGameSounds.CleanUp();
         @GM_InGame = Packs::GetInGameMusic().ToMusicOrSound();
         @GM_InGameSounds = Packs::GetInGame_GameSounds().ToMusicOrSound();
         return GM_InGame;

@@ -107,11 +107,18 @@ namespace GameMusic {
             AddSimpleTooltip("dB; 0.0 is normal");
         }
 
-        if (GM_InGame !is null) {
-            GM_InGame.RenderDebug();
+        auto currMusic = Music::GetCurrentMusic();
+        if (currMusic !is null) {
+            currMusic.RenderDebug();
+            auto currGameSounds = Music::GetCurrentGameSounds();
+            if (currGameSounds !is null) {
+                currGameSounds.RenderDebug();
+            }
+        } else {
+            UI::Text("GetCurrentMusic() returned null.");
         }
 
-
+        /*
         if (Turbo::G_Music !is null) {
             if (UI::Button("Explore")) {
                 ExploreNod(Turbo::G_Music);
@@ -129,6 +136,7 @@ namespace GameMusic {
                 Turbo::G_Music.NextVariant2(true);
             }
         }
+        */
 
         if (UI::CollapsingHeader("All Sources")) {
             if (UI::BeginChild("All Sources")) {
