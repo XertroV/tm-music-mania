@@ -2,7 +2,7 @@
 name     = "Music Mania"
 author   = "XertroV"
 category = "Music"
-version  = "0.9.2"
+version  = "0.9.3"
 
 blocks = ["music-auto-toggler", "music-auto-toggler-dev"]
 
