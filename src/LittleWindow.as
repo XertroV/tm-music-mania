@@ -81,7 +81,19 @@ namespace LittleWindow {
             DrawMapMusicScrubber(mapMusicSrc);
         } else {
             DrawNextButton_Optional(cast<Music_StdTrackSelection>(music));
+        }
 
+        // helpers in case of issues with map music.
+        if (TM_State::MapHasEmbeddedMusic) {
+            if (!GameMusic::S_PrioritizeMusicInMap && Music::GetCurrentMusic() is null) {
+                if (UX::SmallButton("Fix: Try and Play Chosen Music")) {
+                    Music::ChooseInGameMusic();
+                }
+            } else if (GameMusic::S_PrioritizeMusicInMap && Music::GetCurrentMusic() !is null) {
+                if (UX::SmallButton("Fix: Try and revert to Map Music")) {
+                    Music::ChooseInGameMusic();
+                }
+            }
         }
     }
 

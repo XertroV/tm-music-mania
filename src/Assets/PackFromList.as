@@ -1,28 +1,8 @@
-AP_Downloadable@ AP_BigBang1112 = AP_Downloadable("BigBang1112 Remixes", "GameData/Media/Sounds/BigBang1112/", "https://assets.xk.io/OtherTmMusic/BigBang1112/",
-"TMU/TMF Remixes by BigBang1112", """
-TMF Menu Remix.ogg
-TMU Bay Remix.ogg
-TMU Coast Remix.ogg
-TMU Desert Remix ft ThaumicTom.ogg
-TMU Island Remix.ogg
-TMU Rally Remix.ogg
-TMU Snow Remix.ogg
-""");
+AP_Downloadable@ AP_BigBang1112 = AP_Downloadable("BigBang1112 Remixes", "GameData/Media/Sounds/BigBang1112/", "https://assets.xk.io/OtherTmMusic/BigBang1112/", "TMU/TMF Remixes by BigBang1112", "TMF Menu Remix.ogg\nTMU Bay Remix.ogg\nTMU Coast Remix.ogg\nTMU Desert Remix ft ThaumicTom.ogg\nTMU Island Remix.ogg\nTMU Rally Remix.ogg\nTMU Snow Remix.ogg");
 
-AP_Downloadable@ AP_ZaiLoop = AP_DownloadableLoop("Zai's Loop", "GameData/Media/Sounds/ZaiLoop/", "https://assets.xk.io/OtherTmMusic/ZaiLoop/", "Zai's in-game Loop", """
-InThePast_L.zip
-""");
+AP_Downloadable@ AP_ZaiLoop = AP_DownloadableLoop("Zai's Loop", "GameData/Media/Sounds/ZaiLoop/", "https://assets.xk.io/OtherTmMusic/ZaiLoop/", "Zai's slappin' in-game Music Loop", "InThePast_L.zip");
 
-AP_Downloadable@ AP_PMC = AP_Downloadable("Project Minecraft", "GameData/Media/Sounds/PMC/", "https://assets.xk.io/MusicMisc/PMC/", "Project Minecraft", """
-Badlands.ogg
-Blossom.ogg
-Caves.ogg
-End.ogg
-Jungle.ogg
-Nether.ogg
-Swamp.ogg
-Tundra.ogg
-""");
+AP_Downloadable@ AP_PMC = AP_Downloadable("Project Minecraft", "GameData/Media/Sounds/PMC/", "https://assets.xk.io/MusicMisc/PMC/", "Project Minecraft", "Badlands.ogg\nBlossom.ogg\nCaves.ogg\nEnd.ogg\nJungle.ogg\nNether.ogg\nSwamp.ogg\nTundra.ogg");
 
 AP_Downloadable@ AP_Outer_Wilds = AP_Downloadable("Outer Wilds", "GameData/Media/Sounds/OuterWilds/", "https://assets.xk.io/MusicMisc/Outer Wilds/", "Music from Outer Wilds. (Great game. You should play it.)", "01. Timber Hearth.ogg\n02. Outer Wilds.ogg\n03. The Museum.ogg\n04. Space.ogg\n05. Castaways.ogg\n06. The Sun Station.ogg\n07. Main Title.ogg\n08. The Search.ogg\n09. The Uncertainty Principle.ogg\n10. End Times.ogg\n11. 22 Minutes.ogg\n12. The Nomai.ogg\n13. The Ash Twin Project.ogg\n14. Dark Bramble.ogg\n15. Giants Deep.ogg\n16. Nomai Ruins.ogg\n17. Final Voyage.ogg\n18. The Ancient Glade.ogg\n19. Curiosity.ogg\n20. Travelers.ogg\n21. Let There Be Light.ogg\n22. 14.3 Billion Years.ogg\n23. Morning.ogg\n24. Campfire Song.ogg\n25. Into the Wilds.ogg\n26. Arrow of Time.ogg\n27. We Have Liftoff.ogg\n28. A Terrible Fate.ogg");
 
@@ -31,9 +11,10 @@ AP_Downloadable@[] AP_Downloadables = {
     AP_BigBang1112
     , AP_PMC
     , AP_Outer_Wilds
+    , AP_ZaiLoop
     // add more here
 #if DEV
-    , AP_ZaiLoop
+    // , AP_ZaiLoop
 #endif
 };
 

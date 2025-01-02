@@ -298,7 +298,8 @@ namespace Music {
             string dlcCol = missing > 0 ? "\\$f80" : "\\$8b8";
             UI::SeparatorText(dlcCol + "\\$i DLC " + Icons::Download);
             if (missing > 0) {
-                UI::Text("  \\$db6" + Icons::ExclamationTriangle + " Missing: " + missing + " packs.");
+                // db6
+                UI::Text("  \\$aaa" + Icons::ExclamationTriangle + " Available: " + missing + " packs.");
             } else {
                 UI::Text("  \\$999" + Icons::Check + " All packs downloaded.");
             }
