@@ -15,8 +15,8 @@ enum MusicCtx {
 
 namespace Music {
     void Main() {
-        // todo: instantiating music in the wrong mania app context can cause problems where it doesn't play back properly and things get stuck.
-        // todo: we shouldn't create this until we're in the menu.
+        // instantiating music in the wrong mania app context can cause problems where it doesn't play back properly and things get stuck.
+        // we shouldn't create this until we're in the menu. (Sounds are populated on-demand currently)
         // if (TM_State::IsInMenu) {
         //     ChooseInMenuMusic();
         // }
@@ -109,7 +109,7 @@ namespace Music {
 
     string GetCurrentGameSoundPackName() {
         auto music = GetCurrentGameSounds();
-        if (music is null) return "null";
+        if (music is null || music.origin is null) return "<No custom game sounds>";
         return music.GetOriginName();
     }
 
@@ -130,12 +130,13 @@ namespace Music {
 
     void OnGameContextChanged() {
         // we need the game to load its music first so we can replace it
-        yield(4);
+        yield(1);
         dev_trace("Resetting due to context change. IsInMenu: " + TM_State::IsInMenu + ", IsInPlayground: " + TM_State::IsInPlayground + ", IsInEditor: " + TM_State::IsInEditor);
         startnew(GameMusic::Reset);
-        yield(4);
+        yield(1);
 
         if (TM_State::IsInMenu) {
+            // clear game/editor if they still exist
             if (GM_InGame !is null) GM_InGame.CleanUp();
             if (GM_InGameSounds !is null) GM_InGameSounds.CleanUp();
             if (GM_Editor !is null) GM_Editor.CleanUp();
@@ -150,15 +151,16 @@ namespace Music {
 
             startnew(Music::InMenuLoop).WithRunContext(Meta::RunContext::GameLoop);
         } else if (TM_State::IsInPlayground) {
-            // we need the game to load its music first so we can replace it
-            // yield(10);
-
             if (GM_InGame is null) ChooseInGameMusic();
             else GM_InGame.OnContextEnter();
             startnew(Music::InGameLoop).WithRunContext(Meta::RunContext::AfterMainLoop);
         } else if (TM_State::IsInEditor) {
+            // clear game if it still exists
+            if (GM_InGame !is null) GM_InGame.CleanUp();
+            if (GM_InGameSounds !is null) GM_InGameSounds.CleanUp();
             @GM_InGame = null;
             @GM_InGameSounds = null;
+            // handle editor sounds
             if (GM_Editor is null) ChooseEditorMusic();
             else GM_Editor.OnContextEnter();
         } else if (TM_State::IsLoading) {
@@ -235,7 +237,10 @@ namespace Music {
     }
 
     void RenderMenuMain() {
-        if (UI::BeginMenu(MenuMainTitle)) {
+        if (UI::BeginMenu(Global::MusicVolume < -35 ? MenuMainTitleMuted
+                        : Global::MusicVolume < -15 ? MenuMainTitleVolMid
+                        : MenuMainTitle
+        )) {
             RenderMenu_CurrentMusicStats();
 
             if (TM_State::MapHasEmbeddedMusic) {
@@ -280,11 +285,28 @@ namespace Music {
 
     void RenderMenu_CurrentMusicStats() {
         UI::SeparatorText("Global Volumes");
-
+        UI::TextWrapped("\\$aaa\\$i Vanilla max volume = 0.0.");
         // UI::PushItemWidth(200.);
         Global::MusicVolume = UI::SliderFloat("Music Vol dB", Global::MusicVolume, -40., 6.);
+        bool rmbMusicVol = UI::IsItemClicked(UI::MouseButton::Right);
         Global::GameVolume = UI::SliderFloat("Game Vol dB", Global::GameVolume, -40., 6.);
+        bool rmbGameVol = UI::IsItemClicked(UI::MouseButton::Right);
         // UI::PopItemWidth();
+
+        if (rmbMusicVol) Global::MusicVolume = Global::S_SavedMusicVolume;
+        if (rmbGameVol) Global::GameVolume = Global::S_SavedGameVolume;
+
+        UX::AlignTextToSmallFramePadding();
+        UI::Text("\\$aaaFavorite Vol: ");
+        UI::SameLine();
+        UX::SmallButtonCB(Icons::FloppyO + "###savevol", Global::SaveVolumes);
+        UI::SameLine();
+        UX::SmallButtonCB(Icons::FolderOpenO + "###loadvol", Global::LoadVolumes);
+        AddSimpleTooltip("Right-click M/G vol slider to load favorited volume.");
+        UI::SameLine();
+        UI::TextWrapped("\\$aaa " + Global::SavedVolumeDescStr);
+
+        Global::Draw_VolumeCheckboxes();
 
         UI::SeparatorText("Music");
 
@@ -372,6 +394,8 @@ namespace Music {
         AddSimpleTooltip("When enabled, the playing track will loop until the map changes.\nOtherwise, when a track finishes, a new track will play.");
         S_Playlist_Sequential = UI::Checkbox("[Playlist] Sequential", S_Playlist_Sequential);
         AddSimpleTooltip("When enabled, the playlist will advance through the tracks in order. Otherwise, it will play them randomly.");
+        S_Playlist_ChangeTrackOnCtxChange = UI::Checkbox("[Playlist] Start new track on map exit", S_Playlist_ChangeTrackOnCtxChange);
+        AddSimpleTooltip("When enabled, entering the menu will cause the menu playlist to go to next track. Same for returning to the editor from test/validation mode.");
 
         UI::Separator();
 

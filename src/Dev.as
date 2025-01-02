@@ -1,4 +1,4 @@
-#if SIG_DEVELOPERx
+#if SIG_DEVELOPER
 uint64 Dev_GetPtrForNod(CMwNod@ nod) {
     if (nod is null) throw("null nod passed"); // return 0 here if you prefer, but remember to check it later!
     uint64 vtablePtr = Dev::GetOffsetUint64(nod, 0); // store the vtable ptr to restore later

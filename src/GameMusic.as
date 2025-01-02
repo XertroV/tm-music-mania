@@ -41,7 +41,7 @@ namespace GameMusic {
 
     // Dev stuff disabled via `x` suffix
 
-#if SIG_DEVELOPERx
+#if SIG_DEVELOPER
 
     void RenderMenu() {
         if (UI::MenuItem("Music Mania Debug", "", windowOpen)) {
@@ -103,6 +103,10 @@ namespace GameMusic {
             UI::Unindent();
         }
         UI::Text("AudioPort Sources Len: " + lastApSourcesLen);
+        UI::Indent();
+        UI::Text("lastGoodIx: " + lastGoodIx);
+        UI::Unindent();
+
         targetVolume = UI::SliderFloat("Target Volume", targetVolume, -100.0f, 20.0f);
         S_PrioritizeMusicInMap = UI::Checkbox("Prioritize Map Custom Music (when it exists)", S_PrioritizeMusicInMap);
         S_SetMusicInMapVolume = UI::Checkbox("Set Custom Music Volume", S_SetMusicInMapVolume);
@@ -268,6 +272,7 @@ namespace GameMusic {
             stale = true;
         } else if (lastApSourcesLen > ap.Sources.Length && !stale) {
             // something got removed, we need to re-find from last index
+            lastApSourcesLen = ap.Sources.Length;
             lastGoodIx = GetIxAfterLastKnown();
             stale = true;
         }
@@ -306,7 +311,13 @@ namespace GameMusic {
     }
 
     uint GetIxAfterLastKnown() {
-        return musicTrackIndexes.Length > 0 ? musicTrackIndexes[musicTrackIndexes.Length - 1] + 1 : 0;
+        auto nextIx = musicTrackIndexes.Length > 0 ? musicTrackIndexes[musicTrackIndexes.Length - 1] + 1 : 0;
+        if (lastApSourcesLen > nextIx + 100 && lastApSourcesLen > 100) {
+            // big reorg, just change to last 100 to avoid extra processing.
+            // ! might cause bugs where music isn't silenced?
+            nextIx = lastApSourcesLen - 100;
+        }
+        return nextIx;
     }
 
     const string GetSoundSourceFidName(CAudioSource@ src) {
@@ -434,7 +445,7 @@ void SearchForOggFiles() {
 #endif
 
 
-#if FALSE
+#if SIG_DEVELOPER
 
 FoundOggFile@[] foundOggFiles;
 

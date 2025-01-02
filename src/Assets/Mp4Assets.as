@@ -1,6 +1,6 @@
 const string Mp4Assets_BaseUrl = "https://assets.xk.io/Mp4Music/";
 const string Mp4Assets_RawBaseDir = "GameData/Media/Sounds/Mp4/";
-const string Mp4Assets_BaseDir = IO::FromAppFolder("GameData/Media/Sounds/Mp4/");
+const string Mp4Assets_BaseDir = IO::FromAppFolder(Mp4Assets_RawBaseDir);
 
 const string MEDIA_SOUNDS_MP4 = "file://Media/Sounds/Mp4/";
 

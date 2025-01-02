@@ -553,7 +553,7 @@ class Music_StdTrackSelection : MusicOrSound {
     }
 
     void OnContextEnter() override {
-        On_NextTrack();
+        if (S_Playlist_ChangeTrackOnCtxChange) On_NextTrack();
         // we can technically double up on these loops, but they resolve cleanly anyway. better than no loops running.
         startnew(CoroutineFuncUserdataInt64(this.WatchForEndMusicTrack), int64(curTrackIx));
     }
@@ -601,7 +601,7 @@ class Music_StdTrackSelection : MusicOrSound {
     void ChooseNewCurrentTrack(int trackIx = -1) {
         // if (_chooseRandomly)
         curTrackIx = trackIx < 0 ? Math::Rand(0, MusicPaths.Length) : trackIx % MusicPaths.Length;
-        debug_CurrMusicPath = MusicShortPaths[curTrackIx];
+        debug_CurrMusicPath = curTrackIx < MusicShortPaths.Length ? MusicShortPaths[curTrackIx] : "No track";
     }
 
     void PreloadSelectedTrack() {

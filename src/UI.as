@@ -38,6 +38,16 @@ namespace UX {
 		return pressed;
 	}
 
+	bool SmallButtonCB(const string &in label, CoroutineFunc@ cb, vec2 size = vec2()) {
+		PushThinControls();
+		bool pressed = SmallButton(label, size);
+		if (pressed) {
+			startnew(cb);
+		}
+		PopThinControls();
+		return pressed;
+	}
+
 	void PushThinControls() {
 		UI::PushStyleVar(UI::StyleVar::FramePadding, vec2(2, 1));
 		// UI::PushStyleVar(UI::StyleVar::ItemSpacing, vec2(2, 1));
@@ -45,5 +55,11 @@ namespace UX {
 
 	void PopThinControls() {
 		UI::PopStyleVar(1);
+	}
+
+	void AlignTextToSmallFramePadding() {
+		PushThinControls();
+		UI::AlignTextToFramePadding();
+		PopThinControls();
 	}
 }

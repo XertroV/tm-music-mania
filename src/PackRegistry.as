@@ -502,6 +502,9 @@ class AudioPack_Playlist : AudioPack {
         super(AudioPackType::Playlist, name);
         @this.tracks = tracks;
         this.baseDir = baseFolder;
+        for (uint i = 0; i < tracks.Length; i++) {
+            OnAddTrack(i);
+        }
     }
 
     AudioPack_Playlist(const string &in name, const string &in baseFolder, string[]@ trackFiles, float defaultVolume) {
@@ -509,7 +512,8 @@ class AudioPack_Playlist : AudioPack {
         @tracks = {};
         this.baseDir = baseFolder;
         for (uint i = 0; i < trackFiles.Length; i++) {
-            tracks.InsertLast(Playlist_Track(trackFiles[i]));
+            if (trackFiles[i].Length < 2) continue;
+            AddTrack(Playlist_Track(trackFiles[i]));
         }
     }
 
@@ -519,8 +523,13 @@ class AudioPack_Playlist : AudioPack {
         baseDir = string(j["baseDir"]);
         Json::Value@ jTracks = j["tracks"];
         for (uint i = 0; i < jTracks.Length; i++) {
-            tracks.InsertLast(Playlist_Track(jTracks[i]));
+            AddTrack(Playlist_Track(jTracks[i]));
         }
+    }
+
+    void AddTrack(Playlist_Track@ track) {
+        tracks.InsertLast(track);
+        OnAddTrack(tracks.Length - 1);
     }
 
     Json::Value@ ToJson() override {
@@ -584,6 +593,31 @@ class AudioPack_Playlist : AudioPack {
     int GetTrackCount() override {
         return tracks.Length;
     }
+
+    void OnAddTrack(int i) {
+        // overridden in AudioPack_PlaylistEverything
+        if (AllMusicPlaylistSingleton !is null) {
+            AllMusicPlaylistSingleton.AddTrack(tracks[i].CloneButAdjustBaseDir(MEDIA_URI, baseDir));
+        }
+    }
+}
+
+const string MEDIA_URI = "file://Media/";
+
+AudioPack_PlaylistEverything@ AllMusicPlaylistSingleton = null;
+
+class AudioPack_PlaylistEverything : AudioPack_Playlist {
+    AudioPack_PlaylistEverything(const string &in name) {
+        if (AllMusicPlaylistSingleton !is null) {
+            throw("Only one instance of AudioPack_PlaylistEverything allowed");
+        }
+        super(name, MEDIA_URI, {});
+        @AllMusicPlaylistSingleton = this;
+    }
+
+    void OnAddTrack(int i) override {
+        // do nothing here
+    }
 }
 
 
@@ -607,6 +641,14 @@ class Playlist_Track {
         j["n"] = name;
         j["v"] = volume;
         return j;
+    }
+
+    Playlist_Track@ CloneButAdjustBaseDir(const string &in newBaseDir, const string &in oldBaseDir) {
+        if (!oldBaseDir.StartsWith(newBaseDir)) {
+            throw("oldBaseDir must start with newBaseDir; instead: " + oldBaseDir + " vs " + newBaseDir);
+        }
+        string newName = (oldBaseDir + name).Replace(newBaseDir, "");
+        return Playlist_Track(newName, volume);
     }
 }
 

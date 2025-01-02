@@ -1,11 +1,21 @@
 const string PluginName = Meta::ExecutingPlugin().Name;
 const string MenuIconColor = "\\$4f9";
+const string MenuIconMutedColor = "\\$d44";
+const string MenuIconQuietColor = "\\$f94";
 const string PluginIcon = Icons::Headphones;
 const string MenuTitle = MenuIconColor + PluginIcon + "\\$z " + PluginName;
-const string MenuMainTitle = MenuIconColor + PluginIcon + "\\$z Music";
+const string MenuMainId = "mmusic";
+const string MenuMainTitle = MenuIconColor + PluginIcon + "\\$z Music###" + MenuMainId;
+const string MenuMainTitleMuted = MenuIconMutedColor + Icons::VolumeOff + "\\$z Music###" + MenuMainId;
+const string MenuMainTitleVolMid = MenuIconQuietColor + Icons::VolumeDown + "\\$z Music###" + MenuMainId;
+
 
 void Main() {
     startnew(SetupIntercepts);
+    // keep track of all music
+    Packs::AddPack(AudioPack_PlaylistEverything("<All>"));
+    // we start with TM2020 music
+    Register_Tm2020_Assets();
     // download turbo assets by default
     EnsureTurboAssets();
     // check if we have these downloaded
