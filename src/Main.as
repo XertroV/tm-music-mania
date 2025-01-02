@@ -28,7 +28,6 @@ void Main() {
     // a short break to give some time before starting music stuff on game start
     yield(4);
     startnew(GameMusic::Main);
-    startnew(Turbo::Main).WithRunContext(Meta::RunContext::GameLoop);
     yield();
     startnew(Music::Main).WithRunContext(Meta::RunContext::GameLoop);
 }
@@ -37,7 +36,6 @@ void Main() {
 */
 void OnDestroyed() {
     // GameMusic::OnDestroyed();
-    Turbo::OnDestroyed();
 }
 
 // seconds

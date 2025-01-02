@@ -3,6 +3,10 @@
 Replace the in-game music with whatever you want!
 OSTs from previous TM games are included via download.
 
+Little Window:
+
+- Right click scrubber to pause
+
 License: Public Domain
 
 Authors: XertroV

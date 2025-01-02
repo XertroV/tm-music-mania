@@ -7,6 +7,9 @@ MusicOrSound@ GM_Editor;
 MusicOrSound@ GM_InGameSounds;
 MusicOrSound@ GM_EditorSounds;
 
+const string CUSTOM_MUSIC_FOLDER = IO::FromAppFolder("GameData/Media/CustomMusic/");
+const string CUSTOM_MUSIC_FOLDER_README = CUSTOM_MUSIC_FOLDER + "README.txt";
+
 enum MusicCtx {
     InGame,
     Menu,
@@ -37,6 +40,7 @@ namespace Music {
     }
 
     void SetCurrentMusicChoice(AudioPack@ music) {
+        if (music is null) throw("SetCurrentMusicChoice: music is null");
         if (TM_State::IsInMenu) {
             if (Packs::UpdateMenuMusicChoice(music)) {
                 dev_trace("UpdateMenuMusicChoice: Menu music changed");
@@ -184,7 +188,10 @@ namespace Music {
     }
 
     MusicOrSound@ ChooseInGameMusic(bool andGameSounds = true) {
-        if (GM_InGame !is null) GM_InGame.CleanUp();
+        if (GM_InGame !is null) {
+            GM_InGame.CleanUp();
+            @GM_InGame = null;
+        }
         if (TM_State::MapHasEmbeddedMusic && GameMusic::S_PrioritizeMusicInMap) {
             // do nothing if the map has music and we want to prioritize it.
         } else {
@@ -247,22 +254,25 @@ namespace Music {
                 UI::SeparatorText("Map Music");
 
                 auto map = GetApp().RootMap;
-                auto plugSound = map.CustomMusic;
-                auto musicPackDesc = map.CustomMusicPackDesc;
+                if (map !is null) {
+                    auto plugSound = map.CustomMusic;
+                    auto musicPackDesc = map.CustomMusicPackDesc;
 
-                if (plugSound !is null) {
-                    plugSound.VolumedB = UI::SliderFloat("Map music vol dB", plugSound.VolumedB, -40., 12.);
-                }
+                    if (plugSound !is null) {
+                        plugSound.VolumedB = UI::SliderFloat("Map music vol dB", plugSound.VolumedB, -40., 12.);
+                    }
 
-                if (musicPackDesc !is null) {
-                    UI::Text("Pack.Name: " + musicPackDesc.Name);
-                    UI::Text("Pack.Url: " + musicPackDesc.Url);
-                    auto fid = musicPackDesc.Fid;
-                    if (fid !is null) {
-                        if (fid.Nod !is null) {
-                            auto nodTy = Reflection::TypeOf(fid.Nod);
-                            UI::Text("Nod Type: " + nodTy.Name);
-                            UI::Text("BaseType: " + nodTy.BaseType.Name);
+                    if (musicPackDesc !is null) {
+                        UI::Text("Name: " + GetClean_MusicPackDescName(musicPackDesc.Name));
+                    }
+
+                    if (!GameMusic::S_PrioritizeMusicInMap && Music::GetCurrentMusic() is null) {
+                        if (UX::SmallButton("Try and Play Chosen Music")) {
+                            ChooseInGameMusic();
+                        }
+                    } else if (GameMusic::S_PrioritizeMusicInMap && Music::GetCurrentMusic() !is null) {
+                        if (UX::SmallButton("Try and revert to Map Music")) {
+                            ChooseInGameMusic();
                         }
                     }
                 }
@@ -288,6 +298,24 @@ namespace Music {
             if (UI::BeginMenu("Already Downloaded")) {
                 UI::Dummy(vec2(300, 0));
                 DLC::RenderDownloadMenu(false);
+                UI::EndMenu();
+            }
+            if (UI::BeginMenu("Your Own Music")) {
+                UI::Dummy(vec2(300, 0));
+                UI::SeparatorText("How To");
+                // UI::Text("  \\$999" + Icons::FolderOpenO + " Not implemented yet.");
+                UI::Text("1. Convert your music to .ogg format.");
+                UI::Text("2. Place your music files in the folder (open it below).");
+                UI::Text("3. Click \"Refresh\" to see your music.");
+                UI::SeparatorText("Folder");
+                if (UX::SmallButton(Icons::FolderOpenO + " Open Folder")) {
+                    startnew(OpenCustomMusicFolder);
+                }
+                UI::SeparatorText("Loaded Music");
+                // UI::Text("# Tracks: " + AP_CustomMusic.NbTracks);
+                if (UX::SmallButton(Icons::Refresh + " Refresh")) {
+                    // AP_CustomMusic.Refresh();
+                }
                 UI::EndMenu();
             }
 
@@ -425,20 +453,46 @@ namespace Music {
 
         UI::Separator();
 
-        LittleWindow::S_ShowLittleWindow = UI::Checkbox("[UI] Show Little Window", LittleWindow::S_ShowLittleWindow);
-        if (LittleWindow::S_ShowLittleWindow) {
-            UI::Indent();
-            LittleWindow::S_HideLittleWindowWhenGameUIHidden = UI::Checkbox("[LW] Hide with Game UI", LittleWindow::S_HideLittleWindowWhenGameUIHidden);
-            LittleWindow::S_HideLittleWindowWhenOverlayHidden = UI::Checkbox("[LW] Hide with Overlay", LittleWindow::S_HideLittleWindowWhenOverlayHidden);
-            LittleWindow::S_ShowTrackPackInfo = UI::Checkbox("[LW] Music Pack Info", LittleWindow::S_ShowTrackPackInfo);
-            LittleWindow::S_ShowTrackInfo = UI::Checkbox("[LW] Track Info", LittleWindow::S_ShowTrackInfo);
-            LittleWindow::S_ShowNextButton = UI::Checkbox("[LW] Show Next Button", LittleWindow::S_ShowNextButton);
-            LittleWindow::S_ShowTrackScrubber = UI::Checkbox("[LW] Track Scrubber", LittleWindow::S_ShowTrackScrubber);
-            UI::Unindent();
+        if (UI::BeginMenu("Little Window")) {
+            LittleWindow::S_ShowLittleWindow = UI::Checkbox("[UI] Show Little Window", LittleWindow::S_ShowLittleWindow);
+            if (LittleWindow::S_ShowLittleWindow) {
+                UI::Indent();
+                LittleWindow::S_HideLittleWindowWhenGameUIHidden = UI::Checkbox("[LW] Hide with Game UI", LittleWindow::S_HideLittleWindowWhenGameUIHidden);
+                LittleWindow::S_HideLittleWindowWhenOverlayHidden = UI::Checkbox("[LW] Hide with Overlay (F3)", LittleWindow::S_HideLittleWindowWhenOverlayHidden);
+                LittleWindow::S_ShowTrackPackInfo = UI::Checkbox("[LW] Music Pack Info", LittleWindow::S_ShowTrackPackInfo);
+                LittleWindow::S_ShowTrackInfo = UI::Checkbox("[LW] Track Info", LittleWindow::S_ShowTrackInfo);
+                LittleWindow::S_ShowTrackScrubber = UI::Checkbox("[LW] Track Scrubber", LittleWindow::S_ShowTrackScrubber);
+                LittleWindow::S_ShowNextButton = UI::Checkbox("[LW] Show Next Button", LittleWindow::S_ShowNextButton);
+                UI::Unindent();
+            }
+            UI::EndMenu();
         }
 
         UX::PopThinControls();
     }
+
+    void OpenCustomMusicFolder() {
+        IO::CreateFolder(CUSTOM_MUSIC_FOLDER, true);
+        if (!IO::FileExists(CUSTOM_MUSIC_FOLDER + "README.txt")) {
+            WriteCustomMusicFolderReadme();
+        }
+        OpenExplorerPath(CUSTOM_MUSIC_FOLDER);
+    }
+
+    void WriteCustomMusicFolderReadme() {
+        IO::File f(CUSTOM_MUSIC_FOLDER + "README.txt", IO::FileMode::Write);
+        f.WriteLine("# Custom Music\r\n\r\n");
+        f.Write(CustomMusicReadmeForFile);
+        f.Close();
+    }
+
+    const string CustomMusicReadme_T = """1. Convert your music to .ogg format.{FFMPEG}
+2. Place your music files in this folder.
+3. Click "Refresh"{REFRESH} to see your music.
+""";
+    const string CustomMusicReadme = CustomMusicReadme_T.Replace("{FFMPEG}", "").Replace("{REFRESH}", "");
+    const string CustomMusicReadmeForFile = CustomMusicReadme_T.Replace("{FFMPEG}", " (using ffmpeg: `ffmpeg -i INPUT_FILE -c:a libvorbis OUTPUT_NAME.ogg`. Specify quality with `-q:a [1-10]`.)")
+        .Replace("{REFRESH}", " in the custom music menu");
 }
 
 

@@ -36,12 +36,25 @@ namespace LittleWindow {
     void RenderWindow_Inner() {
         auto pos = UI::GetCursorPos();
         auto music = Music::GetCurrentMusic();
+        CPlugSound@ mapMusic;
+        CSystemPackDesc@ mapMusicDesc;
+        CAudioSource@ mapMusicSrc;
         if (music !is null) {
             trackProg = "# " + (music.GetCurrTrackIx() + 1) + " / " + music.origin.GetTrackCount();
             trackName = music.GetCurrTrackName();
             trackTime = music.GetTimeProgressString();
             packName = music.GetOriginName();
+        } else if (TM_State::IsInPlayground && TM_State::MapHasEmbeddedMusic) {
+            @mapMusic = GetMapCustomMusic();
+            @mapMusicDesc = GetMapCustomMusicPackDesc();
+            @mapMusicSrc = GameMusic::TryGetMapMusicSource();
+            trackProg = "# 1 / 1";
+            trackName = GetClean_MusicPackDescName(mapMusicDesc.Name);
+            packName = "<Current Map>";
+            trackTime = GetMusicProgressString(mapMusicSrc, savedMapMusicCursor);
         }
+
+
         // UI::Text("\\$<\\$aaa" + trackProg + "\\$>  [ " + trackTime + " ]  \\$ccc" + trackName);
         if (S_ShowTrackPackInfo) {
             UI::Text(packName + "  \\$<\\$aaa" + trackProg + "\\$>");
@@ -49,7 +62,55 @@ namespace LittleWindow {
         if (S_ShowTrackInfo) {
             UI::Text("[ " + trackTime + " ]  \\$ccc" + trackName);
         }
-        DrawNextButton_Optional(cast<Music_StdTrackSelection>(music));
+        if (TM_State::MapHasEmbeddedMusic) {
+            DrawMapMusicScrubber(mapMusicSrc);
+        } else {
+            DrawNextButton_Optional(cast<Music_StdTrackSelection>(music));
+        }
+    }
+
+    vec2 savedMapMusicCursor;
+
+    void DrawMapMusicScrubber(CAudioSource@ src) {
+        if (src is null || !S_ShowTrackScrubber) {
+            return;
+        }
+        UX::PushThinControls();
+        float _indent = 4.0;
+        UI::Indent(_indent);
+
+        if (S_ShowNextButton) {
+            if (UX::SmallButton(src.IsPlaying ? Icons::Pause : Icons::Play)) {
+                startnew(CoroutineFuncUserdata(ToggleSourcePlaying), src);
+            }
+            UI::SameLine();
+        }
+
+        vec2 avail = UI::GetContentRegionAvail();
+        float w = avail.x / UI::GetScale() - _indent;
+
+        UI::SetNextItemWidth(Math::Max(w, 60.));
+        // src.DrawPlayCursorSlider();
+        UX::PlayCursorSlider(src, "##map-m-cur", savedMapMusicCursor);
+        if (UI::IsItemClicked(UI::MouseButton::Right)) {
+            ToggleSourcePlaying(src);
+        }
+
+        UI::Unindent(_indent);
+        UX::PopThinControls();
+    }
+
+    void ToggleSourcePlaying(ref@ _src) {
+        auto src = cast<CAudioSource>(_src);
+        if (src.IsPlaying) {
+            savedMapMusicCursor.x = src.PlayCursor;
+            savedMapMusicCursor.y = src.PlayCursorUi;
+            src.Stop();
+        } else {
+            src.Play();
+            src.PlayCursor = savedMapMusicCursor.x;
+            src.PlayCursorUi = savedMapMusicCursor.y;
+        }
     }
 
     float _nextButtonW = 40.;
@@ -111,4 +172,28 @@ namespace LittleWindow {
             UI::Text("\\$i\\$999Muted - Game not focused");
         }
     }
+
+    string GetMusicProgressString(CAudioSource@ src, vec2 playCursorIfPaused = vec2()) {
+        if (src is null) {
+            return "0:00 / 0:00";
+        }
+        bool isPaused = !src.IsPlaying && playCursorIfPaused.x > 0;
+        float sec = isPaused ? playCursorIfPaused.x : src.PlayCursor;
+        float denom = isPaused ? playCursorIfPaused.y : (src.PlayCursorUi > 0.0 ? src.PlayCursorUi : 1.0);
+        float dur = sec / denom;
+        return Time::Format(int64(sec * 1000.), false, true, false, true) + " / " + Time::Format(int64(dur * 1000.), false, true, false, true);
+    }
+}
+
+// get leaf and remove mux extension
+string GetClean_MusicPackDescName(const string &in _name) {
+    string name = _name;
+    auto parts = name.Replace("\\", "/").Split("/");
+    if (parts.Length > 1) {
+        name = parts[parts.Length - 1];
+    }
+    if (name.EndsWith(".mux")) {
+        name = name.SubStr(0, name.Length - 4);
+    }
+    return name;
 }

@@ -290,7 +290,7 @@ namespace GameMusic {
                 musicTrackIndexes.InsertLast(i);
                 musicTracksWerePlaying.InsertLast(src.IsPlaying);
                 musicTracksFidNames.InsertLast(GetSoundSourceFidName(src));
-                musicTracksIgnore.InsertLast(IsOneOfOurSoundSources(src) || IsTempMuxSource(src));
+                musicTracksIgnore.InsertLast(IsOneOfOurSoundSources(src) || IsTempMuxSource(src, i));
                 if (andSilence && !musicTracksIgnore[mtIx]) {
                     SetVolumeOnSource(src, mtIx);
                 }
@@ -340,14 +340,29 @@ namespace GameMusic {
         return fid.ParentFolder.DirName == "Turbo";
     }
 
-    bool IsTempMuxSource(CAudioSource@ src) {
+    int lastMuxSourceFoundIx = -1;
+
+    bool IsTempMuxSource(CAudioSource@ src, int ix) {
         auto pSound = cast<CPlugSound>(src.PlugSound);
         if (pSound is null) return false;
         if (pSound.PlugFile is null) return false;
         auto fid = GetFidFromNod(pSound.PlugFile);
         // filename e.g.: D18C607873C835C393BE36D076D451CA2FBF876624B4BD7C5786E5B8B2A7F73536B81F617D2B15CCDFE60285606A7AEF.mux
         // full filename C:\ProgramData\Trackmania\Cache\D18C607873C835C393BE36D076D451CA2FBF876624B4BD7C5786E5B8B2A7F73536B81F617D2B15CCDFE60285606A7AEF.mux
-        return fid.FileName.EndsWith(".mux");
+        if (fid.FileName.EndsWith(".mux")) {
+            lastMuxSourceFoundIx = ix;
+            return true;
+        }
+        return false;
+    }
+
+    CAudioSource@ TryGetMapMusicSource() {
+        if (lastMuxSourceFoundIx < 0) return null;
+        auto ap = GetApp().AudioPort;
+        if (lastMuxSourceFoundIx >= ap.Sources.Length) return null;
+        auto source = ap.Sources[lastMuxSourceFoundIx];
+        if (source.BalanceGroup != CAudioSource::EAudioBalanceGroup::Music) return null;
+        return source;
     }
 }
 

@@ -154,3 +154,17 @@ namespace TM_State {
         return InPg_UiSeq == int(SGamePlaygroundUIConfig::EUISequence::None);
     }
 }
+
+CPlugSound@ GetMapCustomMusic() {
+    try {
+        return GetApp().RootMap.CustomMusic;
+    } catch {}
+    return null;
+}
+
+CSystemPackDesc@ GetMapCustomMusicPackDesc() {
+    try {
+        return GetApp().RootMap.CustomMusicPackDesc;
+    } catch {}
+    return null;
+}
