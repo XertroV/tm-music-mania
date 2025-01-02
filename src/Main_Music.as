@@ -274,7 +274,11 @@ namespace Music {
 
             if (DLC::IsAnyAvailable()) {
                 UI::SeparatorText("\\$f80\\$i DLC " + Icons::Download);
-                DLC::RenderDownloadMenu();
+                if (UI::BeginMenu("Download Packs")) {
+                    UI::Dummy(vec2(300, 0));
+                    DLC::RenderDownloadMenu();
+                    UI::EndMenu();
+                }
             }
 
             UI::SeparatorText("Settings");
@@ -412,6 +416,16 @@ namespace Music {
         UI::Separator();
 
         LittleWindow::S_ShowLittleWindow = UI::Checkbox("[UI] Show Little Window", LittleWindow::S_ShowLittleWindow);
+        if (LittleWindow::S_ShowLittleWindow) {
+            UI::Indent();
+            LittleWindow::S_HideLittleWindowWhenGameUIHidden = UI::Checkbox("[LW] Hide with Game UI", LittleWindow::S_HideLittleWindowWhenGameUIHidden);
+            LittleWindow::S_HideLittleWindowWhenOverlayHidden = UI::Checkbox("[LW] Hide with Overlay", LittleWindow::S_HideLittleWindowWhenOverlayHidden);
+            LittleWindow::S_ShowTrackPackInfo = UI::Checkbox("[LW] Music Pack Info", LittleWindow::S_ShowTrackPackInfo);
+            LittleWindow::S_ShowTrackInfo = UI::Checkbox("[LW] Track Info", LittleWindow::S_ShowTrackInfo);
+            LittleWindow::S_ShowNextButton = UI::Checkbox("[LW] Show Next Button", LittleWindow::S_ShowNextButton);
+            LittleWindow::S_ShowTrackScrubber = UI::Checkbox("[LW] Track Scrubber", LittleWindow::S_ShowTrackScrubber);
+            UI::Unindent();
+        }
 
         UX::PopThinControls();
     }

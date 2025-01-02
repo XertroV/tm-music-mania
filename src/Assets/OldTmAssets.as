@@ -1,11 +1,16 @@
 const string OldAssets_BaseUrl = "https://assets.xk.io/OldTmMusic/";
 const string OldAssets_RawBaseDir = "GameData/Media/Sounds/old/";
 const string OldAssets_BaseDir = IO::FromAppFolder("GameData/Media/Sounds/old/");
+const string OA_TMO_BaseDir = OldAssets_BaseDir + "TMO/";
 
 const string MEDIA_SOUNDS_OLD = "file://Media/Sounds/old/";
+const string MEDIA_SOUNDS_OLD_TMO = MEDIA_SOUNDS_OLD + "TMO/";
 
 string[] oldTm_MenuFiles;
 string[] oldTm_RaceFiles;
+string[] oldTm_Effects_Alpine;
+string[] oldTm_Effects_Rally;
+string[] oldTm_Effects_Speed;
 
 const string OldAssetsIndex = """
 TMN ESWC/04.Menu.ogg
@@ -46,6 +51,7 @@ TMO/Rally/Race/rally_replay.ogg
 TMO/Speed/Effects/desert.ogg
 TMO/Speed/Effects/SpeedBronze.wav
 TMO/Speed/Effects/SpeedCheckPoint.wav
+TMO/Speed/Effects/SpeedFinish.wav
 TMO/Speed/Effects/SpeedGold.wav
 TMO/Speed/Effects/SpeedLap.wav
 TMO/Speed/Effects/SpeedNadeo.wav
@@ -81,6 +87,10 @@ TMU/Race/TMU-Stadium-Tictac-remix.ogg
 TMU/TMU-Menu.ogg
 """;
 
+/*
+    Note: SpeedFinish is copied SpeedNewRecord b/c there wasn't a finish sound. But it's easier to assume there is for game sounds spec logic
+*/
+
 string[]@ _oldTmAssetFiles = OldAssets_FilterOnlyMusicFiles(OldAssetsIndex.Split("\n"));
 
 string[]@ OldAssets_FilterOnlyMusicFiles(string[]@ assetFiles) {
@@ -92,10 +102,36 @@ string[]@ OldAssets_FilterOnlyMusicFiles(string[]@ assetFiles) {
         // trace("Filtered: " + file);
 
         string lFile = file.ToLower();
-        if (lFile.Contains("menu") || lFile.Contains("heartbeat")) {
+        if (lFile.Contains("menu") || lFile.Contains("mutants") || lFile.Contains("heartbeat")) {
             oldTm_MenuFiles.InsertLast(file);
         } else if (!lFile.Contains("effects")) {
             oldTm_RaceFiles.InsertLast(file);
+        } else {
+            // effects; paths: TMO/<Env>/Effects/<File>
+            string p = file.SubStr(4); // remove "TMO/"
+            auto parts = p.Split("/", 3);
+            if (parts.Length != 3) {
+                warn("Invalid effects file path: " + file);
+                continue;
+            }
+            string env = parts[0];
+            string e_file = parts[2];
+            if (!e_file.StartsWith(env) || !e_file.EndsWith(".wav")) {
+                trace("Invalid effects file name: " + file);
+                continue;
+            }
+
+            // e_file = e_file.SubStr(env.Length + 1);
+
+            if (env == "Alpine") {
+                oldTm_Effects_Alpine.InsertLast(e_file);
+            } else if (env == "Rally") {
+                oldTm_Effects_Rally.InsertLast(e_file);
+            } else if (env == "Speed") {
+                oldTm_Effects_Speed.InsertLast(e_file);
+            } else {
+                warn("Invalid effects env: " + env);
+            }
         }
     }
     return filteredFiles;
@@ -125,9 +161,67 @@ void CheckOldTmAssetsAndRegister() {
     bool gotAll = true;
     gotAll = CheckOldTmAssetsSubfolderAndRegister("Old Menus", oldTm_MenuFiles) && gotAll;
     gotAll = CheckOldTmAssetsSubfolderAndRegister("Old Races", oldTm_RaceFiles) && gotAll;
+    gotAll = CheckOldTmEffectsAndRegister("Alpine", oldTm_Effects_Alpine) && gotAll;
+    gotAll = CheckOldTmEffectsAndRegister("Rally", oldTm_Effects_Rally) && gotAll;
+    gotAll = CheckOldTmEffectsAndRegister("Speed", oldTm_Effects_Speed) && gotAll;
     if (gotAll) {
         SetGotAssetPack(OLD_TM_AP_NAME);
     }
+}
+
+bool CheckOldTmEffectsAndRegister(const string &in EnvName, string[]@ files) {
+    string subfolderDir = OA_TMO_BaseDir + EnvName + "/Effects/";
+    if (!IO::FolderExists(subfolderDir)) {
+        warn("OldAssetPack effect subfolder does not exist: " + subfolderDir);
+        return false;
+    }
+    for (uint i = 0; i < files.Length; i++) {
+        string file = files[i];
+        if (!IO::FileExists(subfolderDir + file)) {
+            warn("OldAssetPack effect file does not exist: " + subfolderDir + file);
+            return false;
+        }
+    }
+    auto spec = CreateOldTmEffectsSpec(EnvName, files);
+    Packs::AddPack(AudioPack_GameSounds(EnvName + " Game Sounds", MEDIA_SOUNDS_OLD_TMO + EnvName + "/Effects/", spec));
+    return true;
+}
+
+GameSoundsSpec@ CreateOldTmEffectsSpec(const string &in EnvName, string[]@ files) {
+    /* examples
+TMO/Rally/Effects/RallyBronze.wav
+TMO/Rally/Effects/RallyCheckPoint.wav
+TMO/Rally/Effects/RallyFinish.wav
+TMO/Rally/Effects/RallyGold.wav
+TMO/Rally/Effects/RallyLap.wav
+TMO/Rally/Effects/RallyNadeo.wav
+TMO/Rally/Effects/RallyNewRecord.wav
+TMO/Rally/Effects/RallyRaceDefeat.wav
+TMO/Rally/Effects/RallySilver.wav
+TMO/Rally/Effects/RallyZoom.wav
+    */
+    return GameSoundsSpec(
+        FindSingletonSound(files, "CheckPoint.wav"),
+        FindSingletonSound(files, "CheckPoint.wav"),
+        FindSingletonSound(files, "Lap.wav"),
+        FindSingletonSound(files, "Finish.wav"),
+        {}, // start
+        {}, // respawn
+        FindSingletonSound(files, "Bronze.wav"),
+        FindSingletonSound(files, "Silver.wav"),
+        FindSingletonSound(files, "Gold.wav"),
+        FindSingletonSound(files, "Nadeo.wav")
+    );
+}
+
+string[]@ FindSingletonSound(string[]@ files, const string &in nameEnd) {
+    for (uint i = 0; i < files.Length; i++) {
+        if (files[i].EndsWith(nameEnd)) {
+            return {files[i]};
+        }
+    }
+    warn("No sound found for: " + nameEnd);
+    return {};
 }
 
 bool CheckOldTmAssetsSubfolderAndRegister(const string &in name, string[]@ files) {

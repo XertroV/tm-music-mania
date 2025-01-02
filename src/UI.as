@@ -62,4 +62,13 @@ namespace UX {
 		UI::AlignTextToFramePadding();
 		PopThinControls();
 	}
+
+	// add id to play cursor if need be
+	void PlayCursorSlider(CAudioSource@ source, const string &in label = "Play Cursor") {
+		float origCursorUi = source.PlayCursorUi;
+		float newCursorUi = UI::SliderFloat(label, origCursorUi, 0., 1., Time::Format(int64(source.PlayCursor * 1000.)));
+		if (newCursorUi != origCursorUi) {
+			source.PlayCursorUi = newCursorUi;
+		}
+	}
 }

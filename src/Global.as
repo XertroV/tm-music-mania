@@ -4,6 +4,7 @@ namespace Global {
     float _gameSoundsVolume = 0.0;
     bool IsMuteWhenUnfocused = false;
     bool IsGameFocused = false;
+    bool IsMutedBecauseUnfocused = false;
 
     void Update() {
         auto app = GetApp();
@@ -14,6 +15,7 @@ namespace Global {
         // _gameMusicVolume = ConvertVolumeDbToAmp(_gameMusicVolume, vec2(-40.0, 0.0));
         IsMuteWhenUnfocused = ap.MuteWhenUnfocused;
         IsGameFocused = app.InputPort.IsFocused;
+        IsMutedBecauseUnfocused = IsMuteWhenUnfocused && !IsGameFocused;
     }
 
     float get_MusicVolume() {

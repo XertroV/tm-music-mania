@@ -61,6 +61,8 @@ class MusicOrSound {
 
 // Manages turbo-like music (tracks and loops) in-game
 class Music_TurboInGame : MusicOrSound {
+    string mediaBaseUri;
+
     // 'all' excluding standby and replay
     CAudioScriptMusic@ CurMusic;
     CAudioScriptMusic@[] MusicAll;
@@ -78,12 +80,18 @@ class Music_TurboInGame : MusicOrSound {
     float G_MusicGain = 0.0;
     float G_Debug_LastTargetLPFratioFromSpeed = 0.0;
 
-    Music_TurboInGame(Json::Value@ musicList = null) {
-        super("Turbo In-Game Music");
-        InitRandomMusicIndicies();
-        PreloadAllMusicAndSounds();
+    // mediaBaseUri for turbo is MEDIA_SOUNDS_TURBO
+    Music_TurboInGame(const string &in name, const string &in mediaBaseUri, Json::Value@ musicList = null) {
+        this.mediaBaseUri = mediaBaseUri;
+        super(name);
         // for custom music lists
         @_musicList = musicList;
+        if (musicList !is null) {
+            dev_trace("Music_TurboInGame ("+name+") created with custom music list: " + Json::Write(musicList));
+        }
+        // need to set music list before initializing
+        InitRandomMusicIndicies();
+        PreloadAllMusicAndSounds();
     }
 
     Music_TurboInGame@ WithOriginPack(AudioPack@ origin) {
@@ -146,6 +154,11 @@ class Music_TurboInGame : MusicOrSound {
             if (raceState.RaceState == Turbo::ERaceState::Running) {
                 PickNewMusicTrack();
             }
+        }
+
+        if (CurMusic is null) {
+            warn("CurMusic is null -- should not happen");
+            return;
         }
 
         if (raceState.m_StartStandbyNeeded) {
@@ -219,7 +232,7 @@ class Music_TurboInGame : MusicOrSound {
         }
         dev_warn("Music not found in G_MusicDescs: " + musicName);
         G_MusicDescs.InsertLast(musicJ);
-        MusicAll.InsertLast(GetAudio().CreateMusic(MEDIA_SOUNDS_TURBO + musicName));
+        MusicAll.InsertLast(GetAudio().CreateMusic(mediaBaseUri + musicName));
         return G_MusicDescs.Length - 1;
     }
 
@@ -304,10 +317,10 @@ class Music_TurboInGame : MusicOrSound {
         }
         auto musicToPlay = musicIx;
         if (musicIx == -1) {
-            musicToPlay = Math::Rand(0, MusicAll.Length - 1);
+            musicToPlay = Math::Rand(0, MusicAll.Length);
             // on relance une fois on a la même / we restart once we have the same
             if (G_PrevPlayedTrack == musicToPlay) {
-                musicToPlay = Math::Rand(0, MusicAll.Length - 1);
+                musicToPlay = Math::Rand(0, MusicAll.Length);
             }
             G_PrevPlayedTrack = musicToPlay;
         }
@@ -349,10 +362,10 @@ class Music_TurboInGame : MusicOrSound {
             throw("MusicAll is not empty");
         }
 
-        auto audio = cast<CTrackMania>(GetApp()).MenuManager.MenuCustom_CurrentManiaApp.Audio;
+        auto audio = GetAudio();
         for (uint i = 0; i < G_MusicDescs.Length; i++) {
             auto @j = G_MusicDescs[i];
-            auto audioPath = MEDIA_SOUNDS_TURBO + string(j[0]);
+            auto audioPath = mediaBaseUri + string(j[0]);
             trace("Loading music: " + audioPath);
             MusicAll.InsertLast(
                 audio.CreateMusic(audioPath)
@@ -363,26 +376,31 @@ class Music_TurboInGame : MusicOrSound {
         }
 
         if (MusicStandby is null) {
-            auto file = MEDIA_SOUNDS_TURBO + TurboConst::GetMusicStandBy();
+            auto file = mediaBaseUri + TurboConst::GetMusicStandBy();
             @MusicStandby = audio.CreateSoundEx(file, Turbo::VolumedB_MusicStandBy, true, true, false);
             if (MusicStandby is null) {
                 warn("MusicStandby is null; file: " + file);
+            } else {
+                // if ({{{_IsTrackbuilder}}}) yield;
+                MusicStandby.Stop();
+                MusicStandby.VolumedB = Turbo::VolumedB_MusicStandBy;
+                MusicStandby.PanRadiusLfe = Turbo::GetMusicPanRadiusLfe(Turbo::VolumeCase::MusicStandby);
+                // todo: standby event
+                // @G_SoundStandbyEvent = audio.CreateSoundEx(mediaBaseUri + TurboConst::SoundGameStart, GetVolumedB("MusicStandBy"), true, false, false);
+                // G_SoundStandbyEvent.PanRadiusLfe = MusicStandby.PanRadiusLfe;
             }
-            // if ({{{_IsTrackbuilder}}}) yield;
-            MusicStandby.Stop();
-            MusicStandby.VolumedB = Turbo::VolumedB_MusicStandBy;
-            MusicStandby.PanRadiusLfe = Turbo::GetMusicPanRadiusLfe(Turbo::VolumeCase::MusicStandby);
-            // todo: standby event
-            // @G_SoundStandbyEvent = audio.CreateSoundEx(MEDIA_SOUNDS_TURBO + TurboConst::SoundGameStart, GetVolumedB("MusicStandBy"), true, false, false);
-            // G_SoundStandbyEvent.PanRadiusLfe = MusicStandby.PanRadiusLfe;
         }
 
         if (MusicReplay is null) {
-            @MusicReplay = audio.CreateSoundEx(MEDIA_SOUNDS_TURBO + TurboConst::MusicReplay, Turbo::VolumedB_MusicReplay, true, true, false);
-            // if ({{{_IsTrackbuilder}}}) yield;
-            MusicReplay.Stop();
-            MusicReplay.VolumedB = Turbo::VolumedB_MusicReplay;
-            MusicReplay.PanRadiusLfe = Turbo::GetMusicPanRadiusLfe(Turbo::VolumeCase::MusicReplay);
+            @MusicReplay = audio.CreateSoundEx(mediaBaseUri + TurboConst::MusicReplay, Turbo::VolumedB_MusicReplay, true, true, false);
+            if (MusicReplay is null) {
+                warn("MusicReplay is null; file: " + mediaBaseUri + TurboConst::MusicReplay);
+            } else {
+                // if ({{{_IsTrackbuilder}}}) yield;
+                MusicReplay.Stop();
+                MusicReplay.VolumedB = Turbo::VolumedB_MusicReplay;
+                MusicReplay.PanRadiusLfe = Turbo::GetMusicPanRadiusLfe(Turbo::VolumeCase::MusicReplay);
+            }
         }
     }
 
@@ -392,6 +410,10 @@ class Music_TurboInGame : MusicOrSound {
     }
 
     void OnStartRace_Reset() {
+        if (CurMusic is null) {
+            warn("CurMusic is null");
+            return;
+        }
         CurMusic.LPF_CutoffRatio = Turbo::LPF_CUTOFF_RATIO_MIN;
         CurMusic.UpdateMode = TurboMusicUpdateMode;
         CurMusic.Dbg_ForceSequential = false;
@@ -410,8 +432,8 @@ class Music_TurboInGame : MusicOrSound {
     }
 
     void ResetSounds(bool _ResetStandby) {
-        if (_ResetStandby) MusicStandby.Stop();
-        if (_ResetStandby) MusicReplay.Stop();
+        if (_ResetStandby && MusicStandby !is null) MusicStandby.Stop();
+        if (_ResetStandby && MusicReplay !is null) MusicReplay.Stop();
         if (CurMusic !is null) {
             CurMusic.Stop();
             CurMusic.VolumedB = -100.;
@@ -523,11 +545,7 @@ class Music_StdTrackSelection : MusicOrSound {
         if (music !is null) {
             auto source = cast<CAudioSource>(Dev::GetOffsetNod(music, 0x20));
             // UI::PushItemWidth(200.);
-            float origCursorUi = source.PlayCursorUi;
-            float newCursorUi = UI::SliderFloat("Play Cursor", origCursorUi, 0., 1., Time::Format(int64(source.PlayCursor * 1000.)));
-            if (newCursorUi != origCursorUi) {
-                source.PlayCursorUi = newCursorUi;
-            }
+            UX::PlayCursorSlider(source);
             source.VolumedB = UI::SliderFloat("Track vol dB", source.VolumedB, -41., 12.);
             if (source.PlugSound !is null) {
                 source.PlugSound.VolumedB = UI::SliderFloat("Sound vol dB", source.PlugSound.VolumedB, -41., 12.);
@@ -608,7 +626,7 @@ class Music_StdTrackSelection : MusicOrSound {
         dev_warn("Preloading music: " + MusicPaths[curTrackIx]);
         auto audio = GetAudio();
         MusicAll.Resize(MusicPaths.Length);
-        auto music = @MusicAll[curTrackIx];
+        auto @music = MusicAll[curTrackIx];
         if (music is null) {
             @music = audio.CreateSoundEx(MusicPaths[curTrackIx], 0.0, true, true, false);
             @MusicAll[curTrackIx] = music;
@@ -709,6 +727,12 @@ class Music_StdTrackSelection : MusicOrSound {
             return null;
         }
         return MusicAll[curTrackIx];
+    }
+
+    CAudioSource@ GetCurrMusicSource() {
+        auto music = GetCurrMusic();
+        if (music is null) return null;
+        return cast<CAudioSource>(Dev::GetOffsetNod(music, 0x20));
     }
 
     int GetCurrTrackIx() override {
@@ -879,6 +903,7 @@ void LoadFilesToScriptSounds(CAudioScriptManager@ audio, const string &in baseDi
     }
 }
 
+/* Deprecated
 class GameSounds_Turbo : GameSounds {
     GameSounds_Turbo() {
         throw("deprecate me");
@@ -927,7 +952,7 @@ class GameSounds_Turbo : GameSounds {
         startnew(SleepAndDestroy, sound);
     }
 }
-
+*/
 
 // MARK: - Helpers
 

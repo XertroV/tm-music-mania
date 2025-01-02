@@ -7,6 +7,9 @@ version  = "1.0.0"
 blocks = ["music-auto-toggler", "music-auto-toggler-dev"]
 
 [script]
+# loading plugin takes 600ms
+# loading all turbo music takes 700ms
+timeout = 3000
 #__DEFINES__
 # dependencies = ["MLHook", "MLFeedRaceData"]
 dependencies = ["VehicleState"]

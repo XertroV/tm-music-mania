@@ -14,7 +14,7 @@ namespace DLC {
     bool get_gotVS() { return DoWeHaveAssetPack(VS_AP_NAME); }
 
     bool IsAnyAvailable() {
-        return !(gotTurbo && gotMp4 && gotOld && gotWii && gotDs && gotVS);
+        return !(GotAllDownloadableAPs() && gotTurbo && gotMp4 && gotOld && gotWii && gotDs && gotVS);
     }
 
     void RenderDownloadMenu() {
@@ -24,6 +24,12 @@ namespace DLC {
         if (!gotWii) RenderDLCDownloader(wiiAssetDownloader, WII_AP_NAME, DownloadAllWiiAssets, "Music from Trackmania Wii.");
         if (!gotDs) RenderDLCDownloader(dsAssetDownloader, DS_AP_NAME, DownloadAllDsAssets, "Music from TrackMania DS & TrackMania Turbo (DS).");
         if (!gotVS) RenderDLCDownloader(vsAssetDownloader, VS_AP_NAME, DownloadAllVSAssets, "Music from the Virtual Skipper series (mostly VS1).");
+        for (uint i = 0; i < AP_Downloadables.Length; i++) {
+            auto @dlc = AP_Downloadables[i];
+            if (!dlc.HasRegisteredAssetPack()) {
+                dlc.RenderDlcDownloader();
+            }
+        }
     }
 
     void RenderDLCDownloader(AssetDownloader@ downloader, const string &in packName, CoroutineFunc@ downloadFn, const string &in description) {

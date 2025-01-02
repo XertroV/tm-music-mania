@@ -160,19 +160,11 @@ namespace Packs {
     }
 
     void R_DownloadPacks() {
-        UI::BeginDisabled(!mp4AssetDownloader.IsDone || DoWeHaveAssetPack(MP4_AP_NAME));
-        if (UI::Button("Download Mp4 Packs")) {
-            startnew(DownloadAllMp4Assets);
+        if (!DLC::IsAnyAvailable()) {
+            UI::Text("All DLC Downloaded");
+            return;
         }
-        UI::TextWrapped("Includes music from Canyon, Lagoon, Stadium, Valley, and SM Storm");
-        UI::EndDisabled();
-
-        UI::BeginDisabled(!oldAssetDownloader.IsDone || DoWeHaveAssetPack(OLD_TM_AP_NAME));
-        if (UI::Button("Download Old Tm Packs")) {
-            startnew(DownloadAllOldTmAssets);
-        }
-        UI::TextWrapped("Includes music from TMO, TMS, TMU, TMN ESWC, and TMNF");
-        UI::EndDisabled();
+        DLC::RenderDownloadMenu();
     }
 
     string R_PackChoice(const string &in name, const string &in currentChoice, MusicCtx mCtx, int allowedPackTypes = PackTy::Playlist) {
@@ -466,7 +458,7 @@ class AudioPack_LoopsTurbo : AudioPack_LoopsGeneric {
 
     MusicOrSound@ ToMusicOrSound() override {
         dev_warn("AP_LoopsTurbo::ToMusicOrSound " + name);
-        return Music_TurboInGame(GetLoopsJsonArr()).WithOriginPack(this);
+        return Music_TurboInGame(name, baseDir, GetLoopsJsonArr()).WithOriginPack(this);
     }
 }
 
@@ -716,6 +708,10 @@ class GameSoundsSpec {
     string[]@ finishRace;
     string[]@ startRace;
     string[]@ respawn;
+    string[]@ medalBronze;
+    string[]@ medalSilver;
+    string[]@ medalGold;
+    string[]@ medalAuthor;
 
     GameSoundsSpec() {
         checkpointFast = {};
@@ -726,13 +722,19 @@ class GameSoundsSpec {
         respawn = {};
     }
 
-    GameSoundsSpec(string[]@ checkpointFast, string[]@ checkpointSlow, string[]@ finishLap, string[]@ finishRace, string[]@ startRace, string[]@ respawn) {
+    GameSoundsSpec(string[]@ checkpointFast, string[]@ checkpointSlow, string[]@ finishLap, string[]@ finishRace, string[]@ startRace, string[]@ respawn,
+        string[]@ medalBronze = {}, string[]@ medalSilver = {}, string[]@ medalGold = {}, string[]@ medalAuthor = {}
+    ) {
         @this.checkpointFast = checkpointFast;
         @this.checkpointSlow = checkpointSlow;
         @this.finishLap = finishLap;
         @this.finishRace = finishRace;
         @this.startRace = startRace;
         @this.respawn = respawn;
+        @this.medalBronze = medalBronze;
+        @this.medalSilver = medalSilver;
+        @this.medalGold = medalGold;
+        @this.medalAuthor = medalAuthor;
     }
 
     GameSoundsSpec(Json::Value@ j) {
@@ -742,6 +744,10 @@ class GameSoundsSpec {
         @finishRace = Parse_JStrArr(j["finishRace"]);
         @startRace = Parse_JStrArr(j["startRace"]);
         @respawn = Parse_JStrArr(j["respawn"]);
+        @medalBronze = Parse_JStrArr(j["medalBronze"]);
+        @medalSilver = Parse_JStrArr(j["medalSilver"]);
+        @medalGold = Parse_JStrArr(j["medalGold"]);
+        @medalAuthor = Parse_JStrArr(j["medalAuthor"]);
     }
 
     Json::Value@ ToJson() {
@@ -763,6 +769,8 @@ class GameSoundsSpec {
 
 string[]@ Parse_JStrArr(Json::Value@ j) {
     string[]@ arr = {};
+    if (j.GetType() == Json::Type::Null) return arr;
+    if (j.GetType() != Json::Type::Array) throw("Parse_JStrArr expected array, got " + j.GetType());
     for (uint i = 0; i < j.Length; i++) {
         arr.InsertLast(string(j[i]));
     }
