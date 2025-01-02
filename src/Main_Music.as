@@ -454,7 +454,7 @@ namespace Music {
         UX::PushThinControls();
         S_Playlist_RepeatOne = UI::Checkbox("[Playlist] Repeat One", S_Playlist_RepeatOne);
         AddSimpleTooltip("When enabled, the playing track will loop until the map changes.\nOtherwise, when a track finishes, a new track will play.");
-        S_Playlist_Sequential = UI::Checkbox("[Playlist] Sequential", S_Playlist_Sequential);
+        S_Playlist_Sequential = !UI::Checkbox("[Playlist] Shuffle", !S_Playlist_Sequential);
         AddSimpleTooltip("When enabled, the playlist will advance through the tracks in order. Otherwise, it will play them randomly.");
         S_Playlist_ChangeTrackOnCtxChange = UI::Checkbox("[Playlist] Start new track on map exit", S_Playlist_ChangeTrackOnCtxChange);
         AddSimpleTooltip("When enabled, entering the menu will cause the menu playlist to go to next track. Same for returning to the editor from test/validation mode.");

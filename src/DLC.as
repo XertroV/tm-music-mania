@@ -37,7 +37,7 @@ namespace DLC {
     void RenderDownloadMenu(bool renderIfMissing = true) {
         bool showAnyway = true;
         if (renderIfMissing ^^ gotTurbo) RenderDLCDownloader(turboAssetDownloader, TM_TURBO_AP_NAME, EnsureTurboAssets, "TM Turbo Music and Game Sounds. These should download automatically.");
-        if (renderIfMissing ^^ gotMp4) RenderDLCDownloader(mp4AssetDownloader, MP4_AP_NAME, DownloadAllMp4Assets, "Music from Canyon, Lagoon, Stadium, Valley, and SM Storm.");
+        if (renderIfMissing ^^ gotMp4) RenderDLCDownloader(mp4AssetDownloader, MP4_AP_NAME, DownloadAllMp4Assets, "Music from Canyon, Lagoon, Stadium, Valley, and ShootMania Storm.");
         if (renderIfMissing ^^ gotOld) RenderDLCDownloader(oldAssetDownloader, OLD_TM_AP_NAME, DownloadAllOldTmAssets, "Music from TMO, TMS, TMU, TMN ESWC, and TMNF.");
         if (renderIfMissing ^^ gotWii) RenderDLCDownloader(wiiAssetDownloader, WII_AP_NAME, DownloadAllWiiAssets, "Music from Trackmania Wii.");
         if (renderIfMissing ^^ gotDs) RenderDLCDownloader(dsAssetDownloader, DS_AP_NAME, DownloadAllDsAssets, "Music from TrackMania DS & TrackMania Turbo (DS).");
