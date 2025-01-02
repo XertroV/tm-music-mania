@@ -9,6 +9,8 @@ string[] canyonFiles;
 string[] lagoonFiles;
 string[] valleyFiles;
 string[] stadiumFiles;
+string[] mp4RaceAnyFiles;
+string[] mp4AnyFiles;
 
 // zip files exist online but will be skipped for download
 const string Mp4AssetFiles = """
@@ -68,14 +70,23 @@ string[]@ Mp4Assets_FilterOnlyMusicFiles(string[]@ assetFiles) {
 
         if (file.StartsWith("SMStorm/")) {
             smStormFiles.InsertLast(file.SubStr(8));
+            mp4AnyFiles.InsertLast(file);
         } else if (file.StartsWith("Canyon/")) {
             canyonFiles.InsertLast(file.SubStr(7));
+            mp4AnyFiles.InsertLast(file);
+            mp4RaceAnyFiles.InsertLast(file);
         } else if (file.StartsWith("Lagoon/")) {
             lagoonFiles.InsertLast(file.SubStr(7));
+            mp4AnyFiles.InsertLast(file);
+            mp4RaceAnyFiles.InsertLast(file);
         } else if (file.StartsWith("Valley/")) {
             valleyFiles.InsertLast(file.SubStr(7));
+            mp4AnyFiles.InsertLast(file);
+            mp4RaceAnyFiles.InsertLast(file);
         } else if (file.StartsWith("Stadium/")) {
             stadiumFiles.InsertLast(file.SubStr(8));
+            mp4AnyFiles.InsertLast(file);
+            mp4RaceAnyFiles.InsertLast(file);
         }
     }
     return filteredFiles;
@@ -103,6 +114,8 @@ void CheckMp4AssetsAndRegister() {
         return;
     }
     bool gotAll = true;
+    gotAll = CheckMp4AssetsSubfolderAndRegister("", mp4AnyFiles, "MP4 (Any)") && gotAll;
+    gotAll = CheckMp4AssetsSubfolderAndRegister("", mp4RaceAnyFiles, "MP4 (Any, Race)") && gotAll;
     gotAll = CheckMp4AssetsSubfolderAndRegister("SMStorm", smStormFiles) && gotAll;
     gotAll = CheckMp4AssetsSubfolderAndRegister("Canyon", canyonFiles) && gotAll;
     gotAll = CheckMp4AssetsSubfolderAndRegister("Lagoon", lagoonFiles) && gotAll;
@@ -113,9 +126,13 @@ void CheckMp4AssetsAndRegister() {
     }
 }
 
-bool CheckMp4AssetsSubfolderAndRegister(const string &in subfolder, string[]@ files) {
+bool CheckMp4AssetsSubfolderAndRegister(const string &in subfolder, string[]@ files, const string &in nameInsteadOfSubfolder = "") {
+    if (subfolder.Length == 0 && nameInsteadOfSubfolder.Length == 0) {
+        throw("CheckMp4AssetsSubfolderAndRegister: subfolder and nameInsteadOfSubfolder are both empty");
+    }
     // c:/.../GameData/Media/Sounds/Mp4/<subfolder>/
-    string subfolderDir = Mp4Assets_BaseDir + subfolder + "/";
+    string subfolderDir = Mp4Assets_BaseDir + (subfolder.Length > 0 ? subfolder + "/" : "");
+
     if (!IO::FolderExists(subfolderDir)) {
         warn("Mp4AssetPack subfolder does not exist: " + subfolderDir);
         return false;
@@ -127,11 +144,16 @@ bool CheckMp4AssetsSubfolderAndRegister(const string &in subfolder, string[]@ fi
             return false;
         }
     }
-    RegisterMp4AssetPack(subfolder, files);
+    RegisterMp4AssetPack(subfolder, files, nameInsteadOfSubfolder);
     return true;
 }
 
-void RegisterMp4AssetPack(const string &in subfolder, string[]@ files) {
+void RegisterMp4AssetPack(const string &in subfolder, string[]@ files, const string &in nameInsteadOfSubfolder = "") {
+    if (nameInsteadOfSubfolder.Length == 0 && subfolder.Length == 0) {
+        throw("RegisterMp4AssetPack: nameInsteadOfSubfolder and subfolder are both empty");
+    }
+    auto baseDir = MEDIA_SOUNDS_MP4 + (subfolder.Length > 0 ? subfolder + "/" : "");
     trace("Registering Mp4AssetPack: " + subfolder);
-    Packs::AddPack(AudioPack_Playlist(subfolder, MEDIA_SOUNDS_MP4 + subfolder + "/", files, 0.0));
+    string apName = nameInsteadOfSubfolder.Length > 0 ? nameInsteadOfSubfolder : subfolder;
+    Packs::AddPack(AudioPack_Playlist(apName, baseDir, files, 0.0));
 }

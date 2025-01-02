@@ -72,7 +72,7 @@ string[]@ WiiAssets_FilterOnlyMusicFiles(string[]@ assetFiles) {
         } else if (asset.Contains("Coast")) {
             wiiCoastFiles.InsertLast(asset);
             wiiRaceFiles.InsertLast(asset);
-        } else if (asset.StartsWith("0")) {
+        } else if (asset.StartsWith("02")) {
             wiiMenuFiles.InsertLast(asset);
         } else {
             wiiMiscFiles.InsertLast(asset);
