@@ -63,6 +63,8 @@ namespace UX {
 		PopThinControls();
 	}
 
+	float _cursorSliderHeld = -1;
+
 	// add id to label if need be; play cursor if paused is <seconds, ui>
 	void PlayCursorSlider(CAudioSource@ source, const string &in label = "Play Cursor", vec2 playCursorIfPaused = vec2(0.0)) {
 		if (source is null) {
@@ -78,7 +80,10 @@ namespace UX {
 
 		float newCursorUi = UI::SliderFloat(label, origCursorUi, 0., 1., fmtLabel);
 		if (newCursorUi != origCursorUi) {
-			source.PlayCursorUi = newCursorUi;
+			if (_cursorSliderHeld != newCursorUi) {
+				source.PlayCursorUi = newCursorUi;
+			}
 		}
+		_cursorSliderHeld = UI::IsItemActive() ? newCursorUi : -1;
 	}
 }

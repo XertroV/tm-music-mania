@@ -14,6 +14,7 @@ void Main() {
     startnew(SetupIntercepts);
     // keep track of all music
     Packs::AddPack(AudioPack_PlaylistEverything("<All>"));
+    Packs::AddPack(AudioPack_PlaylistCustomDir("<Custom Music>"));
     // we start with TM2020 music
     Register_Tm2020_Assets();
     // download turbo assets by default

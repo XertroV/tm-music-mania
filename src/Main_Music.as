@@ -39,7 +39,8 @@ namespace Music {
         }
     }
 
-    void SetCurrentMusicChoice(AudioPack@ music) {
+    // Will not do any updates if the pack matches user's current setting (force to always update)
+    void SetCurrentMusicChoice(AudioPack@ music, bool force = false) {
         if (music is null) throw("SetCurrentMusicChoice: music is null");
         if (TM_State::IsInMenu) {
             if (Packs::UpdateMenuMusicChoice(music)) {
@@ -93,9 +94,20 @@ namespace Music {
                 break;
             case MusicCtx::Editor:
                 if (GM_Editor !is null) GM_Editor.CleanUp();
+                if (GM_EditorSounds !is null) GM_EditorSounds.CleanUp();
                 @GM_Editor = null;
+                @GM_EditorSounds = null;
                 break;
         }
+    }
+
+    MusicOrSound@ GetMusicFor(MusicCtx ctx) {
+        switch (ctx) {
+            case MusicCtx::InGame: return GM_InGame;
+            case MusicCtx::Menu: return GM_Menu;
+            case MusicCtx::Editor: return GM_Editor;
+        }
+        return null;
     }
 
     MusicOrSound@ GetCurrentMusic() {
@@ -300,7 +312,7 @@ namespace Music {
                 DLC::RenderDownloadMenu(false);
                 UI::EndMenu();
             }
-            if (UI::BeginMenu("Your Own Music")) {
+            if (UI::BeginMenu("\\$bf8" + Icons::FolderOpenO + " Your Own Music")) {
                 UI::Dummy(vec2(300, 0));
                 UI::SeparatorText("How To");
                 // UI::Text("  \\$999" + Icons::FolderOpenO + " Not implemented yet.");
@@ -312,9 +324,13 @@ namespace Music {
                     startnew(OpenCustomMusicFolder);
                 }
                 UI::SeparatorText("Loaded Music");
-                // UI::Text("# Tracks: " + AP_CustomMusic.NbTracks);
-                if (UX::SmallButton(Icons::Refresh + " Refresh")) {
-                    // AP_CustomMusic.Refresh();
+                if (CustomMusicPlaylistSingleton is null) {
+                    UI::Text("???");
+                } else {
+                    UI::Text("# Tracks: " + CustomMusicPlaylistSingleton.tracks.Length);
+                    if (UX::SmallButton(Icons::Refresh + " Refresh")) {
+                        CustomMusicPlaylistSingleton.OnClickRefresh();
+                    }
                 }
                 UI::EndMenu();
             }

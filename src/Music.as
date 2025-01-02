@@ -508,7 +508,7 @@ class Music_StdTrackSelection : MusicOrSound {
     }
 
     void RenderDebug() override {
-        UI::Text("Song: " + (curTrackIx+1) + " - " + debug_CurrMusicPath + " ["+Time::Format(int64(debug_CurrMusicLength * 1000.), false, true, false, true)+"]");
+        UI::TextWrapped("Song: " + (curTrackIx+1) + " - " + CurrMusicPath + " ["+Time::Format(int64(CurrMusicLength * 1000.), false, true, false, true)+"]");
         UI::Text("Total Songs: " + MusicPaths.Length);
 
         auto music = GetCurrMusic();
@@ -546,14 +546,6 @@ class Music_StdTrackSelection : MusicOrSound {
     }
 
     void RenderMenuTools() override {
-        UI::BeginDisabled();
-        UI::MenuItem("Song: " + (curTrackIx+1) + " - " + debug_CurrMusicPath + "  ["+Time::Format(int64(debug_CurrMusicLength * 1000.), true, true, false, true)+"]");
-        UI::EndDisabled();
-        if (curTrackIx < 0 || curTrackIx >= MusicAll.Length) {
-            warn("Invalid curTrackIx: " + curTrackIx);
-            return;
-        }
-
         // auto music = MusicAll[curTrackIx];
         auto music = GetCurrMusic();
         if (music !is null) {
@@ -579,6 +571,11 @@ class Music_StdTrackSelection : MusicOrSound {
         if (UX::SmallButton("Next Track")) {
             startnew(CoroutineFunc(On_NextTrack));
         }
+
+        UX::AlignTextToSmallFramePadding();
+        // UI::Dummy(vec2(0., 2.), 0.);
+        UI::TextWrapped("\\$aaaSong: " + (curTrackIx+1) + " - " + CurrMusicPath + "  ["+Time::Format(int64(CurrMusicLength * 1000.), true, true, false, true)+"]");
+
         UI::Dummy(vec2(0., 2.), 0.);
     }
 
@@ -634,13 +631,13 @@ class Music_StdTrackSelection : MusicOrSound {
         }
     }
 
-    string debug_CurrMusicPath;
-    float debug_CurrMusicLength;
+    string CurrMusicPath;
+    float CurrMusicLength;
 
     void ChooseNewCurrentTrack(int trackIx = -1) {
         // if (_chooseRandomly)
         curTrackIx = trackIx < 0 ? Math::Rand(0, MusicPaths.Length) : trackIx % MusicPaths.Length;
-        debug_CurrMusicPath = curTrackIx < MusicShortPaths.Length ? MusicShortPaths[curTrackIx] : "No track";
+        CurrMusicPath = curTrackIx < MusicShortPaths.Length ? MusicShortPaths[curTrackIx] : "No track";
     }
 
     void PreloadSelectedTrack() {
@@ -652,7 +649,7 @@ class Music_StdTrackSelection : MusicOrSound {
         if (music is null) {
             @music = audio.CreateSoundEx(MusicPaths[curTrackIx], 0.0, true, true, false);
             @MusicAll[curTrackIx] = music;
-            debug_CurrMusicLength = music.PlayLength;
+            CurrMusicLength = music.PlayLength;
             startnew(CoroutineFuncUserdataInt64(this.WatchForEndMusicTrack), int64(curTrackIx));
         }
         // see Turbo::GetMusicPanRadiusLfe for other settings
@@ -1053,4 +1050,9 @@ float easeOutCircle(float t, float b, float c, float d) {
     t = t / d - 1.0;
     // trace('t: ' + t + ' b: ' + b + ' c: ' + c + ' d: ' + d);
     return c * Math::Sqrt(1. - t*t) + b;
+}
+
+string EllipsisTrim(const string &in str, int maxLen = 48) {
+    if (str.Length <= maxLen) return str;
+    return str.SubStr(0, maxLen - 3) + "...";
 }

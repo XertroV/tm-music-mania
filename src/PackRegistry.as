@@ -492,8 +492,13 @@ class AudioPack_Playlist : AudioPack {
 
     AudioPack_Playlist(const string &in name, const string &in baseFolder, Playlist_Track@[]@ tracks) {
         super(AudioPackType::Playlist, name);
-        @this.tracks = tracks;
+
         this.baseDir = baseFolder;
+        if (!baseDir.StartsWith("file://")) {
+            throw("baseDir must start with file://; instead: " + baseDir);
+        }
+
+        @this.tracks = tracks;
         for (uint i = 0; i < tracks.Length; i++) {
             OnAddTrack(i);
         }
@@ -522,6 +527,24 @@ class AudioPack_Playlist : AudioPack {
     void AddTrack(Playlist_Track@ track) {
         tracks.InsertLast(track);
         OnAddTrack(tracks.Length - 1);
+    }
+
+    void RemoveAllTracks() {
+        for (uint i = 0; i < tracks.Length; i++) {
+            OnRemoveTrack(i);
+        }
+        tracks.RemoveRange(0, tracks.Length);
+    }
+
+    bool RemoveTrack(Playlist_Track@ track) {
+        for (uint i = 0; i < tracks.Length; i++) {
+            if (tracks[i].name == track.name) {
+                OnRemoveTrack(i);
+                tracks.RemoveAt(i);
+                return true;
+            }
+        }
+        return false;
     }
 
     Json::Value@ ToJson() override {
@@ -559,7 +582,7 @@ class AudioPack_Playlist : AudioPack {
 
     void RenderSongChoiceMenu() override {
         auto musicStdPlaylist = cast<Music_StdTrackSelection>(Music::GetCurrentMusic());
-        auto currMusic = musicStdPlaylist !is null ? musicStdPlaylist.debug_CurrMusicPath : "";
+        auto currMusic = musicStdPlaylist !is null ? musicStdPlaylist.CurrMusicPath : "";
         if (UI::BeginMenu(name)) {
             for (uint i = 0; i < tracks.Length; i++) {
                 if (UI::MenuItem(tracks[i].name, "", currMusic == tracks[i].name)) {
@@ -567,6 +590,9 @@ class AudioPack_Playlist : AudioPack {
                     startnew(CoroutineFuncUserdataInt64(this.SetCurrMusicPlayingIx), int64(i));
                     dev_warn("Selected: " + tracks[i].name);
                 }
+            }
+            if (tracks.Length == 0) {
+                UI::Text("\\$999\\$iNo tracks");
             }
             UI::EndMenu();
         }
@@ -592,9 +618,17 @@ class AudioPack_Playlist : AudioPack {
             AllMusicPlaylistSingleton.AddTrack(tracks[i].CloneButAdjustBaseDir(MEDIA_URI, baseDir));
         }
     }
+
+    void OnRemoveTrack(int i) {
+        // overridden in AudioPack_PlaylistEverything
+        if (AllMusicPlaylistSingleton !is null) {
+            AllMusicPlaylistSingleton.RemoveTrack(tracks[i].CloneButAdjustBaseDir(MEDIA_URI, baseDir));
+        }
+    }
 }
 
 const string MEDIA_URI = "file://Media/";
+const string MEDIA_CUSTOM_URI = "file://Media/CustomMusic/";
 
 AudioPack_PlaylistEverything@ AllMusicPlaylistSingleton = null;
 
@@ -603,12 +637,69 @@ class AudioPack_PlaylistEverything : AudioPack_Playlist {
         if (AllMusicPlaylistSingleton !is null) {
             throw("Only one instance of AudioPack_PlaylistEverything allowed");
         }
-        super(name, MEDIA_URI, {});
         @AllMusicPlaylistSingleton = this;
+        super(name, MEDIA_URI, {});
     }
 
     void OnAddTrack(int i) override {
         // do nothing here
+    }
+
+    void OnRemoveTrack(int i) override {
+        // do nothing here
+    }
+}
+
+AudioPack_PlaylistCustomDir@ CustomMusicPlaylistSingleton = null;
+
+class AudioPack_PlaylistCustomDir : AudioPack_Playlist {
+    // on-disk dir: CUSTOM_MUSIC_FOLDER
+    AudioPack_PlaylistCustomDir(const string &in name) {
+        if (CustomMusicPlaylistSingleton !is null) {
+            throw("Only one instance of AudioPack_PlaylistCustomDir allowed");
+        }
+        @CustomMusicPlaylistSingleton = this;
+        super(name, MEDIA_CUSTOM_URI, {});
+        OnClickRefresh();
+    }
+
+    void OnClickRefresh() {
+        startnew(CoroutineFunc(this.RescanDir));
+    }
+
+    protected void RescanDir() {
+        if (!IO::FolderExists(CUSTOM_MUSIC_FOLDER)) return;
+
+        bool hadTracks = tracks.Length > 0;
+        RemoveAllTracks();
+
+        auto @files = IO_IndexFolderTrimmed(CUSTOM_MUSIC_FOLDER, true);
+        for (uint i = 0; i < files.Length; i++) {
+            AddTrackIfMusic(files[i]);
+        }
+
+        if (hadTracks || tracks.Length > 0) {
+            InvalidateMusicIfAny();
+        }
+    }
+
+    void AddTrackIfMusic(const string &in file) {
+        if (file.EndsWith(".ogg") || file.EndsWith(".wav")) {
+            AddTrack(Playlist_Track(file));
+        }
+    }
+
+    void InvalidateMusicIfAny() {
+        InvalidateMusicIfFor(MusicCtx::InGame);
+        InvalidateMusicIfFor(MusicCtx::Editor);
+        InvalidateMusicIfFor(MusicCtx::Menu);
+    }
+
+    void InvalidateMusicIfFor(MusicCtx mCtx) {
+        auto m = Music::GetMusicFor(mCtx);
+        if (m !is null && m.origin is this) {
+            Music::ReloadMusicFor(mCtx);
+        }
     }
 }
 

@@ -13,6 +13,8 @@ namespace LittleWindow {
     bool S_ShowTrackPackInfo = true;
     [Setting hidden]
     bool S_ShowTrackInfo = true;
+    [Setting hidden]
+    bool S_DisableMarquee = false;
 
     void Render() {
         if (!S_ShowLittleWindow ||
@@ -60,12 +62,26 @@ namespace LittleWindow {
             UI::Text(packName + "  \\$<\\$aaa" + trackProg + "\\$>");
         }
         if (S_ShowTrackInfo) {
-            UI::Text("[ " + trackTime + " ]  \\$ccc" + trackName);
+
+            // marquee
+            // t = Time::Now / frame_const
+            // ss = Clamp(t - 24, 0, Len - 48)
+            // EllipseTrim(name.SubStr(ss, 48 + 4))
+
+            int len = trackName.Length;
+            int maxLen = 48;
+            if (len > maxLen) len += 3; // add three for initial "..."
+            int t = int(Time::Now / 200) % len;
+            int ss = Math::Clamp(t - maxLen*2/3, 0, Math::Max(0, len - maxLen));
+            if (S_DisableMarquee) ss = 0;
+            UI::Text("[ " + trackTime + " ]  \\$ccc" + EllipsisTrim((ss > 0 ? "..." : "") + trackName.SubStr(ss, maxLen + 3), maxLen));
+            // UI::Text("ss: " + ss + "  t: " + t + "  len: " + len);
         }
-        if (TM_State::MapHasEmbeddedMusic) {
+        if (music is null && TM_State::MapHasEmbeddedMusic) {
             DrawMapMusicScrubber(mapMusicSrc);
         } else {
             DrawNextButton_Optional(cast<Music_StdTrackSelection>(music));
+
         }
     }
 
