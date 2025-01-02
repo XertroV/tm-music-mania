@@ -647,24 +647,35 @@ class Music_StdTrackSelection : MusicOrSound {
         MusicAll.Resize(MusicPaths.Length);
         auto @music = MusicAll[curTrackIx];
         if (music is null) {
+#if DEV
+            if (!IO::FileExists(IO::FromAppFolder(MusicPaths[curTrackIx].Replace("file://", "GameData/")))) {
+                dev_warn("!!!! Music file not found: " + MusicPaths[curTrackIx]);
+            }
+#endif
             @music = audio.CreateSoundEx(MusicPaths[curTrackIx], 0.0, true, true, false);
             @MusicAll[curTrackIx] = music;
-            CurrMusicLength = music.PlayLength;
+            if (music is null) {
+                // todo: handle when file not found or other error
+            } else {
+                CurrMusicLength = music.PlayLength;
+            }
             startnew(CoroutineFuncUserdataInt64(this.WatchForEndMusicTrack), int64(curTrackIx));
         }
         // see Turbo::GetMusicPanRadiusLfe for other settings
         auto panRadiusLfe = vec3(0., 1.,   -20.);
         tmpVoldB = GetMusicVolume(MusicPaths[curTrackIx]);
-        music.PanRadiusLfe = panRadiusLfe;
-        music.VolumedB = 0.0;
-        auto source = cast<CAudioSource>(Dev::GetOffsetNod(music, 0x20));
-        source.PlugSound.VolumedB = tmpVoldB;
-        music.Play();
-        // auto ptr = Dev_GetPtrForNod(music);
-        // dev_trace("Preloaded music: " + MusicPaths[curTrackIx] + " (ptr: " + Text::FormatPointer(ptr) + ")");
-        // IO::SetClipboard(Text::FormatPointer(ptr));
-        this.FixMusicViaBalanceGroups(music);
-        // startnew(CoroutineFuncUserdata(this.FixMusicViaBalanceGroups), music);
+        if (music !is null) {
+            music.PanRadiusLfe = panRadiusLfe;
+            music.VolumedB = 0.0;
+            auto source = cast<CAudioSource>(Dev::GetOffsetNod(music, 0x20));
+            source.PlugSound.VolumedB = tmpVoldB;
+            music.Play();
+            // auto ptr = Dev_GetPtrForNod(music);
+            // dev_trace("Preloaded music: " + MusicPaths[curTrackIx] + " (ptr: " + Text::FormatPointer(ptr) + ")");
+            // IO::SetClipboard(Text::FormatPointer(ptr));
+            this.FixMusicViaBalanceGroups(music);
+            // startnew(CoroutineFuncUserdata(this.FixMusicViaBalanceGroups), music);
+        }
     }
 
     // watch for end of track and play next
@@ -698,6 +709,10 @@ class Music_StdTrackSelection : MusicOrSound {
 
     void FixMusicViaBalanceGroups(ref@ r) {
         CAudioScriptSound@ music = cast<CAudioScriptSound>(r);
+        if (music is null) {
+            dev_warn("Music is null for FixMusicViaBalanceGroups");
+            return;
+        }
         // yield(1);
         dev_trace("Fixing music balance group: " + MusicPaths[curTrackIx]);
         auto audioSource = cast<CAudioSource>(Dev::GetOffsetNod(music, 0x20));

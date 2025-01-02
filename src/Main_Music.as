@@ -319,6 +319,7 @@ namespace Music {
                 UI::Text("1. Convert your music to .ogg format.");
                 UI::Text("2. Place your music files in the folder (open it below).");
                 UI::Text("3. Click \"Refresh\" to see your music.");
+
                 UI::SeparatorText("Folder");
                 if (UX::SmallButton(Icons::FolderOpenO + " Open Folder")) {
                     startnew(OpenCustomMusicFolder);
@@ -331,6 +332,8 @@ namespace Music {
                     if (UX::SmallButton(Icons::Refresh + " Refresh")) {
                         CustomMusicPlaylistSingleton.OnClickRefresh();
                     }
+                    UI::SeparatorText("Tracks");
+                    CustomMusicPlaylistSingleton.RenderSongChoiceMenu();
                 }
                 UI::EndMenu();
             }
@@ -471,16 +474,18 @@ namespace Music {
 
         if (UI::BeginMenu("Little Window")) {
             LittleWindow::S_ShowLittleWindow = UI::Checkbox("[UI] Show Little Window", LittleWindow::S_ShowLittleWindow);
-            if (LittleWindow::S_ShowLittleWindow) {
-                UI::Indent();
-                LittleWindow::S_HideLittleWindowWhenGameUIHidden = UI::Checkbox("[LW] Hide with Game UI", LittleWindow::S_HideLittleWindowWhenGameUIHidden);
-                LittleWindow::S_HideLittleWindowWhenOverlayHidden = UI::Checkbox("[LW] Hide with Overlay (F3)", LittleWindow::S_HideLittleWindowWhenOverlayHidden);
-                LittleWindow::S_ShowTrackPackInfo = UI::Checkbox("[LW] Music Pack Info", LittleWindow::S_ShowTrackPackInfo);
-                LittleWindow::S_ShowTrackInfo = UI::Checkbox("[LW] Track Info", LittleWindow::S_ShowTrackInfo);
-                LittleWindow::S_ShowTrackScrubber = UI::Checkbox("[LW] Track Scrubber", LittleWindow::S_ShowTrackScrubber);
-                LittleWindow::S_ShowNextButton = UI::Checkbox("[LW] Show Next Button", LittleWindow::S_ShowNextButton);
-                UI::Unindent();
-            }
+
+            UI::BeginDisabled(!LittleWindow::S_ShowLittleWindow);
+            UI::Indent();
+            LittleWindow::S_HideLittleWindowWhenGameUIHidden = UI::Checkbox("[LW] Hide with Game UI", LittleWindow::S_HideLittleWindowWhenGameUIHidden);
+            LittleWindow::S_HideLittleWindowWhenOverlayHidden = UI::Checkbox("[LW] Hide with Overlay (F3)", LittleWindow::S_HideLittleWindowWhenOverlayHidden);
+            LittleWindow::S_ShowTrackPackInfo = UI::Checkbox("[LW] Music Pack Info", LittleWindow::S_ShowTrackPackInfo);
+            LittleWindow::S_ShowTrackInfo = UI::Checkbox("[LW] Track Info", LittleWindow::S_ShowTrackInfo);
+            LittleWindow::S_ShowTrackScrubber = UI::Checkbox("[LW] Track Scrubber", LittleWindow::S_ShowTrackScrubber);
+            LittleWindow::S_ShowNextButton = UI::Checkbox("[LW] Show Next Button", LittleWindow::S_ShowNextButton);
+            UI::Unindent();
+            UI::EndDisabled();
+
             UI::EndMenu();
         }
 
@@ -507,7 +512,7 @@ namespace Music {
 3. Click "Refresh"{REFRESH} to see your music.
 """;
     const string CustomMusicReadme = CustomMusicReadme_T.Replace("{FFMPEG}", "").Replace("{REFRESH}", "");
-    const string CustomMusicReadmeForFile = CustomMusicReadme_T.Replace("{FFMPEG}", " (using ffmpeg: `ffmpeg -i INPUT_FILE -c:a libvorbis OUTPUT_NAME.ogg`. Specify quality with `-q:a [1-10]`.)")
+    const string CustomMusicReadmeForFile = CustomMusicReadme_T.Replace("{FFMPEG}", " (using ffmpeg: `ffmpeg -i INPUT_FILE -map_metadata -1 -c:a libvorbis OUTPUT_NAME.ogg`. Specify quality with `-q:a [1-10]`.)")
         .Replace("{REFRESH}", " in the custom music menu");
 }
 

@@ -690,16 +690,24 @@ class AudioPack_PlaylistCustomDir : AudioPack_Playlist {
     }
 
     void InvalidateMusicIfAny() {
-        InvalidateMusicIfFor(MusicCtx::InGame);
-        InvalidateMusicIfFor(MusicCtx::Editor);
-        InvalidateMusicIfFor(MusicCtx::Menu);
+        // if we invalidate music that's currently playing, we need to trigger an update in case of embedded music (which can start playing)
+        bool any = false;
+        any = (InvalidateMusicIfFor(MusicCtx::InGame) && TM_State::IsInPlayground) || any;
+        any = (InvalidateMusicIfFor(MusicCtx::Editor) && TM_State::IsInEditor) || any;
+        any = (InvalidateMusicIfFor(MusicCtx::Menu) && TM_State::IsInMenu) || any;
+        if (any) {
+            // trigger a reload of the music
+            startnew(Music::OnGameContextChanged);
+        }
     }
 
-    void InvalidateMusicIfFor(MusicCtx mCtx) {
+    bool InvalidateMusicIfFor(MusicCtx mCtx) {
         auto m = Music::GetMusicFor(mCtx);
         if (m !is null && m.origin is this) {
             Music::ReloadMusicFor(mCtx);
+            return true;
         }
+        return false;
     }
 }
 

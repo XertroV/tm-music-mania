@@ -24,10 +24,13 @@ Swamp.ogg
 Tundra.ogg
 """);
 
+AP_Downloadable@ AP_Outer_Wilds = AP_Downloadable("Outer Wilds", "GameData/Media/Sounds/OuterWilds/", "https://assets.xk.io/MusicMisc/Outer Wilds/", "Music from Outer Wilds. (Great game. You should play it.)", "01. Timber Hearth.ogg\n02. Outer Wilds.ogg\n03. The Museum.ogg\n04. Space.ogg\n05. Castaways.ogg\n06. The Sun Station.ogg\n07. Main Title.ogg\n08. The Search.ogg\n09. The Uncertainty Principle.ogg\n10. End Times.ogg\n11. 22 Minutes.ogg\n12. The Nomai.ogg\n13. The Ash Twin Project.ogg\n14. Dark Bramble.ogg\n15. Giants Deep.ogg\n16. Nomai Ruins.ogg\n17. Final Voyage.ogg\n18. The Ancient Glade.ogg\n19. Curiosity.ogg\n20. Travelers.ogg\n21. Let There Be Light.ogg\n22. 14.3 Billion Years.ogg\n23. Morning.ogg\n24. Campfire Song.ogg\n25. Into the Wilds.ogg\n26. Arrow of Time.ogg\n27. We Have Liftoff.ogg\n28. A Terrible Fate.ogg");
+
 // commas go before entries to make commenting lines possible without breaking the last entry
 AP_Downloadable@[] AP_Downloadables = {
     AP_BigBang1112
     , AP_PMC
+    , AP_Outer_Wilds
     // add more here
 #if DEV
     , AP_ZaiLoop
