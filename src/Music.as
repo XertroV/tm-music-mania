@@ -444,6 +444,11 @@ class Music_TurboInGame : MusicOrSound {
         UI::BeginDisabled();
         UI::MenuItem("Track: " + G_Debug_SongName);
         UI::EndDisabled();
+
+        if (UX::SmallButton(CurMusic.IsPlaying ? Icons::Pause : Icons::Play)) {
+            CurMusic.IsPlaying ? CurMusic.Stop() : CurMusic.Play();
+        }
+        UI::SameLine();
         if (UX::SmallButton("Next Track")) {
             LoadMusic(-1);
         }
@@ -505,6 +510,14 @@ class Music_StdTrackSelection : MusicOrSound {
     void RenderDebug() override {
         UI::Text("Song: " + (curTrackIx+1) + " - " + debug_CurrMusicPath + " ["+Time::Format(int64(debug_CurrMusicLength * 1000.), false, true, false, true)+"]");
         UI::Text("Total Songs: " + MusicPaths.Length);
+
+        auto music = GetCurrMusic();
+        if (music !is null) {
+            if (UX::SmallButton(music.IsPlaying ? Icons::Pause : Icons::Play)) {
+                TryPlayPause();
+            }
+            UI::SameLine();
+        }
         if (UX::SmallButton("Next Track")) {
             startnew(CoroutineFunc(On_NextTrack));
         }
@@ -541,11 +554,12 @@ class Music_StdTrackSelection : MusicOrSound {
             return;
         }
 
-        auto music = MusicAll[curTrackIx];
+        // auto music = MusicAll[curTrackIx];
+        auto music = GetCurrMusic();
         if (music !is null) {
-            auto source = cast<CAudioSource>(Dev::GetOffsetNod(music, 0x20));
+            auto source = GetCurrMusicSource(); // cast<CAudioSource>(Dev::GetOffsetNod(music, 0x20));
             // UI::PushItemWidth(200.);
-            UX::PlayCursorSlider(source);
+            DrawPlayCursorSlider("Play Cursor");
             source.VolumedB = UI::SliderFloat("Track vol dB", source.VolumedB, -41., 12.);
             if (source.PlugSound !is null) {
                 source.PlugSound.VolumedB = UI::SliderFloat("Sound vol dB", source.PlugSound.VolumedB, -41., 12.);
@@ -555,6 +569,13 @@ class Music_StdTrackSelection : MusicOrSound {
         }
 
         UI::Dummy(vec2(0., 2.), 0.);
+
+        if (music !is null) {
+            if (UX::SmallButton(music.IsPlaying ? Icons::Pause : Icons::Play)) {
+                TryPlayPause();
+            }
+            UI::SameLine();
+        }
         if (UX::SmallButton("Next Track")) {
             startnew(CoroutineFunc(On_NextTrack));
         }
@@ -624,6 +645,7 @@ class Music_StdTrackSelection : MusicOrSound {
 
     void PreloadSelectedTrack() {
         dev_warn("Preloading music: " + MusicPaths[curTrackIx]);
+        ExpectPausedMusicSource = false;
         auto audio = GetAudio();
         MusicAll.Resize(MusicPaths.Length);
         auto @music = MusicAll[curTrackIx];
@@ -735,6 +757,24 @@ class Music_StdTrackSelection : MusicOrSound {
         return cast<CAudioSource>(Dev::GetOffsetNod(music, 0x20));
     }
 
+    vec2 savedPlayCursor;
+    bool ExpectPausedMusicSource = false;
+
+    void TryPlayPause() {
+        auto music = GetCurrMusic();
+        if (music is null) return;
+        if (music.IsPlaying) {
+            savedPlayCursor.x = music.PlayCursor;
+            savedPlayCursor.y = music.PlayCursor / music.PlayLength;
+            ExpectPausedMusicSource = true;
+            music.Stop();
+        } else {
+            music.Play();
+            ExpectPausedMusicSource = false;
+            music.PlayCursor = savedPlayCursor.x;
+        }
+    }
+
     int GetCurrTrackIx() override {
         return curTrackIx;
     }
@@ -752,8 +792,13 @@ class Music_StdTrackSelection : MusicOrSound {
             return "-:-- / -:--";
         }
         auto totalLen = Time::Format(int64(music.PlayLength * 1000.), false, true, false, true);
-        auto playLen = Time::Format(int64(music.PlayCursor * 1000.), false, true, false, true);
+        float cursor = ExpectPausedMusicSource ? savedPlayCursor.x : music.PlayCursor;
+        auto playLen = Time::Format(int64(cursor * 1000.), false, true, false, true);
         return playLen + " / " + totalLen;
+    }
+
+    void DrawPlayCursorSlider(const string &in label = "###lw-play-cursor") {
+        UX::PlayCursorSlider(GetCurrMusicSource(), label, savedPlayCursor);
     }
 }
 

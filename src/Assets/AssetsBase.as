@@ -44,6 +44,7 @@ class AssetDownloader {
         return _TotalDownloadsDone;
     }
     float get_DownloadsPctDone() {
+        if (_TotalDownloadsStarted == 0) return 0;
         return float(_TotalDownloadsDone) / float(_TotalDownloadsStarted) * 100.0;
     }
     string get_DownloadsDoneOverStarted() {

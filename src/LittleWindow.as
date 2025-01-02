@@ -70,6 +70,13 @@ namespace LittleWindow {
         UI::Indent(_indent);
 
         if (S_ShowNextButton) {
+            auto sound = music.GetCurrMusic();
+            if (sound !is null) {
+                if (UX::SmallButton(sound.IsPlaying ? Icons::Pause : Icons::Play)) {
+                    startnew(CoroutineFunc(music.TryPlayPause));
+                }
+                UI::SameLine();
+            }
             if (UX::SmallButton(Icons::StepForward + " Next")) {
                 music.On_NextTrack();
             }
@@ -77,6 +84,7 @@ namespace LittleWindow {
         }
 
         vec2 avail;
+        bool wasRightClicked = false;
         if (S_ShowTrackScrubber) {
             avail = UI::GetContentRegionAvail();
             auto source = music.GetCurrMusicSource();
@@ -84,11 +92,17 @@ namespace LittleWindow {
             if (source !is null) {
                 float w = avail.x / UI::GetScale() - _indent;
                 UI::SetNextItemWidth(Math::Max(w, 60.));
-                UX::PlayCursorSlider(source, "###lw-play-cursor");
+                music.DrawPlayCursorSlider();
+                wasRightClicked = UI::IsItemClicked(UI::MouseButton::Right);
             } else {
                 UI::Dummy(vec2());
             }
         }
+
+        if (wasRightClicked) {
+            music.TryPlayPause();
+        }
+
 
         UI::Unindent(_indent);
         UX::PopThinControls();

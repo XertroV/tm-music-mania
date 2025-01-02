@@ -13,11 +13,22 @@ AP_Downloadable@ AP_ZaiLoop = AP_DownloadableLoop("Zai's Loop", "GameData/Media/
 InThePast_L.zip
 """);
 
+AP_Downloadable@ AP_PMC = AP_Downloadable("Project Minecraft", "GameData/Media/Sounds/PMC/", "https://assets.xk.io/MusicMisc/PMC/", "Project Minecraft", """
+Badlands.ogg
+Blossom.ogg
+Caves.ogg
+End.ogg
+Jungle.ogg
+Nether.ogg
+Swamp.ogg
+Tundra.ogg
+""");
 
+// commas go before entries to make commenting lines possible without breaking the last entry
 AP_Downloadable@[] AP_Downloadables = {
     AP_BigBang1112
+    , AP_PMC
     // add more here
-    // , AP_Blah
 #if DEV
     , AP_ZaiLoop
 #endif

@@ -272,13 +272,23 @@ namespace Music {
 
             RenderMenu_ListPacks();
 
-            if (DLC::IsAnyAvailable()) {
-                UI::SeparatorText("\\$f80\\$i DLC " + Icons::Download);
-                if (UI::BeginMenu("Download Packs")) {
-                    UI::Dummy(vec2(300, 0));
-                    DLC::RenderDownloadMenu();
-                    UI::EndMenu();
-                }
+            auto missing = DLC::MissingDLCPacks();
+            string dlcCol = missing > 0 ? "\\$f80" : "\\$8b8";
+            UI::SeparatorText(dlcCol + "\\$i DLC " + Icons::Download);
+            if (missing > 0) {
+                UI::Text("  \\$db6" + Icons::ExclamationTriangle + " Missing: " + missing + " packs.");
+            } else {
+                UI::Text("  \\$999" + Icons::Check + " All packs downloaded.");
+            }
+            if (missing > 0 && UI::BeginMenu("Available to Download")) {
+                UI::Dummy(vec2(300, 0));
+                DLC::RenderDownloadMenu(true);
+                UI::EndMenu();
+            }
+            if (UI::BeginMenu("Already Downloaded")) {
+                UI::Dummy(vec2(300, 0));
+                DLC::RenderDownloadMenu(false);
+                UI::EndMenu();
             }
 
             UI::SeparatorText("Settings");
