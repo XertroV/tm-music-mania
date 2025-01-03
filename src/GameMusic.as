@@ -290,7 +290,7 @@ namespace GameMusic {
                 musicTrackIndexes.InsertLast(i);
                 musicTracksWerePlaying.InsertLast(src.IsPlaying);
                 musicTracksFidNames.InsertLast(GetSoundSourceFidName(src));
-                musicTracksIgnore.InsertLast(IsOneOfOurSoundSources(src) || IsTempMuxSource(src, i));
+                musicTracksIgnore.InsertLast(IsOneOfOurTurboSoundSources(src) || IsTempMuxSource(src, i));
                 if (andSilence && !musicTracksIgnore[mtIx]) {
                     SetVolumeOnSource(src, mtIx);
                 }
@@ -330,7 +330,7 @@ namespace GameMusic {
         }
     }
 
-    bool IsOneOfOurSoundSources(CAudioSource@ src) {
+    bool IsOneOfOurTurboSoundSources(CAudioSource@ src) {
         auto music = cast<CPlugMusic>(src.PlugSound);
         if (music !is null) return true;
         if (src.PlugSound is null) return true;
@@ -367,7 +367,7 @@ namespace GameMusic {
 }
 
 
-#if TURBO && FALSE
+#if TURBO && DEV && FALSE
 
 void SearchForOggFiles() {
     auto ap = GetApp().AudioPort;
@@ -415,10 +415,12 @@ void SearchForOggFiles(array<CSystemFidsFolder@> parents, CSystemFidsFolder@ nod
 
 
 uint FidsFolder_TreesLen(const CSystemFidsFolder@ folder) {
+    // turbo
     return Dev::GetOffsetUint32(folder, 0x20 + 4);
 }
 
 uint FidsFolder_LeavesLen(const CSystemFidsFolder@ folder) {
+    // turbo
     return Dev::GetOffsetUint32(folder, 0x14 + 4);
 }
 

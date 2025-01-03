@@ -11,3 +11,10 @@ uint64 Dev_GetPtrForNod(CMwNod@ nod) {
     return nodPtr; // ^_^
 }
 #endif
+
+
+
+CAudioSource@ CAudioScriptSound_GetSource(CAudioScriptSound@ sound) {
+    if (sound is null) return null;
+    return cast<CAudioSource>(Dev::GetOffsetNod(sound, 0x20));
+}

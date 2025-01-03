@@ -5,7 +5,7 @@ const string MenuIconQuietColor = "\\$f94";
 const string PluginIcon = Icons::Headphones;
 const string MenuTitle = MenuIconColor + PluginIcon + "\\$z " + PluginName;
 const string MenuMainId = "mmusic";
-const string MenuMainTitle = MenuIconColor + PluginIcon + "\\$z Music###" + MenuMainId;
+const string MenuMainTitle = MenuIconColor + PluginIcon + "\\$z Music " + MenuIconColor + PluginIcon + "###" + MenuMainId;
 const string MenuMainTitleMuted = MenuIconMutedColor + Icons::VolumeOff + "\\$z Music###" + MenuMainId;
 const string MenuMainTitleVolMid = MenuIconQuietColor + Icons::VolumeDown + "\\$z Music###" + MenuMainId;
 

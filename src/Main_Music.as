@@ -117,9 +117,16 @@ namespace Music {
         return null;
     }
 
-    string GetCurrentMusicPackName() {
+    string GetCurrentMusicChoiceSetting() {
+        if (TM_State::IsInMenu) return Packs::S_PackChoice_Menu;
+        if (TM_State::IsInPlayground) return Packs::S_PackChoice_InGame;
+        if (TM_State::IsInEditor) return Packs::S_PackChoice_Editor;
+        return "null";
+    }
+
+    string GetCurrentMusicPackName(const string &in _default = "null") {
         auto music = GetCurrentMusic();
-        if (music is null) return "null";
+        if (music is null) return _default;
         return music.GetOriginName();
     }
 
@@ -180,7 +187,12 @@ namespace Music {
             if (GM_Editor is null) ChooseEditorMusic();
             else GM_Editor.OnContextEnter();
         } else if (TM_State::IsLoading) {
-            // do nothing...
+            // do (mostly) nothing...
+            if (GM_InGame !is null && GM_InGame.ShouldDestroyOnMapChange) {
+                dev_warn("Destroying GM_InGame due to loading");
+                GM_InGame.CleanUp();
+                @GM_InGame = null;
+            }
         }
     }
 
@@ -373,7 +385,7 @@ namespace Music {
         UI::SeparatorText("Music");
 
         UI::BeginDisabled();
-        UI::MenuItem("Current Pack: " + GetCurrentMusicPackName());
+        UI::MenuItem("Current Pack: " + GetCurrentMusicPackName("\\$iNone (Wanted: " + Music::GetCurrentMusicChoiceSetting() + ")"));
         if (TM_State::IsInPlayground) {
             UI::MenuItem("\\$i   Game Sounds: " + (GM_InGameSounds is null ? "null" : GM_InGameSounds.GetOriginName()));
         }

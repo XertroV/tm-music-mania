@@ -24,6 +24,9 @@ class MusicOrSound {
         throw("CleanUp not implemented for " + name);
     }
 
+    // Some cases, like Turbo loops, need to be reinitialized after a map change. They will override this method.
+    bool get_ShouldDestroyOnMapChange() { return false; }
+
     void OnStart() {}
     void OnFinish() {}
     void OnCheckpoint(int cpCount, bool fast) {}
@@ -98,6 +101,8 @@ class Music_TurboInGame : MusicOrSound {
         @this.origin = origin;
         return this;
     }
+
+    bool get_ShouldDestroyOnMapChange() override { return true; }
 
     private Json::Value@ _musicList;
     Json::Value@ GetMusicList() {
@@ -233,6 +238,10 @@ class Music_TurboInGame : MusicOrSound {
         dev_warn("Music not found in G_MusicDescs: " + musicName);
         G_MusicDescs.InsertLast(musicJ);
         MusicAll.InsertLast(GetAudio().CreateMusic(mediaBaseUri + musicName));
+        // if (MusicAll[MusicAll.Length - 1] !is null) {
+        //     auto src = CAudioScriptSound_GetSource(MusicAll[MusicAll.Length - 1]);
+        //     if (src !is null) src.BalanceGroup = CAudioSource::EAudioBalanceGroup::Custom1;
+        // }
         return G_MusicDescs.Length - 1;
     }
 
@@ -312,6 +321,16 @@ class Music_TurboInGame : MusicOrSound {
 
     void LoadMusic(int musicIx) {
         ResetSounds(true);
+        // re-initialize prior music when we load a new one.
+        // if (CurMusic !is null) {
+        //     auto mIx = GetCurrTrackIx();
+        //     if (mIx < 0) throw("CurMusic !is null but GetCurrTrackIx() < 0");
+        //     CleanupMusic(GetAudio(), CurMusic);
+        //     @CurMusic = null;
+        //     string musicPath = string(G_MusicDescs[mIx][0]);
+        //     @MusicAll[mIx] = GetAudio().CreateMusic(mediaBaseUri + musicPath);
+        // }
+
         if (MusicAll.Length < G_MusicDescs.Length) {
             MusicAll.Resize(G_MusicDescs.Length);
         }
@@ -372,6 +391,9 @@ class Music_TurboInGame : MusicOrSound {
             );
             if (MusicAll[i] is null) {
                 warn("MusicAll[" + i + "] is null; file: " + audioPath);
+            } else {
+                auto src = CAudioScriptSound_GetSource(MusicAll[i]);
+                if (src !is null) src.BalanceGroup = CAudioSource::EAudioBalanceGroup::Custom1;
             }
         }
 
@@ -422,9 +444,64 @@ class Music_TurboInGame : MusicOrSound {
         CurMusic.EnableSegment("lap");
         SetMusicLevel();
         CurMusic.Play();
+        // CurMusic.PlayCursor = 0.0001;
         CurMusic.NextVariant2(true);
         trace("CurMusic.Play() " + CurMusic.IdName);
+        // startnew(CoroutineFunc(CheckCurrSongPlaying_AvoidNoPlayBug_Async));
     }
+
+    // Avoids a bug where the music doesn't play; happens when the game music ap.Sources index is < than ours.
+    /*
+    void CheckCurrSongPlaying_AvoidNoPlayBug_Async() {
+        while (Global::IsMutedBecauseUnfocused) yield();
+        yield(4);
+        if (CurMusic.IsPlaying && CurMusic.PlayCursor > 0.0) return;
+        trace("CurMusic IsPlaying but PlayCursor = 0; fixing. PlayCursor: " + CurMusic.PlayCursor);
+        auto curMusicSrc = CAudioScriptSound_GetSource(CurMusic);
+        if (curMusicSrc is null) {
+            warn("CheckCurrSongPlaying_AvoidNoPlayBug: CurMusic source is null");
+            return;
+        }
+        int curMusicSrcIx = -1;
+        int gameMusicSrcIx = -1;
+        auto ap = GetAudioPort();
+        for (uint i = 0; i < ap.Sources.Length; i++) {
+            auto item = ap.Sources[i];
+            if (item is curMusicSrc) curMusicSrcIx = i;
+            else if (
+                item.BalanceGroup == CAudioSource::EAudioBalanceGroup::Music
+                && item.IsPlaying
+                && !GameMusic::IsOneOfOurTurboSoundSources(item)
+            ) {
+                trace("Found music at ix: " + i);
+                gameMusicSrcIx = i;
+            }
+        }
+        dev_warn("CurMusic source ix: " + curMusicSrcIx + "; Game music source ix: " + gameMusicSrcIx);
+
+        if (curMusicSrcIx < 0) throw("CurMusic source ix < 0");
+        if (gameMusicSrcIx < 0) throw("Game music source ix < 0");
+        if (curMusicSrcIx >= ap.Sources.Length) throw("CurMusic source ix >= ap.Sources.Length");
+        if (gameMusicSrcIx >= ap.Sources.Length) throw("Game music source ix >= ap.Sources.Length");
+
+        if (gameMusicSrcIx < curMusicSrcIx) {
+            throw("Shouldn't happen when bugged!?!? : gameMusicSrcIx < curMusicSrcIx <-> " + gameMusicSrcIx + " < " + curMusicSrcIx);
+        }
+
+        auto sourcesOffset = Reflection::TypeOf(ap).GetMember("Sources").Offset;
+        auto sourcesBuf = Dev::GetOffsetNod(ap, sourcesOffset);
+
+        uint64 curMusicSrcPtr = Dev::GetOffsetUint64(sourcesBuf, curMusicSrcIx * 8);
+        uint64 gameMusicSrcPtr = Dev::GetOffsetUint64(sourcesBuf, gameMusicSrcIx * 8);
+        if (curMusicSrcPtr == 0) throw("CurMusic source ptr == 0");
+        if (gameMusicSrcPtr == 0) throw("Game music source ptr == 0");
+
+        Dev::SetOffset(sourcesBuf, curMusicSrcIx * 8, gameMusicSrcPtr);
+        Dev::SetOffset(sourcesBuf, gameMusicSrcIx * 8, curMusicSrcPtr);
+
+        dev_warn("Swapped sources");
+    }
+    */
 
     void SetMusicLevel() {
         CurMusic.VolumedB = G_MusicGain;
@@ -454,6 +531,10 @@ class Music_TurboInGame : MusicOrSound {
         }
     }
 
+    CAudioSourceMusic@ GetCurrMusic() {
+        return cast<CAudioSourceMusic>(CAudioScriptSound_GetSource(CurMusic));
+    }
+
     int GetCurrTrackIx() override {
         return G_LastMusicToPlayIx;
     }
@@ -463,7 +544,8 @@ class Music_TurboInGame : MusicOrSound {
     }
 
     string GetTimeProgressString() override {
-        return "-:--";
+        if (CurMusic is null) return "-:--";
+        return Time::Format(int64(CurMusic.PlayCursor * 1000.), false, true, false, true);
     }
 }
 
@@ -667,7 +749,7 @@ class Music_StdTrackSelection : MusicOrSound {
         if (music !is null) {
             music.PanRadiusLfe = panRadiusLfe;
             music.VolumedB = 0.0;
-            auto source = cast<CAudioSource>(Dev::GetOffsetNod(music, 0x20));
+            auto source = CAudioScriptSound_GetSource(music);
             source.PlugSound.VolumedB = tmpVoldB;
             music.Play();
             // auto ptr = Dev_GetPtrForNod(music);
@@ -675,6 +757,9 @@ class Music_StdTrackSelection : MusicOrSound {
             // IO::SetClipboard(Text::FormatPointer(ptr));
             this.FixMusicViaBalanceGroups(music);
             // startnew(CoroutineFuncUserdata(this.FixMusicViaBalanceGroups), music);
+        } else {
+            warn("Music is null for preload: " + MusicPaths[curTrackIx]);
+            // todo: handle not being able to open file or whatever
         }
     }
 
@@ -685,7 +770,7 @@ class Music_StdTrackSelection : MusicOrSound {
         auto tmCtxFlags = TM_State::ContextFlags;
         while (TM_State::ContextIsNoneOrMatch(tmCtxFlags) && curTrackIx == initCurrIx && MusicAll.Length > curTrackIx && MusicAll[curTrackIx] !is null) {
             auto @music = MusicAll[curTrackIx];
-            auto source = cast<CAudioSource>(Dev::GetOffsetNod(music, 0x20));
+            auto source = CAudioScriptSound_GetSource(music);
             if (source.PlayCursorUi > 0.95) {
                 wasCursorNearlyDone = true;
             } else if (wasCursorNearlyDone && source.PlayCursorUi < 0.05) {
@@ -713,11 +798,10 @@ class Music_StdTrackSelection : MusicOrSound {
             dev_warn("Music is null for FixMusicViaBalanceGroups");
             return;
         }
-        // yield(1);
         dev_trace("Fixing music balance group: " + MusicPaths[curTrackIx]);
-        auto audioSource = cast<CAudioSource>(Dev::GetOffsetNod(music, 0x20));
+        auto audioSource = CAudioScriptSound_GetSource(music);
         if (audioSource.PlayCursorUi > 0.0) {
-            dev_trace("Skipping balance group fix for music: " + MusicPaths[curTrackIx] + " (PlayCursorUi: " + audioSource.PlayCursorUi + ")");
+            dev_warn("Skipping balance group fix for music: " + MusicPaths[curTrackIx] + " (PlayCursorUi: " + audioSource.PlayCursorUi + ")");
             return;
         }
         if (audioSource !is null) {
@@ -766,7 +850,7 @@ class Music_StdTrackSelection : MusicOrSound {
     CAudioSource@ GetCurrMusicSource() {
         auto music = GetCurrMusic();
         if (music is null) return null;
-        return cast<CAudioSource>(Dev::GetOffsetNod(music, 0x20));
+        return CAudioScriptSound_GetSource(music);
     }
 
     vec2 savedPlayCursor;
@@ -1024,6 +1108,10 @@ void SleepAndDestroy(ref@ _sound) {
 
 CAudioScriptManager@ GetAudio() {
     return cast<CTrackMania>(GetApp()).MenuManager.MenuCustom_CurrentManiaApp.Audio;
+}
+
+COalAudioPort@ GetAudioPort() {
+    return cast<COalAudioPort>(GetApp().AudioPort);
 }
 
 void CleanupMusic(CAudioScriptManager@ audio, CAudioScriptMusic@ music) {
