@@ -374,7 +374,7 @@ namespace GameMusic {
     CAudioSource@ TryGetMapMusicSource() {
         if (lastMuxSourceFoundIx < 0) return null;
         auto ap = GetApp().AudioPort;
-        if (lastMuxSourceFoundIx >= ap.Sources.Length) return null;
+        if (lastMuxSourceFoundIx >= int(ap.Sources.Length)) return null;
         auto source = ap.Sources[lastMuxSourceFoundIx];
         if (source.BalanceGroup != CAudioSource::EAudioBalanceGroup::Music) return null;
         return source;

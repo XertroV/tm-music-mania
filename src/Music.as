@@ -224,7 +224,7 @@ class Music_TurboInGame : MusicOrSound {
     int EnsureMusicIxLoadedAndGetIx(int musicIx) {
         if (musicIx < 0) return musicIx;
         auto musicList = GetMusicList();
-        if (musicIx >= musicList.Length) {
+        if (musicIx >= int(musicList.Length)) {
             dev_warn("Invalid musicIx: " + musicIx);
             return -1;
         }
@@ -299,7 +299,7 @@ class Music_TurboInGame : MusicOrSound {
 
     void InitRandomMusicIndicies() {
         auto mList = GetMusicList();
-        auto musicCount = Math::Min(mList.Length, 6);
+        uint musicCount = Math::Min(int(mList.Length), 6);
         auto maxMusicCount = mList.Length;
         G_MusicRandomIndice.Resize(maxMusicCount);
         for (uint i = 0; i < maxMusicCount; i++) {
@@ -616,19 +616,6 @@ class Music_StdTrackSelection : MusicOrSound {
             return;
         }
         origin.RenderSongChoiceMenu();
-        // if (UI::BeginMenu(name)) {
-        //     for (uint i = 0; i < MusicShortPaths.Length; i++) {
-        //         if (UI::MenuItem(MusicShortPaths[i], "", curTrackIx == i)) {
-        //             this.SetThisAsCurrentMusicChoice();
-        //             if (curTrackIx != i) {
-        //                 SelectAndPreloadTrack(i);
-        //             }
-        //             // SetCustAndActualVolume(0, i);
-        //             // startnew(CoroutineFuncUserdata(SelectAndPreloadTrack), i);
-        //         }
-        //     }
-        //     UI::EndMenu();
-        // }
     }
 
     void RenderMenuTools() override {
@@ -707,7 +694,7 @@ class Music_StdTrackSelection : MusicOrSound {
     }
 
     void ResetActiveTrack() {
-        if (curTrackIx >= 0 && curTrackIx < MusicAll.Length) {
+        if (curTrackIx >= 0 && curTrackIx < int(MusicAll.Length)) {
             if (MusicAll[curTrackIx] !is null && MusicAll[curTrackIx].IsPlaying) {
                 MusicAll[curTrackIx].Stop();
                 MusicAll[curTrackIx].VolumedB = -100.0;
@@ -723,7 +710,7 @@ class Music_StdTrackSelection : MusicOrSound {
     void ChooseNewCurrentTrack(int trackIx = -1) {
         // if (_chooseRandomly)
         curTrackIx = trackIx < 0 ? Math::Rand(0, MusicPaths.Length) : trackIx % MusicPaths.Length;
-        CurrMusicPath = curTrackIx < MusicShortPaths.Length ? MusicShortPaths[curTrackIx] : "No track";
+        CurrMusicPath = curTrackIx < int(MusicShortPaths.Length) ? MusicShortPaths[curTrackIx] : "No track";
     }
 
     void PreloadSelectedTrack() {
@@ -772,7 +759,7 @@ class Music_StdTrackSelection : MusicOrSound {
         int initCurrIx = _curTrackIx;
         bool wasCursorNearlyDone = false;
         auto tmCtxFlags = TM_State::ContextFlags;
-        while (TM_State::ContextIsNoneOrMatch(tmCtxFlags) && curTrackIx == initCurrIx && MusicAll.Length > curTrackIx && MusicAll[curTrackIx] !is null) {
+        while (TM_State::ContextIsNoneOrMatch(tmCtxFlags) && curTrackIx == initCurrIx && int(MusicAll.Length) > curTrackIx && MusicAll[curTrackIx] !is null) {
             auto @music = MusicAll[curTrackIx];
             auto source = CAudioScriptSound_GetSource(music);
             if (source.PlayCursorUi > 0.95) {
@@ -844,7 +831,7 @@ class Music_StdTrackSelection : MusicOrSound {
     }
 
     CAudioScriptSound@ GetCurrMusic() {
-        if (curTrackIx < 0 || curTrackIx >= MusicAll.Length) {
+        if (curTrackIx < 0 || curTrackIx >= int(MusicAll.Length)) {
             // warn("Invalid curTrackIx: " + curTrackIx);
             return null;
         }
@@ -880,7 +867,7 @@ class Music_StdTrackSelection : MusicOrSound {
     }
 
     string GetCurrTrackName() override {
-        if (curTrackIx < 0 || curTrackIx >= MusicShortPaths.Length) {
+        if (curTrackIx < 0 || curTrackIx >= int(MusicShortPaths.Length)) {
             return "No track";
         }
         return MusicShortPaths[curTrackIx];

@@ -9,6 +9,8 @@ MusicOrSound@ GM_EditorSounds;
 
 const string CUSTOM_MUSIC_FOLDER = IO::FromAppFolder("GameData/Media/CustomMusic/");
 const string CUSTOM_MUSIC_FOLDER_README = CUSTOM_MUSIC_FOLDER + "README.txt";
+const string CUSTOM_GameSounds_FOLDER = IO::FromAppFolder("GameData/Media/CustomGameSounds/");
+const string CUSTOM_GameSounds_FOLDER_README = CUSTOM_GameSounds_FOLDER + "README.txt";
 
 enum MusicCtx {
     InGame,
@@ -30,10 +32,8 @@ namespace Music {
     void SetGameSoundPack(AudioPack@ pack) {
         if (Packs::UpdateGameSoundsChoice(pack) && TM_State::IsInPlayground) {
             dev_trace("UpdateGameSoundsChoice: Game sounds changed");
-            if (GM_InGameSounds !is null) GM_InGameSounds.CleanUp();
-            if (pack is null) {
-                @GM_InGameSounds = null;
-            } else {
+            ClearGameSounds();
+            if (pack !is null) {
                 @GM_InGameSounds = cast<GameSounds>(pack.ToMusicOrSound());
             }
         }
@@ -84,9 +84,8 @@ namespace Music {
         switch (ctx) {
             case MusicCtx::InGame:
                 if (GM_InGame !is null) GM_InGame.CleanUp();
-                if (GM_InGameSounds !is null) GM_InGameSounds.CleanUp();
                 @GM_InGame = null;
-                @GM_InGameSounds = null;
+                ClearGameSounds();
                 break;
             case MusicCtx::Menu:
                 if (GM_Menu !is null) GM_Menu.CleanUp();
@@ -141,6 +140,11 @@ namespace Music {
         return null;
     }
 
+    void ClearGameSounds() {
+        if (GM_InGameSounds !is null) GM_InGameSounds.CleanUp();
+        @GM_InGameSounds = null;
+    }
+
     void MainInGameLoop() {
         while (true) {
             TM_State::RunUpdate();
@@ -161,11 +165,10 @@ namespace Music {
         if (TM_State::IsInMenu) {
             // clear game/editor if they still exist
             if (GM_InGame !is null) GM_InGame.CleanUp();
-            if (GM_InGameSounds !is null) GM_InGameSounds.CleanUp();
             if (GM_Editor !is null) GM_Editor.CleanUp();
             if (GM_EditorSounds !is null) GM_EditorSounds.CleanUp();
             @GM_InGame = null;
-            @GM_InGameSounds = null;
+            ClearGameSounds();
             @GM_Editor = null;
             @GM_EditorSounds = null;
 
@@ -176,13 +179,14 @@ namespace Music {
         } else if (TM_State::IsInPlayground) {
             if (GM_InGame is null) ChooseInGameMusic();
             else GM_InGame.OnContextEnter();
+            if (GM_InGameSounds is null) ChooseInGameMusic(true);
+            else GM_InGameSounds.OnContextEnter();
             startnew(Music::InGameLoop).WithRunContext(Meta::RunContext::AfterMainLoop);
         } else if (TM_State::IsInEditor) {
             // clear game if it still exists
             if (GM_InGame !is null) GM_InGame.CleanUp();
-            if (GM_InGameSounds !is null) GM_InGameSounds.CleanUp();
             @GM_InGame = null;
-            @GM_InGameSounds = null;
+            ClearGameSounds();
             // handle editor sounds
             if (GM_Editor is null) ChooseEditorMusic();
             else GM_Editor.OnContextEnter();
@@ -223,10 +227,15 @@ namespace Music {
         }
 
         if (andGameSounds) {
-            if (GM_InGameSounds !is null) GM_InGameSounds.CleanUp();
-            @GM_InGameSounds = Packs::GetInGame_GameSounds().ToMusicOrSound();
+            ChooseGameSounds();
         }
         return GM_InGame;
+    }
+
+    MusicOrSound@ ChooseGameSounds() {
+        if (GM_InGameSounds !is null) GM_InGameSounds.CleanUp();
+        @GM_InGameSounds = Packs::GetInGame_GameSounds().ToMusicOrSound();
+        return GM_InGameSounds;
     }
 
     void InMenuLoop() {
@@ -325,6 +334,9 @@ namespace Music {
                 DLC::RenderDownloadMenu(false);
                 UI::EndMenu();
             }
+
+            UI::SeparatorText("Custom Music/Sounds");
+
             if (UI::BeginMenu("\\$bf8" + Icons::FolderOpenO + " Your Own Music")) {
                 UI::Dummy(vec2(300, 0));
                 UI::SeparatorText("How To");
@@ -347,6 +359,38 @@ namespace Music {
                     }
                     UI::SeparatorText("Tracks");
                     CustomMusicPlaylistSingleton.RenderSongChoiceMenu();
+                }
+                UI::EndMenu();
+            }
+
+            if (UI::BeginMenu(Icons::FolderOpenO + " Custom Game Sounds")) {
+                UI::Dummy(vec2(300, 0));
+                UI::SeparatorText("How To");
+                UI::Text("1. Open the folder below and read the readme for file specifications.");
+                UI::Text("2. Convert your sounds to .wav or .ogg format.");
+                UI::Text("3. Place your sound files in the folder (open it below).");
+                UI::Text("4. Click \"Refresh\" to see your sounds.");
+
+                UI::SeparatorText("Folder");
+                if (UX::SmallButton(Icons::FolderOpenO + " Open Folder")) {
+                    startnew(OpenCustomGameSoundsFolder);
+                }
+                UI::SeparatorText("Loaded Sounds");
+                if (CustomGameSoundsSingleton is null) {
+                    UI::Text("???");
+                } else {
+                    UI::Text("# Sounds: " + CustomGameSoundsSingleton.GetTotalSoundCount());
+                    if (UX::SmallButton(Icons::Refresh + " Refresh")) {
+                        CustomGameSoundsSingleton.OnClickRefresh();
+                    }
+                    UI::SeparatorText("Sounds");
+
+                    CustomGameSoundsSingleton.ListAllSoundsAsMenu();
+
+                    if (UI::BeginMenu("Set as active game sounds")) {
+                        CustomGameSoundsSingleton.RenderSongChoiceMenu();
+                        UI::EndMenu();
+                    }
                 }
                 UI::EndMenu();
             }
@@ -513,8 +557,16 @@ namespace Music {
         OpenExplorerPath(CUSTOM_MUSIC_FOLDER);
     }
 
+    void OpenCustomGameSoundsFolder() {
+        IO::CreateFolder(CUSTOM_GameSounds_FOLDER, true);
+        if (!IO::FileExists(CUSTOM_GameSounds_FOLDER + "README.txt")) {
+            WriteCustomGameSoundsFolderReadme();
+        }
+        OpenExplorerPath(CUSTOM_GameSounds_FOLDER);
+    }
+
     void WriteCustomMusicFolderReadme() {
-        IO::File f(CUSTOM_MUSIC_FOLDER + "README.txt", IO::FileMode::Write);
+        IO::File f(CUSTOM_MUSIC_FOLDER_README, IO::FileMode::Write);
         f.WriteLine("# Custom Music\r\n\r\n");
         f.Write(CustomMusicReadmeForFile);
         f.Close();
@@ -527,6 +579,14 @@ namespace Music {
     const string CustomMusicReadme = CustomMusicReadme_T.Replace("{FFMPEG}", "").Replace("{REFRESH_WHERE}", "");
     const string CustomMusicReadmeForFile = CustomMusicReadme_T.Replace("{FFMPEG}", " (using ffmpeg: `ffmpeg -i INPUT_FILE -map 0:0 -map_metadata -1 -c:a libvorbis OUTPUT_NAME.ogg`. Specify quality with `-q:a [1-10]`.)")
         .Replace("{REFRESH_WHERE}", " in the custom music menu");
+
+    void WriteCustomGameSoundsFolderReadme() {
+        IO::File f(CUSTOM_GameSounds_FOLDER_README, IO::FileMode::Write);
+        f.WriteLine("Custom Game Sounds How-To");
+        f.WriteLine("-------------------------\n");
+        f.Write(CUSTOM_GS_SPEC);
+        f.Close();
+    }
 }
 
 
@@ -566,7 +626,7 @@ class InGameRaceStateMonitor {
     int cpTakenThisFrame = -1;
     bool cpThisFrameWasFast = false;
     int cpsTaken = -1;
-    int bestCpTimeForCurrentCp = 0xFFFFFFFF;
+    int bestCpTimeForCurrentCp = 0x7FFFFFFF;
     bool playerRespawnedThisFrame = false;
     bool startedThisFrame = false;
     int curRaceTime;
@@ -632,7 +692,7 @@ class InGameRaceStateMonitor {
 
         if (cpsChanged) {
             cpTakenThisFrame = ++cpsTaken;
-            bestCpTimeForCurrentCp = (cpsTaken < 0 || player.Score.BestRaceTimes.Length <= cpsTaken) ? 0xFFFFFFFF : player.Score.BestRaceTimes[cpsTaken];
+            bestCpTimeForCurrentCp = (cpsTaken < 0 || int(player.Score.BestRaceTimes.Length) <= cpsTaken) ? 0xFFFFFFFF : player.Score.BestRaceTimes[cpsTaken];
             cpThisFrameWasFast = curRaceTime < bestCpTimeForCurrentCp;
 
             if (playerLapCount != lastPlayerLapCount && playerLapCount > 0) {

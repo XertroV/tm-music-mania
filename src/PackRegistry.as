@@ -629,6 +629,7 @@ class AudioPack_Playlist : AudioPack {
 
 const string MEDIA_URI = "file://Media/";
 const string MEDIA_CUSTOM_URI = "file://Media/CustomMusic/";
+const string MEDIA_CUSTOM_GS_URI = "file://Media/CustomGameSounds/";
 
 AudioPack_PlaylistEverything@ AllMusicPlaylistSingleton = null;
 
@@ -796,8 +797,165 @@ class AudioPack_GameSounds : AudioPack {
     int GetTrackCount() override {
         return 1;
     }
+
+    int GetTotalSoundCount() {
+        if (spec is null) return -1;
+        return spec.checkpointFast.Length + spec.checkpointSlow.Length + spec.finishLap.Length + spec.finishRace.Length + spec.startRace.Length + spec.respawn.Length
+            + spec.medalBronze.Length + spec.medalSilver.Length + spec.medalGold.Length + spec.medalAuthor.Length;
+    }
+
+    void ListAllSoundsAsMenu() {
+        if (UI::BeginMenu(name)) {
+            ListSoundsAsMenu("CP Fast", spec.checkpointFast);
+            ListSoundsAsMenu("CP Slow", spec.checkpointSlow);
+            ListSoundsAsMenu("Finish Race", spec.finishRace);
+            ListSoundsAsMenu("Finish Lap", spec.finishLap);
+            ListSoundsAsMenu("Start Race", spec.startRace);
+            ListSoundsAsMenu("Respawn", spec.respawn);
+            ListSoundsAsMenu("Medal: Author", spec.medalAuthor);
+            ListSoundsAsMenu("Medal: Gold", spec.medalGold);
+            ListSoundsAsMenu("Medal: Silver", spec.medalSilver);
+            ListSoundsAsMenu("Medal: Bronze", spec.medalBronze);
+            UI::EndMenu();
+        }
+    }
+
+    void ListSoundsAsMenu(const string &in name, string[]@ files) {
+        if (files.Length == 0) {
+            UI::Text("\\$999\\$iNo sounds for " + name);
+            return;
+        }
+        if (UI::BeginMenu(name)) {
+            for (uint i = 0; i < files.Length; i++) {
+                UI::MenuItem(files[i], "", false, false);
+            }
+            UI::EndMenu();
+        }
+    }
 }
 
+
+AudioPack_GameSounds_CustomDir@ CustomGameSoundsSingleton = null;
+
+class AudioPack_GameSounds_CustomDir : AudioPack_GameSounds {
+    // on-disk dir: CUSTOM_MUSIC_FOLDER
+    AudioPack_GameSounds_CustomDir(const string &in name) {
+        if (CustomGameSoundsSingleton !is null) {
+            throw("Only one instance of AudioPack_GameSounds_CustomDir allowed");
+        }
+        dev_warn("AP_GameSounds_CustomDir: " + name);
+        @CustomGameSoundsSingleton = this;
+        super(name, MEDIA_CUSTOM_GS_URI, GameSoundsSpec());
+        OnClickRefresh();
+    }
+
+    void OnClickRefresh() {
+        startnew(CoroutineFunc(this.RescanDir));
+    }
+
+    protected void RescanDir() {
+        if (!IO::FolderExists(CUSTOM_GameSounds_FOLDER)) return;
+
+        spec.checkpointFast.RemoveRange(0, spec.checkpointFast.Length);
+        spec.checkpointSlow.RemoveRange(0, spec.checkpointSlow.Length);
+        spec.finishLap.RemoveRange(0, spec.finishLap.Length);
+        spec.finishRace.RemoveRange(0, spec.finishRace.Length);
+        spec.startRace.RemoveRange(0, spec.startRace.Length);
+        spec.respawn.RemoveRange(0, spec.respawn.Length);
+        spec.medalBronze.RemoveRange(0, spec.medalBronze.Length);
+        spec.medalSilver.RemoveRange(0, spec.medalSilver.Length);
+        spec.medalGold.RemoveRange(0, spec.medalGold.Length);
+        spec.medalAuthor.RemoveRange(0, spec.medalAuthor.Length);
+
+        auto @files = IO_IndexFolderTrimmed(CUSTOM_GameSounds_FOLDER, true);
+        files.SortAsc();
+        for (uint i = 0; i < files.Length; i++) {
+            AddSoundIfValidPath(files[i]);
+        }
+
+        InvalidateSoundsIfAny();
+    }
+
+    void AddSoundIfValidPath(const string &in file) {
+        if (file.EndsWith(".ogg") || file.EndsWith(".wav")) {
+            AddSoundByName(file);
+        } else if (!file.EndsWith(".txt")) {
+            NotifyWarning("Invalid file in CustomGameSounds folder: " + file);
+        }
+    }
+
+    // assumes file is ogg/wav
+    void AddSoundByName(const string &in path) {
+        if (path.StartsWith("cpFast_")) {
+            spec.checkpointFast.InsertLast(path);
+        } else if (path.StartsWith("cpSlow_")) {
+            spec.checkpointSlow.InsertLast(path);
+        } else if (path.StartsWith("finish_")) {
+            spec.finishRace.InsertLast(path);
+        } else if (path.StartsWith("lap_")) {
+            spec.finishLap.InsertLast(path);
+        } else if (path.StartsWith("start_")) {
+            spec.startRace.InsertLast(path);
+        } else if (path.StartsWith("respawn_")) {
+            spec.respawn.InsertLast(path);
+        } else if (path.StartsWith("ma_")) {
+            spec.medalAuthor.InsertLast(path);
+        } else if (path.StartsWith("mg_")) {
+            spec.medalGold.InsertLast(path);
+        } else if (path.StartsWith("ms_")) {
+            spec.medalSilver.InsertLast(path);
+        } else if (path.StartsWith("mb_")) {
+            spec.medalBronze.InsertLast(path);
+        } else {
+            NotifyWarning("Invalid file in CustomGameSounds folder: " + path);
+        }
+    }
+
+    void InvalidateSoundsIfAny() {
+        auto m = Music::GetCurrentGameSounds();
+        if (m !is null && m.origin is this && TM_State::IsInPlayground) {
+            Music::ClearGameSounds();
+            // trigger a reload of the music
+            startnew(Music::OnGameContextChanged);
+        }
+    }
+}
+
+const string CUSTOM_GS_SPEC = """
+You can register sounds to be played when certain events occur in the game.
+You can add as many sounds for each event as you like, and they will be mostly chosen at random.
+Exception: checkpoint sounds are chosen based on the number of checkpoints and whether the player is faster or slower than PB (blue or red splits). This might not work correctly everywhere. If the checkpoint number is higher than the number of sounds, a random one will be chosen.
+
+Each event is associated with a file prefix, e.g. "cpFast" is associated with Fast Checkpoint events. "mg" is associated with Medal Gold events. And so on.
+Sound files for that event should be named like "cpFast_1.ogg", "cpFast_2.wav", "start_4.wav", etc. (You can use ogg or wav.)
+Also note that file names are case-insensitive.
+If you have more than 9 files for an event, you should use leading zeros in the file names, e.g. "cpFast_01.ogg", "cpFast_02.wav", "start_04.wav", etc. (Files are sorted by alphabetically when added.)
+
+If no file names match an event, no sound will play.
+
+Event Types
+===========
+
+- `cpFast`: Checkpoint Fast
+- `cpSlow`: Checkpoint Slow
+- `finish`: Finish
+- `lap`: Finish Lap
+- `start`: Start
+- `respawn`: Respawn
+- `ma`: Author Medal
+- `mg`: Gold Medal
+- `ms`: Silver Medal
+- `mb`: Bronze Medal
+
+CP Example
+==========
+
+The player is getting their 2nd checkpoint and is slower than pb.
+The file played will be the 2nd file starting with `cpSlow_` when the files are sorted alphabetically.
+so if there are 3 files: `cpSlow_01.ogg`, `cpSlow_02.wav`, `cpSlow_03.wav`, then the _02 file will be played.
+
+For the players 4th and later CP, one of the 3 files will be chosen at random.
+""";
 
 
 class GameSoundsSpec {
@@ -813,12 +971,16 @@ class GameSoundsSpec {
     string[]@ medalAuthor;
 
     GameSoundsSpec() {
-        checkpointFast = {};
-        checkpointSlow = {};
-        finishLap = {};
-        finishRace = {};
-        startRace = {};
-        respawn = {};
+        @checkpointFast = {};
+        @checkpointSlow = {};
+        @finishLap = {};
+        @finishRace = {};
+        @startRace = {};
+        @respawn = {};
+        @medalBronze = {};
+        @medalSilver = {};
+        @medalGold = {};
+        @medalAuthor = {};
     }
 
     GameSoundsSpec(string[]@ checkpointFast, string[]@ checkpointSlow, string[]@ finishLap, string[]@ finishRace, string[]@ startRace, string[]@ respawn,
@@ -857,6 +1019,10 @@ class GameSoundsSpec {
         j["finishRace"] = finishRace.ToJson();
         j["startRace"] = startRace.ToJson();
         j["respawn"] = respawn.ToJson();
+        j["medalBronze"] = medalBronze.ToJson();
+        j["medalSilver"] = medalSilver.ToJson();
+        j["medalGold"] = medalGold.ToJson();
+        j["medalAuthor"] = medalAuthor.ToJson();
         return j;
     }
 
