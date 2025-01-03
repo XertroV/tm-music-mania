@@ -393,7 +393,11 @@ class Music_TurboInGame : MusicOrSound {
                 warn("MusicAll[" + i + "] is null; file: " + audioPath);
             } else {
                 auto src = CAudioScriptSound_GetSource(MusicAll[i]);
-                if (src !is null) src.BalanceGroup = CAudioSource::EAudioBalanceGroup::Custom1;
+                if (src !is null) {
+                    src.BalanceGroup = CAudioSource::EAudioBalanceGroup::Custom1;
+                    // src.Id doesn't exist; so set on PlugSound
+                    src.PlugSound.IdName = "Turbo:MusicAll[" + i + "]";
+                }
             }
         }
 

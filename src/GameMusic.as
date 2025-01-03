@@ -157,7 +157,9 @@ namespace GameMusic {
                         UI::PushID("a.s" + i);
 
                         auto src = ap.Sources[i];
-                        UI::Text("[" + i + "] " + src.BalanceGroup + " | \\$<" + (src.IsPlaying ? "\\$4b4" : "") + src.IsPlaying + "\\$> | " + Time::Format(int64(src.PlayCursor * 1000)) + " | " + src.VolumedB + " | " + GetSoundSourceFidName(src));
+                        bool isEngine = cast<CAudioSourceEngine>(src) !is null;
+                        bool isSurface = cast<CAudioSourceSurface>(src) !is null;
+                        UI::Text("[" + i + "] " + tostring(src.BalanceGroup) + " | \\$<" + (src.IsPlaying ? "\\$4b4" : "") + src.IsPlaying + "\\$> | " + Time::Format(int64(src.PlayCursor * 1000)) + " | " + src.VolumedB + " dB | " + FindSoundSourceName(src));
                         UI::SameLine();
                         if (UX::SmallButton(Icons::Cubes + "##" + i)) {
                             ExploreNod("AudioSource[" + i + "]", src);
@@ -328,6 +330,19 @@ namespace GameMusic {
             // warn("GameMusic :: Failed to get FID name for source. " + getExceptionInfo());
             return "Unknown";
         }
+    }
+
+    const string FindSoundSourceName(CAudioSource@ src) {
+        if (src.Id.Value != 0xFFFFFFFF) return src.IdName;
+        if (src.PlugSound !is null) {
+            if (src.PlugSound.Id.Value != 0xFFFFFFFF) return src.PlugSound.IdName;
+            if (src.PlugSound.PlugFile !is null) {
+                auto fid = GetFidFromNod(src.PlugSound.PlugFile);
+                if (fid !is null) return fid.FileName;
+                if (src.PlugSound.PlugFile.Id.Value != 0xFFFFFFFF) return src.PlugSound.PlugFile.IdName;
+            }
+        }
+        return "Unknown";
     }
 
     bool IsOneOfOurTurboSoundSources(CAudioSource@ src) {
