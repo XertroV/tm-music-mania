@@ -9,8 +9,9 @@ string[] canyonFiles;
 string[] lagoonFiles;
 string[] valleyFiles;
 string[] stadiumFiles;
-string[] mp4RaceAnyFiles;
-string[] mp4AnyFiles;
+string[] mp4RaceAnyFiles; // tm2: in-game
+string[] mp4MenuFiles; // menus
+string[] mp4AnyFiles; // in-game only
 
 // zip files exist online but will be skipped for download
 const string Mp4AssetFiles = """
@@ -51,6 +52,18 @@ Valley/5. Sunset - Setting.ogg
 Valley/6. Night - Extra Cologne.ogg
 Valley/7. Night - Ritual.ogg
 
+; menu musics
+Menu/MP_EnterTitle.ogg
+Menu/MP_Main.ogg
+Menu/MP_MainLoop.ogg
+Menu/MP_StationLoop.ogg
+Menu/canyon_menu.ogg
+Menu/lagoon_menu.ogg
+Menu/stadium_menu.ogg
+Menu/valley_menu.ogg
+Menu/sm_menu.ogg
+
+; online but not downloaded (filtered in Mp4Assets_FilterOnlyMusicFiles)
 TMValley_music.zip
 TMLagoon_music.zip
 SMStorm_music.zip
@@ -63,6 +76,7 @@ string[]@ Mp4Assets_FilterOnlyMusicFiles(string[]@ assetFiles) {
     array<string> filteredFiles;
     for (uint i = 0; i < assetFiles.Length; i++) {
         if (assetFiles[i].Length < 2) continue;
+        if (assetFiles[i].StartsWith(";")) continue;
         if (assetFiles[i].EndsWith(".zip")) continue;
         string file = assetFiles[i];
         filteredFiles.InsertLast(file);
@@ -87,6 +101,8 @@ string[]@ Mp4Assets_FilterOnlyMusicFiles(string[]@ assetFiles) {
             stadiumFiles.InsertLast(file.SubStr(8));
             mp4AnyFiles.InsertLast(file);
             mp4RaceAnyFiles.InsertLast(file);
+        } else if (file.StartsWith("Menu/")) {
+            mp4MenuFiles.InsertLast(file.SubStr(5));
         }
     }
     return filteredFiles;
@@ -114,13 +130,14 @@ void CheckMp4AssetsAndRegister() {
         return;
     }
     bool gotAll = true;
-    gotAll = CheckMp4AssetsSubfolderAndRegister("", mp4AnyFiles, "MP4 (Any)") && gotAll;
-    gotAll = CheckMp4AssetsSubfolderAndRegister("", mp4RaceAnyFiles, "MP4 (Any, Race)") && gotAll;
-    gotAll = CheckMp4AssetsSubfolderAndRegister("SMStorm", smStormFiles) && gotAll;
-    gotAll = CheckMp4AssetsSubfolderAndRegister("Canyon", canyonFiles) && gotAll;
-    gotAll = CheckMp4AssetsSubfolderAndRegister("Lagoon", lagoonFiles) && gotAll;
-    gotAll = CheckMp4AssetsSubfolderAndRegister("Valley", valleyFiles) && gotAll;
-    gotAll = CheckMp4AssetsSubfolderAndRegister("Stadium", stadiumFiles) && gotAll;
+    gotAll = CheckMp4AssetsSubfolderAndRegister("", mp4AnyFiles, "MP4: In-Game Any") && gotAll;
+    gotAll = CheckMp4AssetsSubfolderAndRegister("Menu", mp4MenuFiles, "MP4: Menus") && gotAll;
+    gotAll = CheckMp4AssetsSubfolderAndRegister("", mp4RaceAnyFiles, "TM²: Any") && gotAll;
+    gotAll = CheckMp4AssetsSubfolderAndRegister("SMStorm", smStormFiles, "ShootMania Storm") && gotAll;
+    gotAll = CheckMp4AssetsSubfolderAndRegister("Canyon", canyonFiles, "TM²: Canyon") && gotAll;
+    gotAll = CheckMp4AssetsSubfolderAndRegister("Lagoon", lagoonFiles, "TM²: Lagoon") && gotAll;
+    gotAll = CheckMp4AssetsSubfolderAndRegister("Stadium", stadiumFiles, "TM²: Stadium") && gotAll;
+    gotAll = CheckMp4AssetsSubfolderAndRegister("Valley", valleyFiles, "TM²: Valley") && gotAll;
     if (gotAll) {
         SetGotAssetPack(MP4_AP_NAME);
     }

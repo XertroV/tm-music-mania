@@ -16,6 +16,9 @@ Menu/MainMenu-Royal.ogg
 Stunt/MainTheme.ogg
 """;
 
+
+AudioPack_Playlist@ AP_Tm2020_Playlist;
+
 void Register_Tm2020_Assets() {
     SetGotAssetPack("TM2020");
     auto @files = TM2020_FilePaths.Split("\n");
@@ -25,5 +28,6 @@ void Register_Tm2020_Assets() {
     //         files.RemoveAt(i);
     //     }
     // }
-    Packs::AddPack(AudioPack_Playlist("TM 2020", MEDIA_MUSICS_STADIUM, files, 0.0));
+    @AP_Tm2020_Playlist = AudioPack_Playlist("TM 2020", MEDIA_MUSICS_STADIUM, files, 0.0);
+    Packs::AddPack(AP_Tm2020_Playlist);
 }

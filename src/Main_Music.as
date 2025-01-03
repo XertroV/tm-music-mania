@@ -510,11 +510,11 @@ namespace Music {
 
     const string CustomMusicReadme_T = """1. Convert your music to .ogg format.{FFMPEG}
 2. Place your music files in this folder.
-3. Click "Refresh"{REFRESH} to see your music.
+3. Click "Refresh"{REFRESH_WHERE} to see your music.
 """;
-    const string CustomMusicReadme = CustomMusicReadme_T.Replace("{FFMPEG}", "").Replace("{REFRESH}", "");
-    const string CustomMusicReadmeForFile = CustomMusicReadme_T.Replace("{FFMPEG}", " (using ffmpeg: `ffmpeg -i INPUT_FILE -map_metadata -1 -c:a libvorbis OUTPUT_NAME.ogg`. Specify quality with `-q:a [1-10]`.)")
-        .Replace("{REFRESH}", " in the custom music menu");
+    const string CustomMusicReadme = CustomMusicReadme_T.Replace("{FFMPEG}", "").Replace("{REFRESH_WHERE}", "");
+    const string CustomMusicReadmeForFile = CustomMusicReadme_T.Replace("{FFMPEG}", " (using ffmpeg: `ffmpeg -i INPUT_FILE -map 0:0 -map_metadata -1 -c:a libvorbis OUTPUT_NAME.ogg`. Specify quality with `-q:a [1-10]`.)")
+        .Replace("{REFRESH_WHERE}", " in the custom music menu");
 }
 
 

@@ -11,6 +11,12 @@ string[] oldTm_RaceFiles;
 string[] oldTm_Effects_Alpine;
 string[] oldTm_Effects_Rally;
 string[] oldTm_Effects_Speed;
+string[] oldTm_EditorFiles;
+string[] oldTm_ReplayFiles;
+string[] oldTm_ESWC_RaceFiles;
+string[] oldTm_TMO_RaceFiles;
+string[] oldTm_TMS_RaceFiles;
+string[] oldTm_TMU_RaceFiles;
 
 const string OldAssetsIndex = """
 TMN ESWC/04.Menu.ogg
@@ -104,8 +110,27 @@ string[]@ OldAssets_FilterOnlyMusicFiles(string[]@ assetFiles) {
         string lFile = file.ToLower();
         if (lFile.Contains("menu") || lFile.Contains("mutants") || lFile.Contains("heartbeat")) {
             oldTm_MenuFiles.InsertLast(file);
+
+        } else if (lFile.EndsWith("_edit.ogg")) {
+            oldTm_EditorFiles.InsertLast(file);
+
+        } else if (lFile.EndsWith("_replay.ogg")){
+            oldTm_ReplayFiles.InsertLast(file);
+
         } else if (!lFile.Contains("effects")) {
             oldTm_RaceFiles.InsertLast(file);
+            // race game playlists
+            if (file.StartsWith("TMN ESWC/")) {
+                oldTm_ESWC_RaceFiles.InsertLast(file);
+            } else if (file.StartsWith("TMO/")) {
+                oldTm_TMO_RaceFiles.InsertLast(file);
+            } else if (file.StartsWith("TMS/")) {
+                oldTm_TMS_RaceFiles.InsertLast(file);
+            } else if (file.StartsWith("TMU/")) {
+                oldTm_TMU_RaceFiles.InsertLast(file);
+            }
+
+        // otherwise, must be effect
         } else {
             // effects; paths: TMO/<Env>/Effects/<File>
             string p = file.SubStr(4); // remove "TMO/"
@@ -161,9 +186,15 @@ void CheckOldTmAssetsAndRegister() {
     bool gotAll = true;
     gotAll = CheckOldTmAssetsSubfolderAndRegister("Old Menus", oldTm_MenuFiles) && gotAll;
     gotAll = CheckOldTmAssetsSubfolderAndRegister("Old Races", oldTm_RaceFiles) && gotAll;
+    gotAll = CheckOldTmAssetsSubfolderAndRegister("Old Editors", oldTm_EditorFiles) && gotAll;
+    gotAll = CheckOldTmAssetsSubfolderAndRegister("Old Replays", oldTm_ReplayFiles) && gotAll;
     gotAll = CheckOldTmEffectsAndRegister("Alpine", oldTm_Effects_Alpine) && gotAll;
     gotAll = CheckOldTmEffectsAndRegister("Rally", oldTm_Effects_Rally) && gotAll;
     gotAll = CheckOldTmEffectsAndRegister("Speed", oldTm_Effects_Speed) && gotAll;
+    gotAll = CheckOldTmAssetsSubfolderAndRegister("TMN ESWC", oldTm_ESWC_RaceFiles) && gotAll;
+    gotAll = CheckOldTmAssetsSubfolderAndRegister("TM Original", oldTm_TMO_RaceFiles) && gotAll;
+    gotAll = CheckOldTmAssetsSubfolderAndRegister("TM Sunrise", oldTm_TMS_RaceFiles) && gotAll;
+    gotAll = CheckOldTmAssetsSubfolderAndRegister("TM United", oldTm_TMU_RaceFiles) && gotAll;
     if (gotAll) {
         SetGotAssetPack(OLD_TM_AP_NAME);
     }
