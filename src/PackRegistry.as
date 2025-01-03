@@ -322,7 +322,7 @@ abstract class AudioPack {
 
 class AudioPack_Null : AudioPack_Playlist {
     AudioPack_Null(const string &in name = "") {
-        super("Null: " + (name.Length == 0 ? "-" : name), "null_dir", {});
+        super("Null: " + (name.Length == 0 ? "-" : name), "file://null_dir", {});
     }
 
     AudioPack_Null(Json::Value@ j) {
