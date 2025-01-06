@@ -324,7 +324,7 @@ namespace Music {
             } else {
                 UI::Text("  \\$999" + Icons::Check + " All packs downloaded.");
             }
-            if (missing > 0 && UI::BeginMenu("Available to Download")) {
+            if (missing > 0 && UI::BeginMenu("\\$5f4Available to Download")) {
                 UI::Dummy(vec2(300, 0));
                 DLC::RenderDownloadMenu(true);
                 UI::EndMenu();
@@ -359,6 +359,7 @@ namespace Music {
                     }
                     UI::SeparatorText("Tracks");
                     CustomMusicPlaylistSingleton.RenderSongChoiceMenu();
+                    CustomMusicPlaylistSingleton.RenderChildrenSongChoice(true);
                 }
                 UI::EndMenu();
             }

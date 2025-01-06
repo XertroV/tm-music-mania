@@ -66,6 +66,32 @@ namespace Packs {
         @PackLookup[pack.name] = pack;
     }
 
+    void RemovePack(AudioPack@ pack) {
+        if (PackLookup.Exists(pack.name)) {
+            PackLookup.Delete(pack.name);
+        }
+        if (pack.ty & AudioPackType::GameSounds > 0) {
+            RemovePackIfFound(pack, GameSounds);
+        } else if (pack.ty & AudioPackType::Playlist > 0) {
+            RemovePackIfFound(pack, Playlists);
+        } else if (pack.ty & AudioPackType::Loops_Turbo > 0) {
+            RemovePackIfFound(pack, LoopsTurbo);
+        } else if (pack.ty & AudioPackType::Loops_Editor > 0) {
+            RemovePackIfFound(pack, EditorLoops);
+        }
+    }
+
+    bool RemovePackIfFound(AudioPack@ pack, AudioPack@[]@ arr) {
+        auto ix = arr.FindByRef(pack);
+        if (ix != -1) {
+            arr.RemoveAt(ix);
+            dev_trace("Removed pack: " + pack.name);
+            return true;
+        }
+        dev_warn("RemovePackIfFound: not found: " + pack.name);
+        return false;
+    }
+
     AudioPack@ GetPack(const string &in name) {
         if (PackLookup.Exists(name)) {
             return cast<AudioPack@>(PackLookup[name]);
@@ -335,7 +361,7 @@ class AudioPack_Null : AudioPack_Playlist {
     }
 
     int GetTrackCount() override {
-        return 0;
+        return -1;
     }
 }
 
@@ -625,6 +651,28 @@ class AudioPack_Playlist : AudioPack {
             AllMusicPlaylistSingleton.RemoveTrack(tracks[i].CloneButAdjustBaseDir(MEDIA_URI, baseDir));
         }
     }
+
+    void InvalidateMusicIfAny() {
+        // if we invalidate music that's currently playing, we need to trigger an update in case of embedded music (which can start playing).
+        // test TM_State after invalidation: we only need to refresh if we're in that context atm.
+        bool any = false;
+        any = (InvalidateMusicIfFor(MusicCtx::InGame) && TM_State::IsInPlayground) || any;
+        any = (InvalidateMusicIfFor(MusicCtx::Editor) && TM_State::IsInEditor) || any;
+        any = (InvalidateMusicIfFor(MusicCtx::Menu) && TM_State::IsInMenu) || any;
+        if (any) {
+            // trigger a reload of the music
+            startnew(Music::OnGameContextChanged);
+        }
+    }
+
+    bool InvalidateMusicIfFor(MusicCtx mCtx) {
+        auto m = Music::GetMusicFor(mCtx);
+        if (m !is null && m.origin is this) {
+            Music::ReloadMusicFor(mCtx);
+            return true;
+        }
+        return false;
+    }
 }
 
 const string MEDIA_URI = "file://Media/";
@@ -654,6 +702,8 @@ class AudioPack_PlaylistEverything : AudioPack_Playlist {
 AudioPack_PlaylistCustomDir@ CustomMusicPlaylistSingleton = null;
 
 class AudioPack_PlaylistCustomDir : AudioPack_Playlist {
+    AudioPack_Playlist@[] children;
+
     // on-disk dir: CUSTOM_MUSIC_FOLDER
     AudioPack_PlaylistCustomDir(const string &in name) {
         if (CustomMusicPlaylistSingleton !is null) {
@@ -668,20 +718,36 @@ class AudioPack_PlaylistCustomDir : AudioPack_Playlist {
         startnew(CoroutineFunc(this.RescanDir));
     }
 
+    void ClearChildren() {
+        for (uint i = 0; i < children.Length; i++) {
+            children[i].RemoveAllTracks();
+            Packs::RemovePack(children[i]);
+        }
+        children.RemoveRange(0, children.Length);
+    }
+
     protected void RescanDir() {
         if (!IO::FolderExists(CUSTOM_MUSIC_FOLDER)) return;
 
-        bool hadTracks = tracks.Length > 0;
+        // invalidate while we have children
+        InvalidateMusicIfAny();
         RemoveAllTracks();
+        ClearChildren();
 
-        auto @files = IO_IndexFolderTrimmed(CUSTOM_MUSIC_FOLDER, true);
+        auto @files = IO_IndexFolderTrimmed(CUSTOM_MUSIC_FOLDER, false);
         for (uint i = 0; i < files.Length; i++) {
             AddTrackIfMusic(files[i]);
+            AddSubDirIfDir(files[i]);
         }
+    }
 
-        if (hadTracks || tracks.Length > 0) {
-            InvalidateMusicIfAny();
-        }
+    void AddSubDirIfDir(const string &in fileOrDir) {
+        if (!fileOrDir.EndsWith('/')) return;
+        auto playListName = "<" + fileOrDir.SubStr(0, fileOrDir.Length - 1) + ">";
+        auto @fileList = IO_IndexFolderTrimmed(CUSTOM_MUSIC_FOLDER + fileOrDir, true);
+        children.InsertLast(AudioPack_Playlist(playListName, MEDIA_CUSTOM_URI + fileOrDir, fileList, 0.0));
+        Packs::AddPack(children[children.Length - 1]);
+        trace("Created custom music sub-playlist: " + playListName);
     }
 
     void AddTrackIfMusic(const string &in file) {
@@ -690,25 +756,24 @@ class AudioPack_PlaylistCustomDir : AudioPack_Playlist {
         }
     }
 
-    void InvalidateMusicIfAny() {
-        // if we invalidate music that's currently playing, we need to trigger an update in case of embedded music (which can start playing)
-        bool any = false;
-        any = (InvalidateMusicIfFor(MusicCtx::InGame) && TM_State::IsInPlayground) || any;
-        any = (InvalidateMusicIfFor(MusicCtx::Editor) && TM_State::IsInEditor) || any;
-        any = (InvalidateMusicIfFor(MusicCtx::Menu) && TM_State::IsInMenu) || any;
-        if (any) {
-            // trigger a reload of the music
-            startnew(Music::OnGameContextChanged);
+    void InvalidateMusicIfAny() override {
+        for (uint i = 0; i < children.Length; i++) {
+            children[i].InvalidateMusicIfAny();
         }
+        AudioPack_Playlist::InvalidateMusicIfAny();
     }
 
-    bool InvalidateMusicIfFor(MusicCtx mCtx) {
-        auto m = Music::GetMusicFor(mCtx);
-        if (m !is null && m.origin is this) {
-            Music::ReloadMusicFor(mCtx);
-            return true;
+    void RenderSongChoiceMenu() override {
+        AudioPack_Playlist::RenderSongChoiceMenu();
+    }
+
+    void RenderChildrenSongChoice(bool addSep = false) {
+        if (children.Length > 0) {
+            if (addSep) UI::SeparatorText("Subfolders");
+            for (uint i = 0; i < children.Length; i++) {
+                children[i].RenderSongChoiceMenu();
+            }
         }
-        return false;
     }
 }
 
