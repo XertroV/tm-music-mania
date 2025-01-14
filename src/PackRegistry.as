@@ -19,7 +19,7 @@ void AddTurboToAudioPackRegistry() {
         TurboConst::GetSoundsRespawn()
     )).WithBuiltin());
 
-    SetGotAssetPack(TM_TURBO_AP_NAME);
+    // SetGotAssetPack(TM_TURBO_AP_NAME);
 }
 
 namespace Packs {
@@ -64,6 +64,10 @@ namespace Packs {
             return;
         }
         @PackLookup[pack.name] = pack;
+    }
+
+    bool HasPack(const string &in name) {
+        return PackLookup.Exists(name);
     }
 
     void RemovePack(AudioPack@ pack) {
@@ -514,6 +518,7 @@ class AudioPack_LoopsEditor : AudioPack_LoopsGeneric {
 
 class AudioPack_Playlist : AudioPack {
     Playlist_Track@[]@ tracks;
+    AudioPack_Playlist@[] children;
     string baseDir;
 
     AudioPack_Playlist(const string &in name, const string &in baseFolder, Playlist_Track@[]@ tracks) {
@@ -653,6 +658,10 @@ class AudioPack_Playlist : AudioPack {
     }
 
     void InvalidateMusicIfAny() {
+        for (uint i = 0; i < children.Length; i++) {
+            children[i].InvalidateMusicIfAny();
+        }
+
         // if we invalidate music that's currently playing, we need to trigger an update in case of embedded music (which can start playing).
         // test TM_State after invalidation: we only need to refresh if we're in that context atm.
         bool any = false;
@@ -673,6 +682,40 @@ class AudioPack_Playlist : AudioPack {
         }
         return false;
     }
+
+    protected void ClearChildren() {
+        for (uint i = 0; i < children.Length; i++) {
+            children[i].RemoveAllTracks();
+            Packs::RemovePack(children[i]);
+        }
+        children.RemoveRange(0, children.Length);
+    }
+
+    void RenderChildrenSongChoice(bool addSep = false) {
+        if (children.Length > 0) {
+            if (addSep) UI::SeparatorText("SubLists");
+            for (uint i = 0; i < children.Length; i++) {
+                children[i].RenderSongChoiceMenu();
+            }
+        }
+    }
+
+    AudioPack_Playlist@ WithSubLists(PackDownloadable::PackSubList@[]@ subLists) {
+        // todo
+        if (Time::Stamp > 1736897331) throw("todo: WithSubLists");
+        // todo: custom behaviro if start of regex is `^<name>/`
+        // impl
+        return this;
+    }
+
+    // void AddSubDirIfDir(const string &in fileOrDir) {
+    //     if (!fileOrDir.EndsWith('/')) return;
+    //     auto playListName = "<" + fileOrDir.SubStr(0, fileOrDir.Length - 1) + ">";
+    //     auto @fileList = IO_IndexFolderTrimmed(CUSTOM_MUSIC_FOLDER + fileOrDir, true);
+    //     children.InsertLast(AudioPack_Playlist(playListName, MEDIA_CUSTOM_URI + fileOrDir, fileList, 0.0));
+    //     Packs::AddPack(children[children.Length - 1]);
+    //     trace("Created custom music sub-playlist: " + playListName);
+    // }
 }
 
 const string MEDIA_URI = "file://Media/";
@@ -702,7 +745,6 @@ class AudioPack_PlaylistEverything : AudioPack_Playlist {
 AudioPack_PlaylistCustomDir@ CustomMusicPlaylistSingleton = null;
 
 class AudioPack_PlaylistCustomDir : AudioPack_Playlist {
-    AudioPack_Playlist@[] children;
 
     // on-disk dir: CUSTOM_MUSIC_FOLDER
     AudioPack_PlaylistCustomDir(const string &in name) {
@@ -716,14 +758,6 @@ class AudioPack_PlaylistCustomDir : AudioPack_Playlist {
 
     void OnClickRefresh() {
         startnew(CoroutineFunc(this.RescanDir));
-    }
-
-    void ClearChildren() {
-        for (uint i = 0; i < children.Length; i++) {
-            children[i].RemoveAllTracks();
-            Packs::RemovePack(children[i]);
-        }
-        children.RemoveRange(0, children.Length);
     }
 
     protected void RescanDir() {
@@ -757,23 +791,11 @@ class AudioPack_PlaylistCustomDir : AudioPack_Playlist {
     }
 
     void InvalidateMusicIfAny() override {
-        for (uint i = 0; i < children.Length; i++) {
-            children[i].InvalidateMusicIfAny();
-        }
         AudioPack_Playlist::InvalidateMusicIfAny();
     }
 
     void RenderSongChoiceMenu() override {
         AudioPack_Playlist::RenderSongChoiceMenu();
-    }
-
-    void RenderChildrenSongChoice(bool addSep = false) {
-        if (children.Length > 0) {
-            if (addSep) UI::SeparatorText("Subfolders");
-            for (uint i = 0; i < children.Length; i++) {
-                children[i].RenderSongChoiceMenu();
-            }
-        }
     }
 }
 

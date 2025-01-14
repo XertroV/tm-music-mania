@@ -1,0 +1,12 @@
+{
+    "name": "TM 2020 Seasonal Menu",
+    "baseDir": "Musics/Stadium",
+    "desc": "TM 2020 seasonal menu music.",
+    "baseUrl": "https://assets.xk.io/OtherTmMusic/TM2020/",
+    "tracks": [
+        "Menu-Fall.ogg",
+        "Menu-Spring.ogg",
+        "Menu-Summer.ogg",
+        "Menu-Winter.ogg"
+    ]
+}

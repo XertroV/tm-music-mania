@@ -334,6 +334,15 @@ namespace Music {
                 DLC::RenderDownloadMenu(false);
                 UI::EndMenu();
             }
+            if (UI::BeginMenu("Custom Packs")) {
+                if (UI::MenuItem(Icons::FilesO + " Open Pack Directory")) {
+                    OpenExplorerPath(PackDownloadable::JsonPackDir);
+                }
+                if (UI::MenuItem(Icons::Refresh + " Refresh Pack Directory")) {
+                    startnew(PackDownloadable::RefreshDir);
+                }
+                UI::EndMenu();
+            }
 
             UI::SeparatorText("Custom Music/Sounds");
 

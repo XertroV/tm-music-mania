@@ -18,14 +18,8 @@ void Main() {
     Packs::AddPack(AudioPack_GameSounds_CustomDir("<Custom Game Sounds>"));
     // we start with TM2020 music
     Register_Tm2020_Assets();
-    // download turbo assets by default
-    EnsureTurboAssets();
-    // check if we have these downloaded
-    CheckMp4AssetsAndRegister();
-    CheckOldTmAssetsAndRegister();
-    CheckWiiAssetsAndRegister();
-    CheckDsAssetsAndRegister();
-    CheckVSAssetsAndRegister();
+    // load packs before starting music
+    PackDownloadable::Init();
 
     // a short break to give some time before starting music stuff on game start
     yield(4);

@@ -1,8 +1,8 @@
 void SetupIntercepts() {
 #if DEV
-    Dev::InterceptProc("CAudioScriptManager", "CreateSound", CAudioScriptManager_CreateSound);
-    Dev::InterceptProc("CAudioScriptManager", "CreateSoundEx", CAudioScriptManager_CreateSoundEx);
-    Dev::InterceptProc("CAudioScriptManager", "CreateMusic", CAudioScriptManager_CreateMusic);
+    // Dev::InterceptProc("CAudioScriptManager", "CreateSound", CAudioScriptManager_CreateSound);
+    // Dev::InterceptProc("CAudioScriptManager", "CreateSoundEx", CAudioScriptManager_CreateSoundEx);
+    // Dev::InterceptProc("CAudioScriptManager", "CreateMusic", CAudioScriptManager_CreateMusic);
 #endif
 }
 

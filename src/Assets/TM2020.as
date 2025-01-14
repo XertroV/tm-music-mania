@@ -1,4 +1,4 @@
-// fake these assets because they already exist
+// these assets already exist in the game, no download required
 const string TM2020_RawBaseDir = "GameData/Media/Musics/Stadium/";
 const string MEDIA_MUSICS_STADIUM = "file://Media/Musics/Stadium/";
 

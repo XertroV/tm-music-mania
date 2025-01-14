@@ -129,7 +129,6 @@ string[]@ OldAssets_FilterOnlyMusicFiles(string[]@ assetFiles) {
             } else if (file.StartsWith("TMU/")) {
                 oldTm_TMU_RaceFiles.InsertLast(file);
             }
-
         // otherwise, must be effect
         } else {
             // effects; paths: TMO/<Env>/Effects/<File>

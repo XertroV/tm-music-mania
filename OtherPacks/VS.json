@@ -1,0 +1,40 @@
+{
+    "name": "Virtual Skipper Music",
+    "baseDir": "Music/VS",
+    "desc": "Music from the Virtual Skipper series (mostly VS1).",
+    "baseUrl": "https://assets.xk.io/OtherTmMusic/VS/",
+    "subLists": {
+        "VS1": "^VS1/.*\\.ogg$",
+        "VS_Misc": "^VS_Misc/"
+    },
+    "tracks": [
+        "VS1/02 Track 02.ogg",
+        "VS1/03 Track 03.ogg",
+        "VS1/04 Track 04.ogg",
+        "VS1/05 Track 05.ogg",
+        "VS1/06 Track 06.ogg",
+        "VS1/07 Track 07.ogg",
+        "VS1/08 Track 08.ogg",
+        "VS1/09 Track 09.ogg",
+        "VS1/10 Track 10.ogg",
+        "VS1/11 Track 11.ogg",
+        "VS1/12 Track 12.ogg",
+        "VS1/13 Track 13.ogg",
+        "VS1/14 Track 14.ogg",
+        "VS1/15 Track 15.ogg",
+        "VS1/16 Track 16.ogg",
+        "VS1/17 Track 17.ogg",
+        "VS1/18 Track 18.ogg",
+        "VS1/source.txt",
+        "VS_Misc/VS3/GameSounds/CheckPoint.wav",
+        "VS_Misc/VS3/GameSounds/Lose.wav",
+        "VS_Misc/VS3/GameSounds/Start.wav",
+        "VS_Misc/VS3/GameSounds/VictoryGold.wav",
+        "VS_Misc/VS3/intro-vsk3.ogg",
+        "VS_Misc/VS4/Artbleek - London highs.ogg",
+        "VS_Misc/VS4/Mouton.wav",
+        "VS_Misc/VS4/nightclub.wav",
+        "VS_Misc/VS4/salsa.wav",
+        "VS_Misc/VS5/Credits.ogg"
+    ]
+}

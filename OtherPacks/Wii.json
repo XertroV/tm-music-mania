@@ -1,0 +1,46 @@
+{
+    "name": "Wii Music",
+    "baseDir": "Music/Wii",
+    "desc": "Music from Trackmania Wii.",
+    "baseUrl": "https://assets.xk.io/OtherTmMusic/Wii/",
+    "subLists": {
+        "Editor": "Editor",
+        "Stadium": "Stadium",
+        "Snow": "Snow",
+        "Rally": "Rally",
+        "Island": "Island",
+        "Desert": "Desert",
+        "Coast": "Coast",
+        "Race": {
+            "regex": ".*\\.ogg$",
+            "not-in": ["Editor", "Menu", "Misc"]
+        },
+        "Menu": "02_Menu",
+        "Misc": "(01_|22_DC|Polymorph)"
+    },
+    "tracks": [
+        "01_Intro.ogg",
+        "02_Menu.ogg",
+        "03_Coast 1.ogg",
+        "04_Coast 2.ogg",
+        "05_Coast Editor.ogg",
+        "06_Desert 1.ogg",
+        "07_Desert 2.ogg",
+        "08_Desert Editor.ogg",
+        "09_Island 1.ogg",
+        "10_Island 2.ogg",
+        "11_Island Editor.ogg",
+        "12_Rally 1.ogg",
+        "13_Rally 2.ogg",
+        "14_Rally Editor.ogg",
+        "15_Snow 1.ogg",
+        "16_Snow 2.ogg",
+        "17_Snow Editor.ogg",
+        "18_Stadium 1.ogg",
+        "19_Stadium 2.ogg",
+        "20_Stadium 3.ogg",
+        "21_Stadium Editor.ogg",
+        "22_DC.ogg",
+        "23_Polymorph.ogg"
+    ]
+}

@@ -1,0 +1,8 @@
+{
+    "name": "BigBang1112 + Zai's Loops",
+    "baseDir": "Sounds/ZaiLoop",
+    "desc": "Zai's conversion of some BigBang1112 tracks into in-game Music Loops",
+    "baseUrl": "https://assets.xk.io/OtherTmMusic/ZaiLoop/",
+    "loops": true,
+    "files": ["InThePast_L.zip", "Grown_L.zip", "TheseTimes_L.zip"]
+}

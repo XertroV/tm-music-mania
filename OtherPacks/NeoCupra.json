@@ -1,0 +1,20 @@
+{
+    "name": "Neo Cupra",
+    "baseDir": "Music/NeoCupra",
+    "desc": "Tracks from the official Neo Cupra campaign.",
+    "baseUrl": "https://nadeo-download.cdn.ubi.com/trackmania/assets/Cupra/Music/",
+    "tracks": [
+        "Acinonyx.mux",
+        "AlienBrass.mux",
+        "Attachment.mux",
+        "Bleach.mux",
+        "Broker_Fee.mux",
+        "Lunar.mux",
+        "Lynx.mux",
+        "Never_Work.mux",
+        "Ocelot.mux",
+        "Panthera.mux",
+        "Ripper.mux",
+        "Teleport.mux"
+    ]
+}

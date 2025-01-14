@@ -1,0 +1,14 @@
+{
+    "name": "Nadeo Partnerships",
+    "baseDir": "Music/NadeoPartnerships",
+    "desc": "Music from official partnerships: Formula-E, AC Mirage, & Hungry Shark.",
+    "baseUrl": "https://nadeo-download.cdn.ubi.com/trackmania/assets/",
+    "trimDirsAfterDl": true,
+    "tracks": [
+        "Ubisoft/Mod/Hungry-Arctic.mux",
+        "Ubisoft/Mod/Hungry-Island.mux",
+        "Ubisoft/Mod/ACMirage_Main.mux",
+        "Ubisoft/Mod/Laserhawk_BloodDragonTheme.mux",
+        "TMFE/Mod/TMFE_Music_Conductor.mux"
+    ]
+}

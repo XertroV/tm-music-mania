@@ -1,6 +1,4 @@
 
-const string AssetBase_DestDir = IO::FromAppFolder("GameData/Media/Sounds/");
-
 const int MAX_CONCURRENT_DOWNLOADS = 10;
 
 dictionary _DownloadedAssetPacks;
@@ -17,6 +15,7 @@ void SetGotAssetPack(const string &in name) {
 class AssetDownloader {
     string name;
     string destDirRaw;
+    bool trimDirsAfterDl = false;
 
     AssetDownloader(const string &in name, const string &in baseUrl, const string &in destDirRaw) {
         this.name = name;
@@ -59,14 +58,21 @@ class AssetDownloader {
         return startnew(CoroutineFuncUserdataString(this.DownloadAsset), asset);
     }
 
+    string ProcessOutputNameAfterDl(const string &in fileName) {
+        if (trimDirsAfterDl) {
+            return Path::GetFileName(fileName);
+            // return fileName.SubStr(fileName.LastIndexOf("/") + 1);
+        }
+        return fileName;
+    }
+
     void DownloadAsset(const string &in asset) {
         _TotalDownloadsStarted++;
         while (_DlSemaphore >= MAX_CONCURRENT_DOWNLOADS) yield();
         _DlSemaphore++;
         string url = (_BaseUrl + asset).Replace(" ", "%20");
-        string dest = _DestDir + asset;
+        string dest = _DestDir + ProcessOutputNameAfterDl(asset);
         try {
-
             if (IO::FileExists(dest)) {
                 dev_trace("Skipping download of " + asset + " as it already exists at " + dest);
                 _DlSemaphore--;

@@ -1,0 +1,7 @@
+{
+    "name": "TrackMania DS",
+    "baseDir": "Music/DS",
+    "desc": "Music from TrackMania DS & TrackMania Turbo (DS).",
+    "baseUrl": "https://assets.xk.io/OtherTmMusic/",
+    "tracks": ["DS_Turbo/01 Frontend Music.ogg", "DS_Turbo/02 Coast Music.ogg", "DS_Turbo/03 Island Music.ogg", "DS_Turbo/04 Snow Music.ogg", "DS_Turbo/05 Stadium Music.ogg", "DS/01_Menu.ogg", "DS/02_Desert.ogg", "DS/03_Rally.ogg", "DS/04_Stadium.ogg"]
+}
