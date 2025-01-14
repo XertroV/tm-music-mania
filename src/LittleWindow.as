@@ -35,6 +35,8 @@ namespace LittleWindow {
     string trackTime = "0:00 / 0:00";
     string packName = "No pack";
 
+    float minWidth = 230.;
+
     void RenderWindow_Inner() {
         auto pos = UI::GetCursorPos();
         auto music = Music::GetCurrentMusic();
@@ -74,7 +76,16 @@ namespace LittleWindow {
             int t = int(Time::Now / 200) % len;
             int ss = Math::Clamp(t - maxLen*2/3, 0, Math::Max(0, len - maxLen));
             if (S_DisableMarquee) ss = 0;
-            UI::Text("[ " + trackTime + " ]  \\$ccc" + EllipsisTrim((ss > 0 ? "..." : "") + trackName.SubStr(ss, maxLen + 3), maxLen));
+            string nameLine = "[ " + trackTime + " ]  \\$ccc" + EllipsisTrim((ss > 0 ? "..." : "") + trackName.SubStr(ss, maxLen + 3), maxLen);
+            UI::Text(nameLine);
+            UI::SameLine();
+            auto pos = UI::GetCursorPos();
+
+            if (pos.x < minWidth) {
+                UI::Dummy(vec2(minWidth - pos.x - UI::GetStyleVarVec2(UI::StyleVar::ItemSpacing).x * 2, 0));
+            } else {
+                UI::Dummy(vec2(0, 0));
+            }
             // UI::Text("ss: " + ss + "  t: " + t + "  len: " + len);
         }
         if (music is null && TM_State::MapHasEmbeddedMusic) {

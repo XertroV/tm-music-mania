@@ -1,31 +1,4 @@
-// AP_Downloadable@ AP_TM2020_Extra = AP_DownloadableTM2020Extra("TM 2020 Seasonal Menu", "GameData/Media/Musics/Stadium/", "https://assets.xk.io/OtherTmMusic/TM2020/", "TM 2020 seasonal menu music.", "Menu-Fall.ogg\nMenu-Spring.ogg\nMenu-Summer.ogg\nMenu-Winter.ogg");
-
-// AP_Downloadable@ AP_BigBang1112 = AP_Downloadable("BigBang1112 Remixes", "GameData/Media/Sounds/BigBang1112/", "https://assets.xk.io/OtherTmMusic/BigBang1112/", "TMU/TMF Remixes by BigBang1112", "Bay (Realnest Bootleg).ogg\nCoast (Realnest Bootleg).ogg\nDesert (Realnest & ThaumicTom Bootleg).ogg\nDoo - Menus (Realnest Bootleg).ogg\nIsland (Realnest Bootleg).ogg\nRally (Realnest Bootleg).ogg\nSnow (Realnest Bootleg).ogg"); // TMF Menu Remix.ogg\nTMU Bay Remix.ogg\nTMU Coast Remix.ogg\nTMU Desert Remix ft ThaumicTom.ogg\nTMU Island Remix.ogg\nTMU Rally Remix.ogg\nTMU Snow Remix.ogg
-
-// AP_Downloadable@ AP_ZaiLoop = AP_DownloadableLoop("BigBang1112 + Zai's Loops", "GameData/Media/Sounds/ZaiLoop/", "https://assets.xk.io/OtherTmMusic/ZaiLoop/", "Zai's conversion of some BigBang1112 tracks into in-game Music Loops", "InThePast_L.zip\nGrown_L.zip\nTheseTimes_L.zip");
-
-// AP_Downloadable@ AP_PMC = AP_Downloadable("Project Minecraft", "GameData/Media/Sounds/PMC/", "https://assets.xk.io/MusicMisc/PMC/", "Project Minecraft", "Badlands.ogg\nBlossom.ogg\nCaves.ogg\nEnd.ogg\nJungle.ogg\nNether.ogg\nSwamp.ogg\nTundra.ogg");
-
-// AP_Downloadable@ AP_ZaiLoop = AP_DownloadableLoop("ZaiLoop.json");
-// AP_Downloadable@ AP_NeoCupra = AP_Downloadable("NeoCupra.json");
-// AP_Downloadable@ AP_BigBang1112 = AP_Downloadable("BigBang1112.json");
-
-// AP_Downloadable@ AP_Outer_Wilds = AP_Downloadable("Outer Wilds OST", "GameData/Media/Sounds/OuterWilds/", "https://assets.xk.io/MusicMisc/Outer Wilds/", "Music from Outer Wilds. (Great game. You should play it.)", "01. Timber Hearth.ogg\n02. Outer Wilds.ogg\n03. The Museum.ogg\n04. Space.ogg\n05. Castaways.ogg\n06. The Sun Station.ogg\n07. Main Title.ogg\n08. The Search.ogg\n09. The Uncertainty Principle.ogg\n10. End Times.ogg\n11. 22 Minutes.ogg\n12. The Nomai.ogg\n13. The Ash Twin Project.ogg\n14. Dark Bramble.ogg\n15. Giants Deep.ogg\n16. Nomai Ruins.ogg\n17. Final Voyage.ogg\n18. The Ancient Glade.ogg\n19. Curiosity.ogg\n20. Travelers.ogg\n21. Let There Be Light.ogg\n22. 14.3 Billion Years.ogg\n23. Morning.ogg\n24. Campfire Song.ogg\n25. Into the Wilds.ogg\n26. Arrow of Time.ogg\n27. We Have Liftoff.ogg\n28. A Terrible Fate.ogg");
-// AP_Downloadable@ AP_FTL = AP_Downloadable("FTL OST", "GameData/Media/Sounds/FTL/", "https://assets.xk.io/MusicMisc/FLT/", "Music from FTL: Faster Than Light", "Ben Prunty - FTL - 01 Space Cruise (Title).ogg\nBen Prunty - FTL - 02 MilkyWay (Explore).ogg\nBen Prunty - FTL - 03 Civil (Explore).ogg\nBen Prunty - FTL - 04 Cosmos (Explore).ogg\nBen Prunty - FTL - 05 Deepspace (Explore).ogg\nBen Prunty - FTL - 06 Debris (Explore).ogg\nBen Prunty - FTL - 07 Mantis (Explore).ogg\nBen Prunty - FTL - 08 Engi (Explore).ogg\nBen Prunty - FTL - 09 Colonial (Explore).ogg\nBen Prunty - FTL - 10 Wasteland (Explore).ogg\nBen Prunty - FTL - 11 Rockmen (Explore).ogg\nBen Prunty - FTL - 12 Void (Explore).ogg\nBen Prunty - FTL - 13 Zoltan (Explore).ogg\nBen Prunty - FTL - 14 BONUS Federation.ogg\nBen Prunty - FTL - 15 MilkyWay (Battle).ogg\nBen Prunty - FTL - 16 Civil (Battle).ogg\nBen Prunty - FTL - 17 Cosmos (Battle).ogg\nBen Prunty - FTL - 18 Deepspace (Battle).ogg\nBen Prunty - FTL - 19 Debris (Battle).ogg\nBen Prunty - FTL - 20 Mantis (Battle).ogg\nBen Prunty - FTL - 21 Engi (Battle).ogg\nBen Prunty - FTL - 22 Colonial (Battle).ogg\nBen Prunty - FTL - 23 Wasteland (Battle).ogg\nBen Prunty - FTL - 24 Rockmen (Battle).ogg\nBen Prunty - FTL - 25 Void (Battle).ogg\nBen Prunty - FTL - 26 Zoltan (Battle).ogg\nBen Prunty - FTL - 27 Last Stand.ogg\nBen Prunty - FTL - 28 Victory.ogg\nBen Prunty - FTL - 29 BONUS Horror.ogg");
-
-// commas go before entries to make commenting lines possible without breaking the last entry
-AP_Downloadable@[] AP_Downloadables = {
-    // AP_TM2020_Extra
-    // , AP_NeoCupra
-    // AP_BigBang1112
-    // , AP_PMC
-    // , AP_ZaiLoop
-    // , AP_Outer_Wilds
-    // add more here
-#if DEV
-    // , AP_ZaiLoop
-#endif
-};
+AP_Downloadable@[] AP_Downloadables = {};
 
 const int REGEX_FLAGS = Regex::Flags::ECMAScript;
 
