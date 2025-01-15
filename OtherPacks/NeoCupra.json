@@ -1,5 +1,7 @@
 {
     "name": "Neo Cupra",
+    "updateFrom": {"dir": "https://xertrov.github.io/tm-music-mania/OtherPacks/"},
+    "version": "1.0.0",
     "baseDir": "Music/NeoCupra",
     "desc": "Tracks from the official Neo Cupra campaign.",
     "baseUrl": "https://nadeo-download.cdn.ubi.com/trackmania/assets/Cupra/Music/",

@@ -1,5 +1,7 @@
 {
     "name": "Nadeo Partnerships",
+    "updateFrom": {"dir": "https://xertrov.github.io/tm-music-mania/OtherPacks/"},
+    "version": "1.0.0",
     "baseDir": "Music/NadeoPartnerships",
     "desc": "Music from official partnerships: Formula-E, AC Mirage, & Hungry Shark.",
     "baseUrl": "https://nadeo-download.cdn.ubi.com/trackmania/assets/",

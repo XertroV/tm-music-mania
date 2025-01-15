@@ -1,5 +1,7 @@
 {
     "name": "TM Turbo Music",
+    "updateFrom": {"dir": "https://xertrov.github.io/tm-music-mania/OtherPacks/"},
+    "version": "1.0.0",
     "baseDir": "Sounds/Turbo",
     "desc": "TM Turbo Music and Game Sounds.",
     "baseUrl": "https://assets.xk.io/TurboMusic/",

@@ -1,5 +1,7 @@
 {
     "name": "MP4 Music",
+    "updateFrom": {"dir": "https://xertrov.github.io/tm-music-mania/OtherPacks/"},
+    "version": "1.0.0",
     "baseDir": "Music/MP4",
     "desc": "Music from Canyon, Lagoon, Stadium, Valley, and ShootMania Storm.",
     "baseUrl": "https://assets.xk.io/Mp4Music/",

@@ -1,5 +1,7 @@
 {
     "name": "Wii Music",
+    "updateFrom": {"dir": "https://xertrov.github.io/tm-music-mania/OtherPacks/"},
+    "version": "1.0.0",
     "baseDir": "Music/Wii",
     "desc": "Music from Trackmania Wii.",
     "baseUrl": "https://assets.xk.io/OtherTmMusic/Wii/",

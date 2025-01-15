@@ -1,5 +1,7 @@
 {
     "name": "Virtual Skipper Music",
+    "updateFrom": {"dir": "https://xertrov.github.io/tm-music-mania/OtherPacks/"},
+    "version": "1.0.0",
     "baseDir": "Music/VS",
     "desc": "Music from the Virtual Skipper series (mostly VS1).",
     "baseUrl": "https://assets.xk.io/OtherTmMusic/VS/",

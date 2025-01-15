@@ -1,5 +1,7 @@
 {
     "name": "Old TM Games' Music",
+    "updateFrom": {"dir": "https://xertrov.github.io/tm-music-mania/OtherPacks/"},
+    "version": "1.0.0",
     "baseDir": "Music/Old",
     "desc": "Music from TMO, TMS, TMU, TMN ESWC, and TMNF.",
     "baseUrl": "https://assets.xk.io/OldTmMusic/",

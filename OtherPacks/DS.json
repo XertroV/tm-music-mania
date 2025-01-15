@@ -1,5 +1,7 @@
 {
     "name": "TrackMania DS",
+    "updateFrom": {"dir": "https://xertrov.github.io/tm-music-mania/OtherPacks/"},
+    "version": "1.0.0",
     "baseDir": "Music/DS",
     "desc": "Music from TrackMania DS & TrackMania Turbo (DS).",
     "baseUrl": "https://assets.xk.io/OtherTmMusic/",
