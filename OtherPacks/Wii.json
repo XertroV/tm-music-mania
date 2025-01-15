@@ -5,12 +5,12 @@
     "baseUrl": "https://assets.xk.io/OtherTmMusic/Wii/",
     "subLists": {
         "Editor": "Editor",
-        "Stadium": "Stadium",
-        "Snow": "Snow",
-        "Rally": "Rally",
-        "Island": "Island",
-        "Desert": "Desert",
-        "Coast": "Coast",
+        "Stadium": {"regex": "Stadium", "not-in": ["Editor", "Menu", "Misc"]},
+        "Snow": {"regex": "Snow", "not-in": ["Editor", "Menu", "Misc"]},
+        "Rally": {"regex": "Rally", "not-in": ["Editor", "Menu", "Misc"]},
+        "Island": {"regex": "Island", "not-in": ["Editor", "Menu", "Misc"]},
+        "Desert": {"regex": "Desert", "not-in": ["Editor", "Menu", "Misc"]},
+        "Coast": {"regex": "Coast", "not-in": ["Editor", "Menu", "Misc"]},
         "Race": {
             "regex": ".*\\.ogg$",
             "not-in": ["Editor", "Menu", "Misc"]

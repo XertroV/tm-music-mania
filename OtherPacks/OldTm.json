@@ -4,23 +4,27 @@
     "desc": "Music from TMO, TMS, TMU, TMN ESWC, and TMNF.",
     "baseUrl": "https://assets.xk.io/OldTmMusic/",
     "gameSounds": {
-        "Alpine": "^.*Alpine.*\\.wav$",
-        "Rally": "^.*Rally.*\\.wav$",
-        "Speed": "^.*Speed.*\\.wav$"
+        "Alpine": { "regex": "^.*Alpine.*\\.wav$", "tmo": true },
+        "Rally": { "regex": "^.*Rally.*\\.wav$", "tmo": true },
+        "Speed": { "regex": "^.*Speed.*\\.wav$", "tmo": true }
     },
-    "trackFilter": "^.*\\.ogg$",
+    "trackFilter": "^.*(?!Effects).*\\.ogg$",
     "subLists": {
         "Editor": "_edit\\.ogg$",
         "Menus": "(Menu|menu|Mutants|Heartbeat).*\\.ogg$",
         "Replay": "_replay\\.ogg$",
         "Race": {
             "regex": ".*(?!Effects).*\\.ogg$",
-            "not-in": ["Editor", "Menus", "Replay"]
+            "not-in": ["Editor", "Menus", "Replay", "Effects"]
         },
-        "TMN ESWC": "^TMN ESWC/.*\\.ogg$",
-        "TMO": "^TMO/.*\\.ogg$",
-        "TMS": "^TMS/.*\\.ogg$",
-        "TMU": "^TMU/.*\\.ogg$"
+        "Effects": {
+            "regex": "^.*Effects.*$",
+            "hidden": true
+        },
+        "TMO": { "regex": "^TMO/.*\\.ogg$", "not-in": ["Editor", "Menus", "Replay", "Effects"] },
+        "TMS": { "regex": "^TMS/.*\\.ogg$", "not-in": ["Editor", "Menus", "Replay", "Effects"] },
+        "TMU": { "regex": "^TMU/.*\\.ogg$", "not-in": ["Editor", "Menus", "Replay", "Effects"] },
+        "TMN ESWC": { "regex": "^TMN ESWC/.*\\.ogg$", "not-in": ["Editor", "Menus", "Replay", "Effects"] }
     },
     "tracks": [
         "TMN ESWC/04.Menu.ogg",

@@ -28,6 +28,6 @@ void Register_Tm2020_Assets() {
     //         files.RemoveAt(i);
     //     }
     // }
-    @AP_Tm2020_Playlist = AudioPack_Playlist("TM 2020", MEDIA_MUSICS_STADIUM, files, 0.0);
+    @AP_Tm2020_Playlist = AudioPack_Playlist(null, "TM 2020", MEDIA_MUSICS_STADIUM, files, 0.0);
     Packs::AddPack(AP_Tm2020_Playlist);
 }

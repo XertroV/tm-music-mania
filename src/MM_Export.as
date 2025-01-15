@@ -33,7 +33,7 @@ namespace MusicMania {
         // add AudioPack and start
         path = path.Replace(reqPrefix, "file://Media/");
         // todo
-        @ap = AudioPack_Playlist(playlistName, path, files, 0.0);
+        @ap = AudioPack_Playlist(null, playlistName, path, files, 0.0);
         Packs::AddPack(ap);
         Music::SetCurrentMusicChoice(ap, true);
     }

@@ -41,7 +41,7 @@ namespace Music {
 
     // Will not do any updates if the pack matches user's current setting (force to always update)
     void SetCurrentMusicChoice(AudioPack@ music, bool force = false) {
-        if (music is null) throw("SetCurrentMusicChoice: music is null");
+        // if (music is null) throw("SetCurrentMusicChoice: music is null");
         if (TM_State::IsInMenu) {
             if (Packs::UpdateMenuMusicChoice(music)) {
                 dev_trace("UpdateMenuMusicChoice: Menu music changed");
@@ -472,7 +472,7 @@ namespace Music {
             UI::EndMenu();
         }
         if (UI::BeginMenu(prefix+"Game Sounds")) {
-            RenderMenu_ListPack(Packs::GameSounds, true);
+            RenderMenu_ListPack(Packs::GameSounds, true, true);
             UI::EndMenu();
         }
         UI::EndDisabled();
@@ -498,20 +498,21 @@ namespace Music {
         UI::EndDisabled();
     }
 
-    void RenderMenu_ListPack(AudioPack@[]@ packs, bool includeNull = false, bool isGameSounds = true) {
+    void RenderMenu_ListPack(AudioPack@[]@ packs, bool includeNull = true, bool isGameSounds = false) {
         if (packs.Length == 0) {
             UI::Text("No packs here :(");
             return;
         }
 
         if (includeNull) {
-            if (UI::MenuItem("\\$bbb<None>", "", GetCurrentGameSounds() is null)) {
+            if (UI::MenuItem("\\$bbb<None>", "", isGameSounds ? GetCurrentGameSounds() is null : GetCurrentMusic() is null)) {
                 if (isGameSounds) SetGameSoundPack(null);
                 else SetCurrentMusicChoice(null);
             }
         }
 
         for (uint i = 0; i < packs.Length; i++) {
+            if (packs[i].hasParent) continue;
             packs[i].RenderSongChoiceMenu();
         }
     }

@@ -1,10 +1,10 @@
 void AddTurboToAudioPackRegistry() {
-    Packs::AddPack(AudioPack_Playlist("Turbo Menu Music", MEDIA_SOUNDS_TURBO, {
+    Packs::AddPack(AudioPack_Playlist(null, "Turbo Menu Music", MEDIA_SOUNDS_TURBO, {
         Playlist_Track(TurboConst::MusicMenuSimple, 0.0),
         Playlist_Track(TurboConst::MusicMenuSimple2, 6.0)
     }).WithBuiltin());
 
-    Packs::AddPack(AudioPack_Playlist("Turbo Editor Music", MEDIA_SOUNDS_TURBO, {
+    Packs::AddPack(AudioPack_Playlist(null, "Turbo Editor Music", MEDIA_SOUNDS_TURBO, {
         Playlist_Track("MapEditor/TMT_Trackbuilder_1.ogg", 0.0)
     }).WithBuiltin());
 
@@ -35,44 +35,44 @@ namespace Packs {
     void AddPack(AudioPack_GameSounds@ pack) {
         AddToLookupIfNotExists(pack);
         GameSounds.InsertLast(pack);
-        trace("Added GameSounds: " + pack.name);
+        trace("Added GameSounds: " + pack.fullName);
     }
 
     void AddPack(AudioPack_Playlist@ pack) {
         AddToLookupIfNotExists(pack);
         Playlists.InsertLast(pack);
-        trace("Added Playlist: " + pack.name);
+        trace("Added Playlist: " + pack.fullName);
     }
 
     void AddPack(AudioPack_LoopsTurbo@ pack) {
         AddToLookupIfNotExists(pack);
         LoopsTurbo.InsertLast(pack);
-        trace("Added LoopsTurbo: " + pack.name);
+        trace("Added LoopsTurbo: " + pack.fullName);
     }
 
     void AddPack(AudioPack_LoopsEditor@ pack) {
         AddToLookupIfNotExists(pack);
         EditorLoops.InsertLast(pack);
-        trace("Added LoopsEditor: " + pack.name);
+        trace("Added LoopsEditor: " + pack.fullName);
     }
 
     dictionary PackLookup;
 
     void AddToLookupIfNotExists(AudioPack@ pack) {
-        if (PackLookup.Exists(pack.name)) {
-            warn("Pack already exists: " + pack.name);
+        if (PackLookup.Exists(pack.fullName)) {
+            warn("Pack already exists: " + pack.fullName);
             return;
         }
-        @PackLookup[pack.name] = pack;
+        @PackLookup[pack.fullName] = pack;
     }
 
-    bool HasPack(const string &in name) {
-        return PackLookup.Exists(name);
+    bool HasPack(const string &in fullName) {
+        return PackLookup.Exists(fullName);
     }
 
     void RemovePack(AudioPack@ pack) {
-        if (PackLookup.Exists(pack.name)) {
-            PackLookup.Delete(pack.name);
+        if (PackLookup.Exists(pack.fullName)) {
+            PackLookup.Delete(pack.fullName);
         }
         if (pack.ty & AudioPackType::GameSounds > 0) {
             RemovePackIfFound(pack, GameSounds);
@@ -89,19 +89,19 @@ namespace Packs {
         auto ix = arr.FindByRef(pack);
         if (ix != -1) {
             arr.RemoveAt(ix);
-            dev_trace("Removed pack: " + pack.name);
+            dev_trace("Removed pack: " + pack.fullName);
             return true;
         }
-        dev_warn("RemovePackIfFound: not found: " + pack.name);
+        dev_warn("RemovePackIfFound: not found: " + pack.fullName);
         return false;
     }
 
-    AudioPack@ GetPack(const string &in name) {
-        if (PackLookup.Exists(name)) {
-            return cast<AudioPack@>(PackLookup[name]);
+    AudioPack@ GetPack(const string &in fullName) {
+        if (PackLookup.Exists(fullName)) {
+            return cast<AudioPack@>(PackLookup[fullName]);
         }
-        warn("Pack not found: " + name);
-        return AudioPack_Null(name);
+        warn("Pack not found: " + fullName);
+        return AudioPack_Null(fullName);
     }
 
     AudioPack@ GetInGameMusic() {
@@ -128,22 +128,22 @@ namespace Packs {
     string S_PackChoice_Editor = "Turbo Editor Music";
 
     bool UpdateMenuMusicChoice(AudioPack@ pack) {
-        if (pack.ty != AudioPackType::Playlist) {
+        if (pack !is null && pack.ty != AudioPackType::Playlist) {
             warn("UpdateMenuMusicChoice: expected Playlist, got " + tostring(pack.ty));
             return false;
         }
-        bool changed = S_PackChoice_Menu != pack.name;
-        S_PackChoice_Menu = pack.name;
+        bool changed = (pack is null && S_PackChoice_Menu.Length > 0) || S_PackChoice_Menu != pack.fullName;
+        S_PackChoice_Menu = pack is null ? "" : pack.fullName;
         return changed;
     }
 
     bool UpdateInGameMusicChoice(AudioPack@ pack) {
-        if (pack.ty & (AudioPackType::Loops_Turbo | AudioPackType::Playlist) == 0) {
+        if (pack !is null && pack.ty & (AudioPackType::Loops_Turbo | AudioPackType::Playlist) == 0) {
             warn("UpdateInGameMusicChoice: expected Loops_Turbo|Playlist, got " + tostring(pack.ty));
             return false;
         }
-        bool changed = S_PackChoice_InGame != pack.name;
-        S_PackChoice_InGame = pack.name;
+        bool changed = (pack is null && S_PackChoice_InGame.Length > 0) || S_PackChoice_InGame != pack.fullName;
+        S_PackChoice_InGame = pack is null ? "" : pack.fullName;
         return changed;
     }
 
@@ -152,18 +152,18 @@ namespace Packs {
             warn("UpdateGameSoundsChoice: expected GameSounds, got " + tostring(pack.ty));
             return false;
         }
-        bool changed = (pack is null && S_PackChoice_InGameSounds.Length > 0) || S_PackChoice_InGameSounds != pack.name;
-        S_PackChoice_InGameSounds = pack is null ? "" : pack.name;
+        bool changed = (pack is null && S_PackChoice_InGameSounds.Length > 0) || S_PackChoice_InGameSounds != pack.fullName;
+        S_PackChoice_InGameSounds = pack is null ? "" : pack.fullName;
         return changed;
     }
 
     bool UpdateEditorMusicChoice(AudioPack@ pack) {
-        if (pack.ty & (AudioPackType::Loops_Editor | AudioPackType::Playlist) == 0) {
+        if (pack !is null && pack.ty & (AudioPackType::Loops_Editor | AudioPackType::Playlist) == 0) {
             warn("UpdateEditorMusicChoice: expected Loops_Editor|Playlist, got " + tostring(pack.ty));
             return false;
         }
-        bool changed = S_PackChoice_Editor != pack.name;
-        S_PackChoice_Editor = pack.name;
+        bool changed = (pack is null && S_PackChoice_Editor.Length > 0) || S_PackChoice_Editor != pack.fullName;
+        S_PackChoice_Editor = pack is null ? "" : pack.fullName;
         return changed;
     }
 
@@ -233,9 +233,9 @@ namespace Packs {
         string choice = currentChoice;
         for (uint i = 0; i < packs.Length; i++) {
             AudioPack@ pack = packs[i];
-            bool isSelected = pack.name == choice;
+            bool isSelected = pack.fullName == choice;
             if (pack.DrawChoiceRow(isSelected)) {
-                choice = pack.name;
+                choice = pack.fullName;
             }
         }
         return choice;
@@ -292,11 +292,14 @@ AudioPack@ AudioPack_FromJson(Json::Value@ j) {
 abstract class AudioPack {
     AudioPackType ty;
     string name;
+    string fullName;
     string tyAndName;
+    bool hasParent;
 
     AudioPack(AudioPackType ty, const string &in name) {
         this.ty = ty;
         this.name = name;
+        this.fullName = name;
         SetTyAndName();
     }
 
@@ -352,7 +355,7 @@ abstract class AudioPack {
 
 class AudioPack_Null : AudioPack_Playlist {
     AudioPack_Null(const string &in name = "") {
-        super("Null: " + (name.Length == 0 ? "-" : name), "file://null_dir", {});
+        super(null, "Null: " + (name.Length == 0 ? "-" : name), "file://null_dir", {});
     }
 
     AudioPack_Null(Json::Value@ j) {
@@ -521,8 +524,10 @@ class AudioPack_Playlist : AudioPack {
     AudioPack_Playlist@[] children;
     string baseDir;
 
-    AudioPack_Playlist(const string &in name, const string &in baseFolder, Playlist_Track@[]@ tracks) {
+    AudioPack_Playlist(AudioPack_Playlist@ parent, const string &in name, const string &in baseFolder, Playlist_Track@[]@ tracks) {
         super(AudioPackType::Playlist, name);
+        fullName = parent is null ? name : parent.name + "/" + name;
+        hasParent = parent !is null;
 
         this.baseDir = baseFolder;
         if (!baseDir.StartsWith("file://")) {
@@ -535,8 +540,11 @@ class AudioPack_Playlist : AudioPack {
         }
     }
 
-    AudioPack_Playlist(const string &in name, const string &in baseFolder, string[]@ trackFiles, float defaultVolume) {
+    AudioPack_Playlist(AudioPack_Playlist@ parent, const string &in name, const string &in baseFolder, string[]@ trackFiles, float defaultVolume) {
         super(AudioPackType::Playlist, name);
+        fullName = parent is null ? name : parent.name + "/" + name;
+        hasParent = parent !is null;
+
         @tracks = {};
         this.baseDir = baseFolder;
         for (uint i = 0; i < trackFiles.Length; i++) {
@@ -611,10 +619,23 @@ class AudioPack_Playlist : AudioPack {
         return ret;
     }
 
+    bool debug_ExitEarly = false;
+
     void RenderSongChoiceMenu() override {
+        bool beganMain = UI::BeginMenu(name);
+        if (!beganMain) return;
+
         auto musicStdPlaylist = cast<Music_StdTrackSelection>(Music::GetCurrentMusic());
         auto currMusic = musicStdPlaylist !is null ? musicStdPlaylist.CurrMusicPath : "";
-        if (UI::BeginMenu(name)) {
+
+        bool beganInner = false;
+        bool drawInner = true;
+        if (children.Length > 0) {
+            beganInner = UI::BeginMenu("All Tracks");
+            drawInner = beganInner;
+        }
+
+        if (drawInner) {
             for (uint i = 0; i < tracks.Length; i++) {
                 if (UI::MenuItem(tracks[i].name, "", currMusic == tracks[i].name)) {
                     Music::SetCurrentMusicChoice(this);
@@ -625,8 +646,17 @@ class AudioPack_Playlist : AudioPack {
             if (tracks.Length == 0) {
                 UI::Text("\\$999\\$iNo tracks");
             }
+        }
+
+        if (beganInner) {
             UI::EndMenu();
         }
+
+        if (!debug_ExitEarly && children.Length > 0) {
+            RenderChildrenSongChoice(true);
+        }
+
+        UI::EndMenu();
     }
 
     void SetCurrMusicPlayingIx(int64 ix) {
@@ -692,19 +722,33 @@ class AudioPack_Playlist : AudioPack {
     }
 
     void RenderChildrenSongChoice(bool addSep = false) {
-        if (children.Length > 0) {
-            if (addSep) UI::SeparatorText("SubLists");
-            for (uint i = 0; i < children.Length; i++) {
-                children[i].RenderSongChoiceMenu();
-            }
+        if (children.Length == 0) return;
+        if (addSep) UI::SeparatorText("SubLists");
+        for (uint i = 0; i < children.Length; i++) {
+            children[i].debug_ExitEarly = true;
+            children[i].RenderSongChoiceMenu();
         }
     }
 
     AudioPack_Playlist@ WithSubLists(PackDownloadable::PackSubList@[]@ subLists) {
-        // todo
-        if (Time::Stamp > 1736897331) throw("todo: WithSubLists");
-        // todo: custom behaviro if start of regex is `^<name>/`
-        // impl
+        for (uint i = 0; i < subLists.Length; i++) {
+            auto @subList = subLists[i];
+            if (subList.hidden) continue;
+            WithSubList(subList);
+        }
+        return this;
+    }
+
+    AudioPack_Playlist@ WithSubList(PackDownloadable::PackSubList@ subList) {
+        string[] fs;
+        for (uint i = 0; i < subList.files.Length; i++) {
+            fs.InsertLast(subList.files[i]);
+        }
+        if (fs.Length > 0) {
+            children.InsertLast(AudioPack_Playlist(this, subList.name, baseDir, fs, 0.0));
+            Packs::AddPack(children[children.Length - 1]);
+            trace("Created sub-playlist: " + subList.name);
+        }
         return this;
     }
 
@@ -712,7 +756,7 @@ class AudioPack_Playlist : AudioPack {
     //     if (!fileOrDir.EndsWith('/')) return;
     //     auto playListName = "<" + fileOrDir.SubStr(0, fileOrDir.Length - 1) + ">";
     //     auto @fileList = IO_IndexFolderTrimmed(CUSTOM_MUSIC_FOLDER + fileOrDir, true);
-    //     children.InsertLast(AudioPack_Playlist(playListName, MEDIA_CUSTOM_URI + fileOrDir, fileList, 0.0));
+    //     children.InsertLast(AudioPack_Playlist(this, playListName, MEDIA_CUSTOM_URI + fileOrDir, fileList, 0.0));
     //     Packs::AddPack(children[children.Length - 1]);
     //     trace("Created custom music sub-playlist: " + playListName);
     // }
@@ -730,7 +774,7 @@ class AudioPack_PlaylistEverything : AudioPack_Playlist {
             throw("Only one instance of AudioPack_PlaylistEverything allowed");
         }
         @AllMusicPlaylistSingleton = this;
-        super(name, MEDIA_URI, {});
+        super(null, name, MEDIA_URI, {});
     }
 
     void OnAddTrack(int i) override {
@@ -752,7 +796,7 @@ class AudioPack_PlaylistCustomDir : AudioPack_Playlist {
             throw("Only one instance of AudioPack_PlaylistCustomDir allowed");
         }
         @CustomMusicPlaylistSingleton = this;
-        super(name, MEDIA_CUSTOM_URI, {});
+        super(null, name, MEDIA_CUSTOM_URI, {});
         OnClickRefresh();
     }
 
@@ -779,7 +823,7 @@ class AudioPack_PlaylistCustomDir : AudioPack_Playlist {
         if (!fileOrDir.EndsWith('/')) return;
         auto playListName = "<" + fileOrDir.SubStr(0, fileOrDir.Length - 1) + ">";
         auto @fileList = IO_IndexFolderTrimmed(CUSTOM_MUSIC_FOLDER + fileOrDir, true);
-        children.InsertLast(AudioPack_Playlist(playListName, MEDIA_CUSTOM_URI + fileOrDir, fileList, 0.0));
+        children.InsertLast(AudioPack_Playlist(this, playListName, MEDIA_CUSTOM_URI + fileOrDir, fileList, 0.0));
         Packs::AddPack(children[children.Length - 1]);
         trace("Created custom music sub-playlist: " + playListName);
     }
@@ -839,6 +883,9 @@ class AudioPack_GameSounds : AudioPack {
 
     AudioPack_GameSounds(const string &in name, const string &in baseDir, GameSoundsSpec@ spec) {
         super(AudioPackType::GameSounds, name);
+        if (!baseDir.StartsWith("file://")) {
+            throw("baseDir must start with file://; instead: " + baseDir);
+        }
         this.baseDir = baseDir;
         @this.spec = spec;
     }
@@ -870,6 +917,19 @@ class AudioPack_GameSounds : AudioPack {
         if (UI::MenuItem(name, "", Music::GetCurrentGameSoundPackName() == name)) {
             dev_warn("ap_gamesounds: Selected: " + name);
             Music::SetGameSoundPack(this);
+        }
+        if (UI::IsItemHovered()) {
+            AddSimpleTooltip("Cp Fast[]: " + spec.checkpointFast.Length + "\n"
+                "Cp Slow[]: " + spec.checkpointSlow.Length + "\n"
+                "Finish Lap[]: " + spec.finishLap.Length + "\n"
+                "Finish Race[]: " + spec.finishRace.Length + "\n"
+                "Start Race[]: " + spec.startRace.Length + "\n"
+                "Respawn[]: " + spec.respawn.Length + "\n"
+                "Medal: Author[]: " + spec.medalAuthor.Length + "\n"
+                "Medal: Gold[]: " + spec.medalGold.Length + "\n"
+                "Medal: Silver[]: " + spec.medalSilver.Length + "\n"
+                "Medal: Bronze[]: " + spec.medalBronze.Length
+            );
         }
         // if (UI::BeginMenu(name)) {
         //     for (uint i = 0; i < spec.checkpointFast.Length; i++) {
@@ -919,6 +979,45 @@ class AudioPack_GameSounds : AudioPack {
             UI::EndMenu();
         }
     }
+
+    void AddSoundIfValidPath(const string &in file) {
+        if (file.EndsWith(".ogg") || file.EndsWith(".wav")) {
+            AddSoundByName(file);
+        } else if (!file.EndsWith(".txt")) {
+            NotifyWarning("Invalid GameSound file: " + file);
+        }
+    }
+
+    // assumes file is ogg/wav
+    void AddSoundByName(const string &in path) {
+        if (path.StartsWith("cpFast_")) {
+            spec.checkpointFast.InsertLast(path);
+        } else if (path.StartsWith("cpSlow_")) {
+            spec.checkpointSlow.InsertLast(path);
+        } else if (path.StartsWith("finish_")) {
+            spec.finishRace.InsertLast(path);
+        } else if (path.StartsWith("lap_")) {
+            spec.finishLap.InsertLast(path);
+        } else if (path.StartsWith("start_")) {
+            spec.startRace.InsertLast(path);
+        } else if (path.StartsWith("respawn_")) {
+            spec.respawn.InsertLast(path);
+        } else if (path.StartsWith("ma_")) {
+            spec.medalAuthor.InsertLast(path);
+        } else if (path.StartsWith("mg_")) {
+            spec.medalGold.InsertLast(path);
+        } else if (path.StartsWith("ms_")) {
+            spec.medalSilver.InsertLast(path);
+        } else if (path.StartsWith("mb_")) {
+            spec.medalBronze.InsertLast(path);
+        } else {
+            OnInvalidSoundPath(path);
+        }
+    }
+
+    void OnInvalidSoundPath(const string &in path) {
+        // nothing by default
+    }
 }
 
 
@@ -963,41 +1062,6 @@ class AudioPack_GameSounds_CustomDir : AudioPack_GameSounds {
         InvalidateSoundsIfAny();
     }
 
-    void AddSoundIfValidPath(const string &in file) {
-        if (file.EndsWith(".ogg") || file.EndsWith(".wav")) {
-            AddSoundByName(file);
-        } else if (!file.EndsWith(".txt")) {
-            NotifyWarning("Invalid file in CustomGameSounds folder: " + file);
-        }
-    }
-
-    // assumes file is ogg/wav
-    void AddSoundByName(const string &in path) {
-        if (path.StartsWith("cpFast_")) {
-            spec.checkpointFast.InsertLast(path);
-        } else if (path.StartsWith("cpSlow_")) {
-            spec.checkpointSlow.InsertLast(path);
-        } else if (path.StartsWith("finish_")) {
-            spec.finishRace.InsertLast(path);
-        } else if (path.StartsWith("lap_")) {
-            spec.finishLap.InsertLast(path);
-        } else if (path.StartsWith("start_")) {
-            spec.startRace.InsertLast(path);
-        } else if (path.StartsWith("respawn_")) {
-            spec.respawn.InsertLast(path);
-        } else if (path.StartsWith("ma_")) {
-            spec.medalAuthor.InsertLast(path);
-        } else if (path.StartsWith("mg_")) {
-            spec.medalGold.InsertLast(path);
-        } else if (path.StartsWith("ms_")) {
-            spec.medalSilver.InsertLast(path);
-        } else if (path.StartsWith("mb_")) {
-            spec.medalBronze.InsertLast(path);
-        } else {
-            NotifyWarning("Invalid file in CustomGameSounds folder: " + path);
-        }
-    }
-
     void InvalidateSoundsIfAny() {
         auto m = Music::GetCurrentGameSounds();
         if (m !is null && m.origin is this && TM_State::IsInPlayground) {
@@ -1005,6 +1069,10 @@ class AudioPack_GameSounds_CustomDir : AudioPack_GameSounds {
             // trigger a reload of the music
             startnew(Music::OnGameContextChanged);
         }
+    }
+
+    void OnInvalidSoundPath(const string&in path) override {
+        NotifyWarning("Invalid file in CustomGameSounds folder: " + path);
     }
 }
 

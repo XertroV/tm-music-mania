@@ -111,7 +111,6 @@ namespace PackDownloadable {
 
         string trackFilter = j.Get("trackFilter", "");
         string fileFilter = j.Get("fileFilter", "");
-        dev_trace("trackFilter, fileFilter: " + trackFilter + ", " + fileFilter);
 
         // Json::Value@ filesJ = cast<Json::Value>(cast<ref>(j.Get("files", Json::Value())));
         const Json::Value@ filesJ = j.Get("files", Json::Parse("null"));
@@ -136,8 +135,8 @@ namespace PackDownloadable {
         string[]@ files = Validate_JsonFiles("files", filesJ, fileFilter);
         string[]@ tracks = Validate_JsonFiles("tracks", tracksJ, trackFilter);
 
-        PackSubList@[]@ subLists = Validate_SubLists(subListsJ);
-        PackGameSounds@[]@ gameSounds = Validate_GameSounds(gameSoundsJ);
+        PackSubList@[]@ subLists = Validate_SubLists(subListsJ, tracks);
+        PackGameSounds@[]@ gameSounds = Validate_GameSounds(gameSoundsJ, tracks);
 
         // -- End Validation --
         // check flags and requirements
@@ -180,27 +179,31 @@ namespace PackDownloadable {
         return ret;
     }
 
-    PackSubList@[]@ Validate_SubLists(const Json::Value@ j) {
+    PackSubList@[]@ Validate_SubLists(const Json::Value@ j, string[]@ _tracks) {
         if (j.GetType() == Json::Type::Null) return null;
         if (j.GetType() != Json::Type::Object) throw("Expected object of sublists, got " + tostring(j.GetType()));
         PackSubList@[] ret;
         auto keys = j.GetKeys();
         for (uint i = 0; i < keys.Length; i++) {
             string name = keys[i];
-            ret.InsertLast(PackSubList(name, j[name]));
+            ret.InsertLast(PackSubList(name, j[name]).WithTracks(_tracks));
         }
         if (ret.Length == 0) return null;
+        for (uint i = 0; i < ret.Length; i++) {
+            ret[i].CheckNotIn(ret);
+        }
         return ret;
     }
 
-    PackGameSounds@[]@ Validate_GameSounds(const Json::Value@ j) {
+    PackGameSounds@[]@ Validate_GameSounds(const Json::Value@ j, string[]@ tracks) {
         if (j.GetType() == Json::Type::Null) return null;
         if (j.GetType() != Json::Type::Object) throw("Expected object of game sounds, got " + tostring(j.GetType()));
         PackGameSounds@[] ret;
         auto keys = j.GetKeys();
         for (uint i = 0; i < keys.Length; i++) {
             string name = keys[i];
-            ret.InsertLast(PackGameSounds(name, j[name]));
+            if (tracks.Length == 0) throw("No tracks provided for game sounds");
+            ret.InsertLast(PackGameSounds(name, j[name]).WithFiles(tracks));
         }
         if (ret.Length == 0) return null;
         return ret;
@@ -221,8 +224,9 @@ namespace PackDownloadable {
     class PackSubList {
         string name;
         string regex;
-        // other sublists, we exclude files from this sublist if they're in any of those other ones.
+        // other sublists, we exclude files from this sublist if they're in any of those other ones. never null.
         string[]@ notIn;
+        bool hidden = false;
 
         PackSubList(const string &in name, const Json::Value@ j) {
             this.name = name;
@@ -233,13 +237,42 @@ namespace PackDownloadable {
                 regex = j["regex"];
                 const Json::Value@ notInJ = j.Get("not-in", Json::Array());
                 @notIn = Json_ToStringArray(notInJ);
+                hidden = j.Get("hidden", false);
             }
+        }
+
+        string[] files;
+        PackSubList@ WithTracks(string[]@ _files) {
+            for (uint i = 0; i < _files.Length; i++) {
+                if (Regex::Contains(_files[i], regex, REGEX_FLAGS)) {
+                    files.InsertLast(_files[i]);
+                }
+            }
+            return this;
+        }
+
+        PackSubList@ CheckNotIn(PackSubList@[]@ subLists) {
+            if (notIn.Length == 0) return this;
+            for (uint j = 0; j < subLists.Length; j++) {
+                if (notIn.Find(subLists[j].name) != -1 && subLists[j].name != name) {
+                    for (uint k = 0; k < subLists[j].files.Length; k++) {
+                        int ix = files.Find(subLists[j].files[k]);
+                        if (ix != -1) {
+                            files.RemoveAt(ix);
+                            // dev_warn("Removed " + subLists[j].files[k] + " from " + name + " because it was in " + subLists[j].name);
+                        }
+                    }
+                }
+            }
+            return this;
         }
     }
 
     class PackGameSounds {
         string name;
         string regex;
+        bool tmo = false;
+        string[] files;
 
         PackGameSounds(const string &in name, const Json::Value@ j) {
             this.name = name;
@@ -247,9 +280,58 @@ namespace PackDownloadable {
                 regex = string(j);
             } else {
                 regex = j["regex"];
+                tmo = j.Get("tmo", false);
             }
         }
+
+        PackGameSounds@ WithFiles(string[]@ fs) {
+            for (uint i = 0; i < fs.Length; i++) {
+                if (Regex::Contains(fs[i], regex, REGEX_FLAGS)) {
+                    files.InsertLast(fs[i]);
+                }
+            }
+            dev_warn("GameSounds " + name + " has " + files.Length + " files");
+            return this;
+        }
+
+        AudioPack_GameSounds@ GetPack(const string &in baseDir) {
+            dev_warn("GameSounds " + name + " at " + baseDir + " has " + files.Length + " files. TMO: " + tmo);
+            if (tmo) {
+                auto spec = GameSoundsSpec(
+                    FindSingletonSound(files, "CheckPoint.wav"),
+                    FindSingletonSound(files, "CheckPoint.wav"),
+                    FindSingletonSound(files, "Lap.wav"),
+                    FindSingletonSound(files, "Finish.wav"),
+                    {}, // start
+                    {}, // respawn
+                    FindSingletonSound(files, "Bronze.wav"),
+                    FindSingletonSound(files, "Silver.wav"),
+                    FindSingletonSound(files, "Gold.wav"),
+                    FindSingletonSound(files, "Nadeo.wav")
+                );
+                return AudioPack_GameSounds(name, baseDir, spec);
+            }
+            // otherwise use the same format as custom directory
+            auto spec = GameSoundsSpec();
+            auto pack = AudioPack_GameSounds(name, baseDir, spec);
+            for (uint i = 0; i < files.Length; i++) {
+                pack.AddSoundIfValidPath(files[i]);
+            }
+            return pack;
+        }
     }
+}
+
+
+string[]@ FindSingletonSound(string[]@ files, const string &in nameEnd) {
+    for (uint i = 0; i < files.Length; i++) {
+        if (files[i].EndsWith(nameEnd)) {
+            dev_trace("Found sound for: " + nameEnd);
+            return {files[i]};
+        }
+    }
+    warn("No sound found for: " + nameEnd);
+    return {};
 }
 
 
@@ -329,9 +411,11 @@ class AP_Downloadable {
 
     protected void AddMainAssetPack() {
         auto pack = CreatePlaylistWithFilteredTracks();
-        if (subLists !is null && subLists.Length > 0) pack.WithSubLists(subLists);
-        if (hasTurboGameSounds || (gameSounds !is null && gameSounds.Length > 0)) AddGameSoundPacks(gameSounds, hasTurboGameSounds);
         Packs::AddPack(pack);
+
+        if (subLists !is null && subLists.Length > 0) pack.WithSubLists(subLists);
+
+        if (hasTurboGameSounds || (gameSounds !is null && gameSounds.Length > 0)) AddGameSoundPacks(gameSounds, hasTurboGameSounds);
     }
 
     AudioPack_Playlist@ CreatePlaylistWithFilteredTracks() {
@@ -343,7 +427,7 @@ class AP_Downloadable {
             }
         }
 
-        if (trackFilter.Length == 0) return AudioPack_Playlist(name, mediaUriBase, _files, 0.0);
+        if (trackFilter.Length == 0) return AudioPack_Playlist(null, name, mediaUriBase, _files, 0.0);
 
         string[] ts;
         for (uint i = 0; i < _files.Length; i++) {
@@ -352,13 +436,27 @@ class AP_Downloadable {
                 ts.InsertLast(file);
             }
         }
-        return AudioPack_Playlist(name, mediaUriBase, ts, 0.0);
+        return AudioPack_Playlist(null, name, mediaUriBase, ts, 0.0);
     }
 
 
     protected void AddGameSoundPacks(PackDownloadable::PackGameSounds@[]@ gameSounds, bool hasTurboGameSounds) {
-        // todo
-        if (Time::Stamp > 1736897331) throw("Implement AddGameSoundPacks");
+        GameSoundsSpec@[] specs;
+        if (hasTurboGameSounds) {
+            auto spec = GameSoundsSpec(
+                TurboConst::GetSoundsCheckpointFast(),
+                TurboConst::GetSoundsCheckpointSlow(),
+                TurboConst::GetSoundsFinishLap(),
+                TurboConst::GetSoundsFinishRace(),
+                TurboConst::GetSoundsStartRace(),
+                TurboConst::GetSoundsRespawn()
+            );
+            Packs::AddPack(AudioPack_GameSounds(name + " (GS)", baseDir.Replace("GameData/", "file://"), spec));
+        } else {
+            for (uint i = 0; i < gameSounds.Length; i++) {
+                Packs::AddPack(gameSounds[i].GetPack(baseDir.Replace("GameData/", "file://")));
+            }
+        }
     }
 
     bool HasRegisteredAssetPack() {
@@ -423,8 +521,17 @@ class AP_DownloadableLoop : AP_Downloadable {
 
     protected void AddMainAssetPack() override {
         auto j = Json::Array();
-        for (uint i = 0; i < files.Length; i++) {
-            j.Add(_FileToLoopJsonArr(files[i]));
+        if (turboStyleMusicList !is null) {
+            for (uint i = 0; i < turboStyleMusicList.Length; i++) {
+                j.Add(_TripleToLoopJsonArr(turboStyleMusicList[i][0], turboStyleMusicList[i][1], turboStyleMusicList[i][2]));
+            }
+        } else {
+            for (uint i = 0; i < files.Length; i++) {
+                if (fileFilter.Length > 0 && !Regex::Contains(files[i], fileFilter, REGEX_FLAGS)) {
+                    continue;
+                }
+                j.Add(_FileToLoopJsonArr(files[i]));
+            }
         }
         Packs::AddPack(AudioPack_LoopsTurbo(name, mediaUriBase, j));
     }
@@ -445,6 +552,14 @@ Json::Value@ _FileToLoopJsonArr(const string &in file) {
     j.Add(0.0); // gain
     j.Add(file.SubStr(0, file.Length - 4)); // name
     // can skip the rest, but they would be label, artist, sample
+    return j;
+}
+
+Json::Value@ _TripleToLoopJsonArr(const string &in zip, float gain, const string &in name) {
+    auto j = Json::Array();
+    j.Add(zip);
+    j.Add(gain);
+    j.Add(name);
     return j;
 }
 

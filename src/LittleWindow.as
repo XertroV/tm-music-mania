@@ -38,7 +38,6 @@ namespace LittleWindow {
     float minWidth = 230.;
 
     void RenderWindow_Inner() {
-        auto pos = UI::GetCursorPos();
         auto music = Music::GetCurrentMusic();
         CPlugSound@ mapMusic;
         CSystemPackDesc@ mapMusicDesc;
@@ -208,7 +207,9 @@ namespace LittleWindow {
         UX::PopThinControls();
 
         if (Global::IsMutedBecauseUnfocused) {
-            UI::Text("\\$i\\$999Muted - Game not focused");
+            UI::Text("\\$i\\$999Muted/paused - Game not focused");
+        } else if (Global::MusicVolume < -60.) {
+            UI::Text("\\$i\\$999Muted/paused - Volume too low");
         }
     }
 

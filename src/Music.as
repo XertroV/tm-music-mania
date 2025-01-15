@@ -995,10 +995,14 @@ class GameSounds : MusicOrSound {
         if (s_cps.Length == 0) return;
         cpCount = Math::Clamp(cpCount, 0, s_cps.Length - 1);
         auto sound = GetAudio().CreateSound(baseDir + s_cps[cpCount]);
-        // auto sound = GetAudio().CreateSound(MEDIA_SOUNDS_TURBO + (fast ? TurboConst::GetSoundCheckpointFast(cpCount) : TurboConst::GetSoundCheckpointSlow(cpCount)));
-        sound.VolumedB = 0.;
-        sound.Play();
-        startnew(SleepAndDestroy, sound);
+        if (sound is null) {
+            NotifyWarning("GameSound invalid path: " + baseDir + s_cps[cpCount]);
+        } else {
+            // auto sound = GetAudio().CreateSound(MEDIA_SOUNDS_TURBO + (fast ? TurboConst::GetSoundCheckpointFast(cpCount) : TurboConst::GetSoundCheckpointSlow(cpCount)));
+            sound.VolumedB = 0.;
+            sound.Play();
+            startnew(SleepAndDestroy, sound);
+        }
     }
 
     void OnLap(int lapCount) override {
