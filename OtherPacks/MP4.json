@@ -6,17 +6,17 @@
     "desc": "Music from Canyon, Lagoon, Stadium, Valley, and ShootMania Storm.",
     "baseUrl": "https://assets.xk.io/Mp4Music/",
     "subLists": {
-        "Canyon": "^Canyon/",
-        "Lagoon": "^Lagoon/",
-        "SMStorm": "^SMStorm/",
-        "Stadium": "^Stadium/",
-        "Valley": "^Valley/",
+        "TM² Canyon": "^Canyon/",
+        "TM² Lagoon": "^Lagoon/",
+        "TM² Stadium": "^Stadium/",
+        "TM² Valley": "^Valley/",
+        "SM Storm": "^SMStorm/",
         "Menu": "^Menu/",
         "Race": {
             "regex": ".*\\.ogg$",
             "not-in": ["Menu"]
         },
-        "Race (MP4)": {
+        "Race (TM2)": {
             "regex": ".*\\.ogg$",
             "not-in": ["Menu", "SMStorm"]
         }
